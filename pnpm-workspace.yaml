@@ -3,3 +3,11 @@ packages:
   - "packs/*"
   - "plugins/*"
   - "apps/*"
+minimumReleaseAgeExclude:
+  - '@tanstack/react-router@1.170.41'
+  - '@tanstack/router-core@1.171.34'
+  - framer-motion@13.5.0
+  - motion-dom@13.5.0
+  - motion-utils@13.5.0
+  - motion@13.5.0
+  - vite@8.3.2

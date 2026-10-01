@@ -1,0 +1,172 @@
+@import "tailwindcss";
+@import "@fontsource-variable/inter";
+@import "@fontsource/cinzel/600.css";
+@import "@fontsource/cinzel/700.css";
+@import "@fontsource-variable/noto-serif-sc";
+
+/*
+ * Design tokens. Every colour, radius, shadow, font and motion value used by
+ * the UI comes from these CSS variables. Themes (plugins/themes.ts) override
+ * them at runtime, so restyling the app never touches components.
+ * Values below are the "Arcane" fallback used for the very first paint.
+ */
+:root {
+  --bg: #0e0f17;
+  --bg-glow-1: rgb(124 92 214 / 0.2);
+  --bg-glow-2: rgb(214 168 92 / 0.1);
+  --surface: #151724;
+  --surface-2: #1b1e2e;
+  --surface-3: #252a3e;
+  --line: rgb(255 255 255 / 0.08);
+  --line-strong: rgb(255 255 255 / 0.16);
+  --ink: #ece8f4;
+  --ink-2: #a9a4bd;
+  --ink-3: #6f6b86;
+  --accent: #d6a85c;
+  --accent-2: #f3d79a;
+  --accent-ink: #1a1408;
+  --good: #5fd39a;
+  --bad: #f06f6f;
+  --warn: #f2b75b;
+  --info: #79a8ff;
+  --hp: #e5484d;
+  --temp: #5aa9e6;
+  --magic: #a78bfa;
+  --shadow-lg: 0 24px 60px -24px rgb(0 0 0 / 0.7);
+  --shadow-md: 0 10px 30px -12px rgb(0 0 0 / 0.6);
+  --inner-hi: inset 0 1px 0 rgb(255 255 255 / 0.05);
+  --radius: 16px;
+  --font-display: "Cinzel", "Noto Serif SC Variable", "Songti SC", serif;
+  --font-body: "Inter Variable", "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", system-ui, sans-serif;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 140ms;
+  --dur: 240ms;
+  /* per-context accent (class colour in the builder / sheet) */
+  --class: var(--accent);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-accent-ink: var(--accent-ink);
+  --color-good: var(--good);
+  --color-bad: var(--bad);
+  --color-warn: var(--warn);
+  --color-info: var(--info);
+  --color-hp: var(--hp);
+  --color-temp: var(--temp);
+  --color-magic: var(--magic);
+  --color-class: var(--class);
+  --font-display: var(--font-display);
+  --font-sans: var(--font-body);
+  --radius-card: var(--radius);
+  --shadow-card: var(--shadow-md), var(--inner-hi);
+  --shadow-float: var(--shadow-lg);
+  --ease-out: var(--ease-out);
+}
+
+@layer base {
+  html {
+    background: var(--bg);
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    min-height: 100dvh;
+    background:
+      radial-gradient(1200px 700px at 10% -10%, var(--bg-glow-1), transparent 60%),
+      radial-gradient(900px 600px at 110% 110%, var(--bg-glow-2), transparent 60%),
+      var(--bg);
+    background-attachment: fixed;
+    color: var(--ink);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior-y: none;
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--accent) 40%, transparent);
+  }
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 8px;
+  }
+  button {
+    cursor: pointer;
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--surface-3) transparent;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+    letter-spacing: 0.04em;
+  }
+  :lang(zh) .font-display,
+  .font-display:lang(zh) {
+    letter-spacing: 0.02em;
+    font-weight: 700;
+  }
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+  .text-gold {
+    background: linear-gradient(180deg, var(--accent-2), var(--accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .glass {
+    background: color-mix(in oklab, var(--surface) 78%, transparent);
+    backdrop-filter: blur(18px) saturate(1.2);
+    -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  }
+  .card {
+    background: linear-gradient(180deg, color-mix(in oklab, var(--surface-2) 92%, white 2%), var(--surface));
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md), var(--inner-hi);
+  }
+  .safe-b {
+    padding-bottom: max(env(safe-area-inset-bottom), 0px);
+  }
+  .safe-t {
+    padding-top: max(env(safe-area-inset-top), 0px);
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Users who prefer less motion (system or in-app toggle) get instant transitions. */
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"]) *,
+  :root:not([data-motion="full"]) *::before,
+  :root:not([data-motion="full"]) *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+  }
+}
+:root[data-motion="reduced"] *,
+:root[data-motion="reduced"] *::before,
+:root[data-motion="reduced"] *::after {
+  animation-duration: 1ms !important;
+  transition-duration: 1ms !important;
+}
