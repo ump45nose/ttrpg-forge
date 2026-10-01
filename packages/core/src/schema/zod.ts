@@ -55,7 +55,7 @@ export const GrantSchema: z.ZodType<Grant> = z.lazy(() =>
     z.object({ type: z.literal("proficiency"), kind: profKind, key: z.string(), level: profLevel.optional() }),
     z.object({ type: z.literal("resource"), id: z.string(), name: text, max: formula, recovery: z.array(recovery), icon: z.string().optional() }),
     z.object({ type: z.literal("action"), action: ActionSchema }),
-    z.object({ type: z.literal("feature"), id: z.string(), name: text, text: text.optional(), grants: z.array(GrantSchema).optional(), tags: z.array(z.string()).optional() }),
+    z.object({ type: z.literal("feature"), id: z.string(), name: text, text: text.optional(), grants: z.array(GrantSchema).optional(), tags: z.array(z.string()).optional(), minLevel: z.number().optional() }),
     z.object({
       type: z.literal("choice"),
       id: z.string(),
@@ -88,7 +88,7 @@ export const GrantSchema: z.ZodType<Grant> = z.lazy(() =>
       cantrips: formula.optional(),
       prepared: formula.optional(),
     }),
-    z.object({ type: z.literal("spell"), spell: z.string(), ability: ability.optional(), alwaysPrepared: z.boolean().optional(), free: z.object({ max: formula, recovery: z.array(recovery) }).optional() }),
+    z.object({ type: z.literal("spell"), spell: z.string(), minLevel: z.number().optional(), ability: ability.optional(), alwaysPrepared: z.boolean().optional(), free: z.object({ max: formula, recovery: z.array(recovery) }).optional() }),
     z.object({ type: z.literal("item"), item: z.string(), qty: z.number().optional(), equipped: z.boolean().optional() }),
     z.object({ type: z.literal("tag"), tag: z.string(), label: text.optional() }),
   ]),

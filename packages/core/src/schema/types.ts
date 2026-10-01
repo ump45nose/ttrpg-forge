@@ -72,6 +72,8 @@ export interface FeatureGrant {
   grants?: Grant[];
   /** Shown on the timeline / combat reminders. */
   tags?: string[];
+  /** Character level at which this feature switches on (species traits like Draconic Flight). */
+  minLevel?: number;
 }
 
 export interface ChoiceOption {
@@ -147,6 +149,8 @@ export interface SpellcastingGrant {
 export interface SpellGrant {
   type: "spell";
   spell: string;
+  /** Character level required (species/lineage spells at 3rd and 5th level). */
+  minLevel?: number;
   /** Casting ability override (feats, species spells). */
   ability?: Ability;
   alwaysPrepared?: boolean;

@@ -139,6 +139,7 @@ export function collect(reg: PackRegistry, build: Build, activeEffects: string[]
     }
     const itemCounts = new Map<string, number>();
     for (const g of grants) {
+      if ((g.type === "feature" || g.type === "spell") && g.minLevel && build.levels.length < g.minLevel) continue;
       res.grants.push({ grant: g, source });
       switch (g.type) {
         case "feature":

@@ -147,6 +147,8 @@ export interface Sheet {
   skills: Record<string, SkillView>;
   ac: number;
   initiative: number;
+  /** Lowest natural d20 that crits (20, or 19 for Champions...). */
+  critRange: number;
   speed: Record<"walk" | "fly" | "swim" | "climb", number>;
   hpMax: number;
   senses: Record<string, number>;
@@ -308,6 +310,7 @@ export function derive(reg: PackRegistry, build: Build, opts: DeriveOptions = {}
   });
 
   // generic attack/damage bonus stats used by weapon & spell actions
+  stats.define("crit.bonus", () => 0, L("Natural 20 only", "仅天然 20"));
   for (const s of ["attack.melee", "attack.ranged", "attack.spell", "damage.melee", "damage.ranged", "spell.dc", "spell.attack"]) stats.define(s, () => 0);
 
   // all modifiers from grants
@@ -538,8 +541,9 @@ export function derive(reg: PackRegistry, build: Build, opts: DeriveOptions = {}
       return sp.level === 0 && sp.cantripScaling ? multiplyDice(d, tier) : d;
     };
     const costs: Cost[] = [...economyCost(sp.activation)];
-    if (sp.level > 0 && !(s.freeResource && !s.prepared)) costs.push({ slot: sp.level });
-    else if (s.freeResource) costs.push({ resource: s.freeResource, amount: 1 });
+    // free casts (species / feat spells) are the default; slots remain available via upcasting UI
+    if (s.freeResource) costs.push({ resource: s.freeResource, amount: 1 });
+    else if (sp.level > 0) costs.push({ slot: sp.level });
     actions.push({
       id: `spell:${s.path}`,
       name: sp.name,
@@ -610,6 +614,7 @@ export function derive(reg: PackRegistry, build: Build, opts: DeriveOptions = {}
     abilities,
     skills,
     ac: stats.get("ac"),
+    critRange: 20 - stats.get("crit.bonus"),
     initiative: stats.get("initiative"),
     speed: { walk: stats.get("speed.walk"), fly: stats.get("speed.fly"), swim: stats.get("speed.swim"), climb: stats.get("speed.climb") },
     hpMax: stats.get("hp.max"),
