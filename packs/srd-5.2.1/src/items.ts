@@ -95,6 +95,62 @@ const GEAR: G[] = [
   ["lute", "Lute", "鲁特琴", "tool"],
 ];
 
+/** Things you use up. Drinking a potion is a Bonus Action in the 2024 rules. */
+const THROWN_DC = "8 + @ability.dex.mod + @prof";
+const CONSUMABLES: ItemEntity[] = [
+  potion("potion-of-healing", "Potion of Healing", "治疗药水", "2d4 + 2", "50 GP", "common"),
+  potion("potion-of-greater-healing", "Potion of Greater Healing", "强效治疗药水", "4d4 + 4", "500 GP", "uncommon"),
+  potion("potion-of-superior-healing", "Potion of Superior Healing", "高等治疗药水", "8d4 + 8", "5,000 GP", "rare"),
+  potion("potion-of-supreme-healing", "Potion of Supreme Healing", "极效治疗药水", "10d4 + 20", "50,000 GP", "very-rare"),
+  thrown("alchemists-fire", "Alchemist's Fire", "炼金火", "1d4", "fire", "50 GP",
+    "Throw at a creature or object within 20 ft: Dex save or take 1d4 Fire damage and start Burning.", "投向 20 尺内的生物或物体：目标须进行敏捷豁免，失败则受到 1d4 火焰伤害并开始燃烧。"),
+  thrown("acid", "Acid (vial)", "强酸（瓶）", "2d6", "acid", "25 GP",
+    "Throw at a creature or object within 20 ft: Dex save or take 2d6 Acid damage.", "投向 20 尺内的生物或物体：目标须进行敏捷豁免，失败则受到 2d6 强酸伤害。"),
+  thrown("holy-water", "Holy Water (flask)", "圣水（瓶）", "2d8", "radiant", "25 GP",
+    "Throw at a creature within 20 ft: Dex save or a Fiend or Undead takes 2d8 Radiant damage.", "投向 20 尺内的生物：目标须进行敏捷豁免，失败则邪魔或不死生物受到 2d8 光耀伤害。"),
+  {
+    id: "item:antitoxin",
+    type: "item",
+    itemType: "gear",
+    name: t("Antitoxin", "抗毒剂"),
+    text: t("Bonus Action: drink it to gain Advantage on saves against the Poisoned condition for 1 hour.", "附赠动作饮用：1 小时内对抗中毒状态的豁免具有优势。"),
+    cost: "50 GP",
+    tags: ["gear", "consumable"],
+    consumable: true,
+    use: { activation: "bonus", duration: t("1 hour", "1 小时") },
+  },
+];
+
+function potion(id: string, en: string, zh: string, heal: string, cost: string, rarity: string): ItemEntity {
+  return {
+    id: `item:${id}`,
+    type: "item",
+    itemType: "gear",
+    name: t(en, zh),
+    text: t(`Bonus Action: drink it (or feed it to someone within 5 ft) to regain ${heal} HP.`, `附赠动作：饮用（或喂给 5 尺内的生物）以恢复 ${heal} 点生命值。`),
+    cost,
+    weight: 0.5,
+    tags: ["gear", "consumable", "potion", "magic", `rarity:${rarity}`],
+    consumable: true,
+    use: { activation: "bonus", range: t("Self / 5 ft", "自身 / 5 尺"), heal: { dice: heal } },
+  };
+}
+
+function thrown(id: string, en: string, zh: string, dice: string, type: string, cost: string, textEn: string, textZh: string): ItemEntity {
+  return {
+    id: `item:${id}`,
+    type: "item",
+    itemType: "gear",
+    name: t(en, zh),
+    text: t(textEn, textZh),
+    cost,
+    weight: 1,
+    tags: ["gear", "consumable"],
+    consumable: true,
+    use: { activation: "action", range: t("20 ft", "20 尺"), save: { ability: "dex", dc: THROWN_DC, onSave: "none" }, damage: [{ dice, type }] },
+  };
+}
+
 const MASTERY: Record<string, [string, string, string, string]> = {
   cleave: ["Cleave", "劈砍", "On a melee hit, make one extra attack against a second creature within 5 ft of the first (once per turn); don't add your ability modifier to its damage unless negative.", "近战命中后，可对首个目标 5 尺内的另一生物再攻击一次（每回合一次）；该次伤害不加属性调整值（负值除外）。"],
   graze: ["Graze", "擦伤", "If your attack misses, the target still takes damage equal to your ability modifier.", "攻击未命中时，目标仍受到等同于你所用属性调整值的伤害。"],
@@ -124,6 +180,7 @@ export const items: Entity[] = [
     armor: { category, ac, dexCap: category === "medium" ? 2 : undefined, ...extra },
   })),
   ...GEAR.map(([id, en, zh, itemType]): Entity => ({ id: `item:${id}`, type: "item", itemType: itemType ?? "gear", name: t(en, zh), tags: [itemType ?? "gear"] })),
+  ...CONSUMABLES,
   ...Object.entries(MASTERY).map(([id, [en, zh, ten, tzh]]): Entity => ({
     id: `mastery:${id}`,
     type: "effect",

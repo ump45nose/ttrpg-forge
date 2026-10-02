@@ -3,7 +3,8 @@ import { host, useHostRevision } from "./host";
 /**
  * Renders every enabled plugin's contribution to a named slot, in order.
  * Slots used by the shell: "app.page" (routed at /p/<id>), "app.overlay" (always mounted),
- * "settings.section", "library.action", "builder.toolbar".
+ * "settings.section", "library.action", "builder.toolbar",
+ * "sheet.panel" (play sheet side column; gets character, sheet and play state).
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function Slot({ name, ...props }: { name: string } & Record<string, any>) {

@@ -204,7 +204,9 @@ export type Activation = "action" | "bonus" | "reaction" | "free" | "special" | 
 export type Cost =
   | { resource: string; amount?: Formula }
   | { slot: number }
-  | { economy: "action" | "bonus" | "reaction" };
+  | { economy: "action" | "bonus" | "reaction" }
+  /** Uses up this many of an inventory stack (key) — consumables. Added by the engine, not authored. */
+  | { item: string; amount?: number };
 
 export interface DamagePart {
   /** Roll template, may contain @refs: "1d8 + @ability.str.mod". */
@@ -372,6 +374,10 @@ export interface ItemEntity extends EntityBase {
   weight?: number;
   /** Pack contents. */
   contents?: { item: string; qty?: number }[];
+  /** Using it uses one up (potions, ammunition-like gear). */
+  consumable?: boolean;
+  /** What using the item does: drink, throw, apply... Usable from the backpack, equipped or not. */
+  use?: Omit<ActionDef, "id" | "name">;
 }
 
 export interface ConditionEntity extends EntityBase {
@@ -488,6 +494,11 @@ export interface Build {
   inventory: InventoryEntry[];
   /** Item instance key -> equipped override. */
   equipped: Record<string, boolean>;
+  /**
+   * Item instance key -> change in quantity (consumed, found, dropped). Written by
+   * the play log (see `foldInventory`), never stored on a saved build.
+   */
+  itemDelta?: Record<string, number>;
 }
 
 export interface CharacterMeta {
@@ -537,6 +548,15 @@ export type PlayEvent =
   | Ev<"slot.restore", { level: number }>
   | Ev<"hitdie.spend", { die: number; roll?: number }>
   | Ev<"economy.use", { slot: "action" | "bonus" | "reaction" }>
+  /** Feet moved this turn (negative to take back). */
+  | Ev<"move", { feet: number }>
+  /** Inventory during play; folded onto the build before deriving (see `foldInventory`). */
+  | Ev<"item.add", { key: string; item: string; qty: number; equipped?: boolean }>
+  | Ev<"item.qty", { key: string; delta: number }>
+  | Ev<"item.remove", { key: string }>
+  /** `unequip`: stacks taken off in the same move (old armor when donning new). */
+  | Ev<"item.equip", { key: string; equipped: boolean; unequip?: string[] }>
+  | Ev<"currency", { delta: Currency }>
   | Ev<
       "action.use",
       {
@@ -546,6 +566,8 @@ export type PlayEvent =
         /** Effects started by this use (self buffs, concentration spells). */
         effects?: EffectStart[];
         concentration?: boolean;
+        /** The action grants extra movement this turn (Dash, Cunning Action...). */
+        dash?: boolean;
         note?: string;
       }
     >

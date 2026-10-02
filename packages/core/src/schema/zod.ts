@@ -19,6 +19,7 @@ const cost = z.union([
   z.object({ resource: z.string(), amount: formula.optional() }),
   z.object({ slot: z.number().int().min(1).max(9) }),
   z.object({ economy: z.enum(["action", "bonus", "reaction"]) }),
+  z.object({ item: z.string(), amount: z.number().optional() }),
 ]);
 
 const applyEffect = z.object({
@@ -158,6 +159,8 @@ export const EntitySchema = z.discriminatedUnion("type", [
     cost: z.string().optional(),
     weight: z.number().optional(),
     contents: z.array(z.object({ item: z.string(), qty: z.number().optional() })).optional(),
+    consumable: z.boolean().optional(),
+    use: z.object({ activation, ...actionBody }).optional(),
   }),
   z.object({ ...entityBase, type: z.enum(["condition", "effect"]), icon: z.string().optional() }),
   z.object({ ...entityBase, type: z.literal("rule"), category: z.string().optional() }),

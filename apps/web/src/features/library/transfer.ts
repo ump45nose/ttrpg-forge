@@ -28,6 +28,8 @@ export function exportCharacter(c: Character, engine: Engine) {
     ...sheet.items.map((i) => i.item),
     ...sheet.spells.map((s) => s.spellId),
     ...c.build.inventory.map((i) => i.item),
+    // items picked up during play
+    ...c.play.flatMap((e) => (e.type === "item.add" ? [e.item] : [])),
   ];
   const homebrew = localEntitiesFor(engine, ids);
   const bundle: CharacterBundle = homebrew.length ? { ...c, homebrew } : c;

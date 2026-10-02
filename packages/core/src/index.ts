@@ -13,5 +13,6 @@ export * from "./derive/stats";
 export * from "./derive/sheet";
 export * from "./diff";
 export * from "./play";
+export * from "./play/inventory";
 export * from "./engine";
 export * from "./glossary";

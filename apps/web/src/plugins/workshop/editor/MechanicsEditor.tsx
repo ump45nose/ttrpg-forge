@@ -381,7 +381,7 @@ function ResourceForm({ g, onChange }: { g: ResourceGrant; onChange: (g: Grant) 
 
 /* ───────────── action ───────────── */
 
-function ActionForm({ g, onChange, resources }: { g: ActionGrant; onChange: (g: Grant) => void; resources: ResourceGrant[] }) {
+export function ActionForm({ g, onChange, resources, bare = false }: { g: ActionGrant; onChange: (g: Grant) => void; resources: ResourceGrant[]; bare?: boolean }) {
   const t = useT();
   const n = useNames();
   const a = g.action;
@@ -390,10 +390,12 @@ function ActionForm({ g, onChange, resources }: { g: ActionGrant; onChange: (g: 
   const dmg = a.damage?.[0];
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-[1fr_auto] gap-2">
-        <Field label={t("homebrew.name")}>
-          <LocalizedInput value={a.name} onChange={(name) => set({ name: name ?? L("?") })} />
-        </Field>
+      <div className={bare ? "" : "grid grid-cols-[1fr_auto] gap-2"}>
+        {!bare && (
+          <Field label={t("homebrew.name")}>
+            <LocalizedInput value={a.name} onChange={(name) => set({ name: name ?? L("?") })} />
+          </Field>
+        )}
         <Field label={t("workshop.activation")}>
           <Select value={a.activation} onChange={(activation) => set({ activation })} options={(["action", "bonus", "reaction", "free", "special", "minute", "hour"] as Activation[]).map((x) => ({ id: x, label: n.activation(x) }))} />
         </Field>

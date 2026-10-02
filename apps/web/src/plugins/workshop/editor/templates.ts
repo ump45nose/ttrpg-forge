@@ -200,6 +200,10 @@ export interface ItemForm {
   attunement: boolean;
   /** Mechanics that apply while the item is equipped. */
   grants: Grant[];
+  /** Using it uses one up. */
+  consumable: boolean;
+  /** What using it does (drink, throw, read...); undefined = not usable. */
+  use?: ItemEntity["use"];
 }
 
 export function itemToForm(e: ItemEntity | undefined, locale: "en" | "zh"): ItemForm {
@@ -224,6 +228,8 @@ export function itemToForm(e: ItemEntity | undefined, locale: "en" | "zh"): Item
     rarity: tags.find((t) => t.startsWith("rarity:"))?.slice(7) ?? "",
     attunement: tags.includes("attunement"),
     grants: e?.grants ?? [],
+    consumable: !!e?.consumable,
+    use: e?.use,
   };
 }
 
@@ -240,8 +246,10 @@ export function formToItem(f: ItemForm, base?: ItemEntity, locale: "en" | "zh" =
     text: keepL(base?.text, locale, f.text),
     weight: f.weight || undefined,
     cost: f.cost || undefined,
-    tags,
+    tags: f.consumable ? [...tags, "consumable"] : tags.filter((x) => x !== "consumable"),
     grants: f.grants.length ? f.grants : undefined,
+    consumable: f.consumable || undefined,
+    use: f.use,
   } as ItemEntity;
   if (f.itemType === "weapon")
     out.weapon = {

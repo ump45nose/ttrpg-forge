@@ -71,7 +71,7 @@ export const monk: Entity = {
         resource("focus", t("Focus Points", "功力"), L, SHORT_ALL),
         focus("flurry-of-blows", "Flurry of Blows", "疾风连击", "bonus", "Make two Unarmed Strikes.", "进行两次徒手打击。", { cost: [{ resource: "focus" }] }),
         focus("patient-defense", "Patient Defense", "坚强防御", "bonus", "Disengage; spend 1 Focus Point to also Dodge.", "执行撤离动作；消耗 1 功力可同时执行闪避动作。"),
-        focus("step-of-the-wind", "Step of the Wind", "疾步如风", "bonus", "Dash; spend 1 Focus Point to also Disengage and double your jump distance.", "执行疾走动作；消耗 1 功力可同时撤离，且跳跃距离翻倍。"),
+        focus("step-of-the-wind", "Step of the Wind", "疾步如风", "bonus", "Dash; spend 1 Focus Point to also Disengage and double your jump distance.", "执行疾走动作；消耗 1 功力可同时撤离，且跳跃距离翻倍。", { tags: ["dash"] }),
       ]),
       feature("unarmored-movement", t("Unarmored Movement", "无甲移动"), t("Your Speed increases while you wear no armor and wield no Shield.", "未着护甲且未持盾时，速度提升。"), [
         mod("speed.walk", table(L, [0, 10, 10, 10, 10, 15, 15, 15, 15, 20, 20, 20, 20, 25, 25, 25, 25, 30, 30, 30]), { when: UNARMORED, label: t("Unarmored Movement", "无甲移动") }),

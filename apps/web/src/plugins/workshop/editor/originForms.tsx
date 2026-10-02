@@ -1,4 +1,4 @@
-import { ABILITIES, type BackgroundEntity, type Entity, type ItemEntity, type SpeciesEntity } from "@forge/core";
+import { ABILITIES, type ActionGrant, type BackgroundEntity, type Entity, type ItemEntity, type SpeciesEntity } from "@forge/core";
 import { Plus, Trash2 } from "lucide-react";
 import { useT } from "../../../app/i18n";
 import { useEngine } from "../../../app/packs";
@@ -7,7 +7,7 @@ import { Button } from "../../../ui/Button";
 import { Input, Textarea } from "../../../ui/Field";
 import { Tabs } from "../../../ui/Tabs";
 import { Field, MultiPick, Select } from "./fields";
-import { MechanicsEditor } from "./MechanicsEditor";
+import { ActionForm, MechanicsEditor } from "./MechanicsEditor";
 import { DAMAGE_TYPES, EntityTags, ExtraNote, KitEditor, NameFields, useForm, useSkillOptions } from "./shared";
 import { backgroundToForm, formToBackground, formToItem, formToSpecies, itemToForm, MASTERIES, RARITIES, speciesToForm, WEAPON_PROPS, type BackgroundForm, type ItemForm, type SpeciesForm } from "./templates";
 
@@ -176,6 +176,7 @@ export function ItemFormView({ e, locale, onChange }: { e: ItemEntity; locale: "
       <Field label={t("homebrew.notes")} hint={t("common.optional")}>
         <Textarea rows={3} value={f.text} onChange={(ev) => set({ text: ev.target.value })} />
       </Field>
+      <UseEditor f={f} set={set} />
       <div className="space-y-3 rounded-2xl border border-magic/25 bg-magic/5 p-3">
         <div className="text-xs font-semibold tracking-wide text-magic uppercase">{t("workshop.magicItem")}</div>
         <div className="grid grid-cols-[1fr_auto] items-end gap-3">
@@ -188,6 +189,41 @@ export function ItemFormView({ e, locale, onChange }: { e: ItemEntity; locale: "
           <MechanicsEditor grants={f.grants} onChange={(grants) => set({ grants })} />
         </Field>
       </div>
+    </div>
+  );
+}
+
+/** Usable items: potions, bombs, scrolls of a homebrew kind. Shown with a "Use" button on the sheet. */
+function UseEditor({ f, set }: { f: ItemForm; set: (p: Partial<ItemForm>) => void }) {
+  const t = useT();
+  const usable = !!f.use;
+  const g: ActionGrant = { type: "action", action: { id: "use", name: f.name || "?", ...(f.use ?? { activation: "bonus" }) } };
+  return (
+    <div className="space-y-3 rounded-2xl border border-warn/25 bg-warn/5 p-3">
+      <div className="flex items-center justify-between gap-2">
+        <div className="text-xs font-semibold tracking-wide text-warn uppercase">{t("workshop.useTitle")}</div>
+        <MultiPick
+          options={[
+            { id: "use", label: t("workshop.usable") },
+            { id: "consumable", label: t("workshop.consumable") },
+          ]}
+          value={[...(usable ? ["use"] : []), ...(f.consumable ? ["consumable"] : [])]}
+          onChange={(v) => set({ use: v.includes("use") ? (f.use ?? { activation: "bonus" }) : undefined, consumable: v.includes("consumable") })}
+        />
+      </div>
+      <p className="text-xs text-ink-3">{t("workshop.useHint")}</p>
+      {usable && (
+        <ActionForm
+          bare
+          g={g}
+          resources={[]}
+          onChange={(next) => {
+            if (next.type !== "action") return;
+            const { id: _id, name: _name, ...use } = next.action;
+            set({ use });
+          }}
+        />
+      )}
     </div>
   );
 }

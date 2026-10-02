@@ -292,6 +292,11 @@ export function collect(reg: PackRegistry, build: Build, activeEffects: string[]
   for (const entry of build.inventory) {
     res.items.push({ key: entry.key, item: entry.item, qty: entry.qty, equipped: build.equipped[entry.key] ?? entry.equipped ?? false });
   }
+  // quantities changed during play (consumed, found, dropped); empty stacks are gone
+  if (build.itemDelta) {
+    const delta = build.itemDelta;
+    res.items = res.items.map((it) => (it.key in delta ? { ...it, qty: it.qty + delta[it.key]! } : it)).filter((it) => it.qty > 0);
+  }
   // equipped items contribute their own grants (magic items, shields with properties...)
   for (const it of res.items) {
     const e = reg.getOf("item", it.item);

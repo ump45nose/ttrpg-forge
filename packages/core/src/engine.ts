@@ -6,6 +6,7 @@ import { derive, type Sheet } from "./derive/sheet";
 import { preview, type Preview } from "./diff";
 import { PackRegistry } from "./pack/registry";
 import { activeEffectIds, replay, type PlayState } from "./play";
+import { foldInventory } from "./play/inventory";
 import type { Build, Character, RulePack } from "./schema/types";
 
 /**
@@ -26,10 +27,11 @@ export class Engine {
   }
 
   /** Table view: active effects from play feed back into the sheet. */
-  play(character: Character): { sheet: Sheet; state: PlayState; issues: Issue[] } {
-    const sheet = derive(this.reg, character.build, { activeEffects: activeEffectIds(character.play) });
+  play(character: Character): { sheet: Sheet; state: PlayState; issues: Issue[]; build: Build } {
+    const build = foldInventory(character.build, character.play);
+    const sheet = derive(this.reg, build, { activeEffects: activeEffectIds(character.play) });
     const state = replay(character.play, sheet);
-    return { sheet, state, issues: validate(this.reg, character.build, sheet) };
+    return { sheet, state, issues: validate(this.reg, build, sheet), build };
   }
 
   preview(build: Build, current: Sheet, ops: BuildOp[], currentIssues?: Issue[]): Preview {

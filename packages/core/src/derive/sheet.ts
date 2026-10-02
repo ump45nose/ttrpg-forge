@@ -118,6 +118,8 @@ export interface ResolvedAction {
   applies?: ApplyEffect[];
   spell?: { id: string; level: number; upcastDamage?: string; upcastHeal?: string; ritual?: boolean };
   weapon?: { itemKey: string; properties: string[]; mastery?: string; versatile?: string; range?: string; equipped: boolean };
+  /** Usable inventory item behind the action. */
+  item?: { key: string; entityId: string; qty: number; consumable: boolean };
   /** Static availability (formula `when`); resource availability is a play-state concern. */
   available: boolean;
 }
@@ -478,7 +480,7 @@ export function derive(reg: PackRegistry, build: Build, opts: DeriveOptions = {}
   };
   const economyCost = (a: Activation): Cost[] => (a === "action" || a === "bonus" || a === "reaction" ? [{ economy: a }] : []);
   const resolveCosts = (costs: Cost[] | undefined): Cost[] =>
-    (costs ?? []).map((c) => ("resource" in c ? { resource: c.resource, amount: stats.eval(c.amount ?? 1) } : c));
+    (costs ?? []).map((c): Cost => ("resource" in c ? { resource: c.resource, amount: stats.eval(c.amount ?? 1) } : c));
 
   for (const c of col.grants) {
     if (c.grant.type !== "action") continue;
@@ -586,6 +588,35 @@ export function derive(reg: PackRegistry, build: Build, opts: DeriveOptions = {}
         ritual: sp.ritual,
       },
       available: true,
+    });
+  }
+
+  // usable items (potions, alchemist's fire...): one action per stack, equipped or not
+  for (const it of items) {
+    const e = it.entity;
+    const u = e?.use;
+    if (!e || !u) continue;
+    actions.push({
+      id: `item:${it.key}`,
+      name: e.name,
+      text: resolveText(u.text ?? e.text),
+      activation: u.activation,
+      trigger: u.trigger,
+      range: u.range,
+      target: u.target,
+      duration: u.duration,
+      concentration: u.concentration,
+      category: "item",
+      tags: [...(u.tags ?? []), ...(e.consumable ? ["consumable"] : [])],
+      source: { path: `item:${it.key}`, kind: "item", name: e.name, entityId: e.id },
+      attack: u.attack ? { bonus: stats.eval(u.attack.bonus), kind: u.attack.kind } : undefined,
+      save: u.save ? { ability: u.save.ability, dc: stats.eval(u.save.dc), onSave: u.save.onSave } : undefined,
+      damage: u.damage?.map((d) => ({ dice: resolveDice(d.dice), type: d.type })),
+      heal: u.heal ? { dice: resolveDice(u.heal.dice) } : undefined,
+      costs: [...economyCost(u.activation), ...resolveCosts(u.cost), ...(e.consumable ? [{ item: it.key, amount: 1 }] : [])],
+      applies: u.applies,
+      item: { key: it.key, entityId: e.id, qty: it.qty, consumable: !!e.consumable },
+      available: u.when ? !!stats.eval(u.when) : true,
     });
   }
 
