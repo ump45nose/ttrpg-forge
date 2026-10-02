@@ -69,6 +69,7 @@ export interface SpellInstance {
   source: SourceRef;
   classId?: string;
   ability?: Ability;
+  abilityFrom?: string;
   alwaysPrepared?: boolean;
   free?: { max: Formula; recovery: Recovery[] };
 }
@@ -140,6 +141,7 @@ export function collect(reg: PackRegistry, build: Build, activeEffects: string[]
     const itemCounts = new Map<string, number>();
     for (const g of grants) {
       if ((g.type === "feature" || g.type === "spell") && g.minLevel && build.levels.length < g.minLevel) continue;
+      if ((g.type === "feature" || g.type === "spell") && g.classLevel && (levels.get(source.classId ?? "") ?? 0) < g.classLevel) continue;
       res.grants.push({ grant: g, source });
       switch (g.type) {
         case "feature":
@@ -164,6 +166,7 @@ export function collect(reg: PackRegistry, build: Build, activeEffects: string[]
             source,
             classId: classOfPath(source.path),
             ability: g.ability,
+            abilityFrom: g.abilityFrom,
             alwaysPrepared: g.alwaysPrepared ?? true,
             free: g.free,
           });

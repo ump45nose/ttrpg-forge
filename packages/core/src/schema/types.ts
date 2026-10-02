@@ -75,6 +75,8 @@ export interface FeatureGrant {
   tags?: string[];
   /** Character level at which this feature switches on (species traits like Draconic Flight). */
   minLevel?: number;
+  /** Level in the granting class at which this switches on (options chosen early that grow later). */
+  classLevel?: number;
 }
 
 export interface ChoiceOption {
@@ -93,6 +95,8 @@ export type ChoiceSource =
       ids?: string[];
       /** Candidate must carry every tag listed. */
       tags?: string[];
+      /** Candidate must carry at least one of these (spells from several class lists). */
+      anyTags?: string[];
       /** Spell choices: candidates' level must be within these bounds. */
       minLevel?: Formula;
       maxLevel?: Formula;
@@ -152,8 +156,15 @@ export interface SpellGrant {
   spell: string;
   /** Character level required (species/lineage spells at 3rd and 5th level). */
   minLevel?: number;
+  /** Level in the granting class required (Circle of the Land spells at druid level 5, 7...). */
+  classLevel?: number;
   /** Casting ability override (feats, species spells). */
   ability?: Ability;
+  /**
+   * Take the casting ability from a tag `spell-ability:<scope>:<ability>` granted elsewhere
+   * (e.g. a lineage's "choose Int, Wis or Cha"). Ignored when `ability` is set.
+   */
+  abilityFrom?: string;
   alwaysPrepared?: boolean;
   /** Free casts without a slot, e.g. "once per long rest". */
   free?: { max: Formula; recovery: Recovery[] };

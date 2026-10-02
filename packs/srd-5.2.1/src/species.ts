@@ -1,14 +1,49 @@
 import type { ChoiceOption, Entity, Grant, Recovery } from "@forge/core";
 import { action, feature, LONG_ALL, mod, resource, t, tag } from "./helpers";
+export { DRAGONS, dragonOption, GIANTS, giantOption, lineageChoice };
 
 const PB_LONG: Recovery[] = LONG_ALL;
 const darkvision = (ft: number): Grant => mod("sense.darkvision", ft, { op: "atLeast", label: t("Darkvision", "黑暗视觉") });
-const freeSpell = (spell: string, minLevel?: number): Grant => ({
+/** Lineage spells use the Int/Wis/Cha picked in the species' "spell-ability" choice. */
+export const freeSpell = (spell: string, minLevel?: number, abilityFrom = "species"): Grant => ({
   type: "spell",
   spell: `spell:${spell}`,
   alwaysPrepared: true,
   minLevel,
+  abilityFrom,
   ...(minLevel ? { free: { max: 1, recovery: LONG_ALL } } : {}),
+});
+
+export const spellAbilityChoice = (scope = "species"): Grant => ({
+  type: "choice",
+  id: "spell-ability",
+  name: t("Spellcasting Ability", "施法属性"),
+  text: t("Intelligence, Wisdom or Charisma for spells from this species.", "此种族赋予的法术使用智力、感知或魅力之一作为施法属性。"),
+  count: 1,
+  from: {
+    kind: "options",
+    options: (
+      [
+        ["int", "Intelligence", "智力"],
+        ["wis", "Wisdom", "感知"],
+        ["cha", "Charisma", "魅力"],
+      ] as const
+    ).map(([id, en, zh]) => ({ id, name: t(en, zh), grants: [tag(`spell-ability:${scope}:${id}`)] })),
+  },
+});
+
+export const sizeChoice = (): Grant => ({
+  type: "choice",
+  id: "size",
+  name: t("Size", "体型"),
+  count: 1,
+  from: {
+    kind: "options",
+    options: [
+      { id: "medium", name: t("Medium", "中型"), grants: [tag("size:medium")] },
+      { id: "small", name: t("Small", "小型"), grants: [tag("size:small")] },
+    ],
+  },
 });
 
 const DRAGONS: [string, string, string, string, string][] = [
@@ -79,7 +114,7 @@ const TIEFLING: Lineage[] = [
 ];
 
 const GNOME: Lineage[] = [
-  ["forest", "Forest Gnome", "森林侏儒", "Minor Illusion; Speak with Animals (Proficiency Bonus times per Long Rest).", "次级幻象；动物交谈（每次长休可用次数等于熟练加值）。", [freeSpell("minor-illusion"), { type: "spell", spell: "spell:speak-with-animals", alwaysPrepared: true, free: { max: "@prof", recovery: LONG_ALL } }]],
+  ["forest", "Forest Gnome", "森林侏儒", "Minor Illusion; Speak with Animals (Proficiency Bonus times per Long Rest).", "次级幻象；动物交谈（每次长休可用次数等于熟练加值）。", [freeSpell("minor-illusion"), { type: "spell", spell: "spell:speak-with-animals", alwaysPrepared: true, abilityFrom: "species", free: { max: "@prof", recovery: LONG_ALL } }]],
   ["rock", "Rock Gnome", "岩石侏儒", "Mending and Prestidigitation; build Tiny clockwork devices.", "修复术与魔法伎俩；可制造超小型发条装置。", [freeSpell("mending"), freeSpell("prestidigitation")]],
 ];
 
@@ -145,6 +180,7 @@ export const species: Entity[] = [
     grants: [
       darkvision(60),
       lineageChoice("lineage", ["Elven Lineage", "精灵血脉"], ELF),
+      spellAbilityChoice(),
       feature("fey-ancestry", t("Fey Ancestry", "妖精血统"), t("Advantage on saves to avoid or end the Charmed condition.", "对抗或终止魅惑状态的豁免具有优势。")),
       { type: "choice", id: "keen-senses", name: t("Keen Senses", "敏锐感官"), count: 1, from: { kind: "proficiency", profKind: "skill", keys: ["insight", "perception", "survival"] } },
       feature("trance", t("Trance", "冥想"), t("You don't sleep; a Long Rest takes you 4 hours of meditation.", "你无需睡眠，4 小时冥想即可完成长休。")),
@@ -162,6 +198,7 @@ export const species: Entity[] = [
       darkvision(60),
       feature("gnomish-cunning", t("Gnomish Cunning", "侏儒狡黠"), t("Advantage on Intelligence, Wisdom and Charisma saving throws.", "智力、感知与魅力豁免具有优势。")),
       lineageChoice("lineage", ["Gnomish Lineage", "侏儒血脉"], GNOME),
+      spellAbilityChoice(),
     ],
   },
   {
@@ -206,6 +243,7 @@ export const species: Entity[] = [
     speed: 30,
     accent: "#0369a1",
     grants: [
+      sizeChoice(),
       feature("resourceful", t("Resourceful", "足智多谋"), t("You gain Heroic Inspiration whenever you finish a Long Rest.", "每次完成长休时获得英雄激励。"), [
         resource("heroic-inspiration", t("Heroic Inspiration", "英雄激励"), 1, LONG_ALL),
       ]),
@@ -242,7 +280,9 @@ export const species: Entity[] = [
     accent: "#be123c",
     grants: [
       darkvision(60),
+      sizeChoice(),
       lineageChoice("legacy", ["Fiendish Legacy", "邪魔血脉"], TIEFLING),
+      spellAbilityChoice(),
       feature("otherworldly-presence", t("Otherworldly Presence", "异界存在"), t("You know the Thaumaturgy cantrip.", "你掌握奇术戏法。"), [freeSpell("thaumaturgy")]),
     ],
   },

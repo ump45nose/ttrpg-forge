@@ -71,6 +71,7 @@ const GEAR: G[] = [
   ["quiver", "Quiver", "箭袋"],
   ["holy-symbol", "Holy Symbol", "圣徽", "focus"],
   ["arcane-focus", "Arcane Focus", "奥术法器", "focus"],
+  ["druidic-focus", "Druidic Focus", "德鲁伊法器", "focus"],
   ["spellbook", "Spellbook", "法术书"],
   ["robe", "Robe", "长袍"],
   ["travelers-clothes", "Traveler's Clothes", "旅行者服装"],
@@ -84,12 +85,14 @@ const GEAR: G[] = [
   ["priests-pack", "Priest's Pack", "牧师套组", "pack"],
   ["scholars-pack", "Scholar's Pack", "学者套组", "pack"],
   ["explorers-pack", "Explorer's Pack", "探险家套组", "pack"],
+  ["entertainers-pack", "Entertainer's Pack", "艺人套组", "pack"],
   ["thieves-tools", "Thieves' Tools", "盗贼工具", "tool"],
   ["calligraphers-supplies", "Calligrapher's Supplies", "书法家工具", "tool"],
   ["dice-set", "Dice Set", "骰子组", "tool"],
   ["playing-cards", "Playing Card Set", "扑克牌组", "tool"],
   ["herbalism-kit", "Herbalism Kit", "草药工具", "tool"],
   ["smiths-tools", "Smith's Tools", "铁匠工具", "tool"],
+  ["lute", "Lute", "鲁特琴", "tool"],
 ];
 
 const MASTERY: Record<string, [string, string, string, string]> = {

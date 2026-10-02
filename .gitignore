@@ -7,4 +7,6 @@ coverage
 test-results
 playwright-report
 *.tsbuildinfo
-scripts/.cache/
+**/scripts/.cache/
+# 2024 PHB (DND5eChm fan translation of WotC text): generated locally, never committed
+packs/phb-2024/src/generated/

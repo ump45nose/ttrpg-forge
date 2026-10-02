@@ -313,6 +313,7 @@ export function derive(reg: PackRegistry, build: Build, opts: DeriveOptions = {}
 
   // generic attack/damage bonus stats used by weapon & spell actions
   stats.define("crit.bonus", () => 0, L("Natural 20 only", "仅天然 20"));
+  stats.define("martial-arts.die", () => 0);
   for (const s of ["attack.melee", "attack.ranged", "attack.spell", "damage.melee", "damage.ranged", "spell.dc", "spell.attack"]) stats.define(s, () => 0);
 
   // all modifiers from grants
@@ -408,11 +409,13 @@ export function derive(reg: PackRegistry, build: Build, opts: DeriveOptions = {}
       continue;
     }
     const sc = spellcasting.find((s) => s.classId === inst.classId);
+    const chosen = inst.abilityFrom ? ABILITIES.find((a) => tags.has(`spell-ability:${inst.abilityFrom}:${a}`)) : undefined;
     const ability: Ability =
-      inst.ability ?? sc?.ability ?? (["int", "wis", "cha"] as const).reduce((a, b) => (stats.get(`ability.${b}.mod`) > stats.get(`ability.${a}.mod`) ? b : a));
+      inst.ability ?? chosen ?? sc?.ability ?? (["int", "wis", "cha"] as const).reduce((a, b) => (stats.get(`ability.${b}.mod`) > stats.get(`ability.${a}.mod`) ? b : a));
     const mod = stats.get(`ability.${ability}.mod`);
-    const dc = sc && !inst.ability ? sc.dc : 8 + stats.get("prof") + mod + stats.get("spell.dc");
-    const attack = sc && !inst.ability ? sc.attack : stats.get("prof") + mod + stats.get("spell.attack");
+    const own = !!(inst.ability ?? chosen);
+    const dc = sc && !own ? sc.dc : 8 + stats.get("prof") + mod + stats.get("spell.dc");
+    const attack = sc && !own ? sc.attack : stats.get("prof") + mod + stats.get("spell.attack");
     let freeResource: string | undefined;
     if (inst.free) {
       freeResource = `free:${inst.path}`;
@@ -467,6 +470,12 @@ export function derive(reg: PackRegistry, build: Build, opts: DeriveOptions = {}
       return tpl;
     }
   };
+  /** "[[formula]]" inside action text -> its current value (Rage Damage +[[...]]). */
+  const resolveText = (text: LocalizedText | undefined): LocalizedText | undefined => {
+    const one = (x: string) => (x.includes("[[") ? x.replace(/\[\[(.+?)\]\]/g, (_, f: string) => String(Math.floor(stats.eval(f)))) : x);
+    if (text === undefined || typeof text === "string") return text === undefined ? text : one(text);
+    return Object.fromEntries(Object.entries(text).map(([k, v]) => [k, typeof v === "string" ? one(v) : v])) as LocalizedText;
+  };
   const economyCost = (a: Activation): Cost[] => (a === "action" || a === "bonus" || a === "reaction" ? [{ economy: a }] : []);
   const resolveCosts = (costs: Cost[] | undefined): Cost[] =>
     (costs ?? []).map((c) => ("resource" in c ? { resource: c.resource, amount: stats.eval(c.amount ?? 1) } : c));
@@ -477,7 +486,7 @@ export function derive(reg: PackRegistry, build: Build, opts: DeriveOptions = {}
     actions.push({
       id: `${c.source.path}#${a.id}`,
       name: a.name,
-      text: a.text,
+      text: resolveText(a.text),
       activation: a.activation,
       trigger: a.trigger,
       range: a.range,
@@ -504,7 +513,11 @@ export function derive(reg: PackRegistry, build: Build, opts: DeriveOptions = {}
     const finesse = w.properties.includes("finesse");
     const str = stats.get("ability.str.mod");
     const dex = stats.get("ability.dex.mod");
-    const mod = w.kind === "ranged" ? dex : finesse ? Math.max(str, dex) : str;
+    // Martial Arts (monk): simple melee weapons and light martial melee weapons may use Dex and the Martial Arts die
+    const monkWeapon = tags.has("martial-arts") && w.kind === "melee" && (w.category === "simple" || w.properties.includes("light"));
+    const mod = w.kind === "ranged" ? dex : finesse || monkWeapon ? Math.max(str, dex) : str;
+    const maDie = monkWeapon ? stats.get("martial-arts.die") : 0;
+    const die = (d: string) => (maDie && /^1d\d+$/.test(d) && Number(d.slice(2)) < maDie ? `1d${maDie}` : d);
     const proficient = !!(proficiency("weapon", w.category) || proficiency("weapon", it.item));
     const kind = w.kind;
     const bonus = mod + (proficient ? stats.get("prof") : 0) + stats.get(`attack.${kind}`);
@@ -521,9 +534,9 @@ export function derive(reg: PackRegistry, build: Build, opts: DeriveOptions = {}
       tags: ["weapon", ...w.properties],
       source: { path: `item:${it.key}`, kind: "item", name: it.entity!.name, entityId: it.item },
       attack: { bonus, kind },
-      damage: [{ dice: dmg(w.damage), type: w.damageType }],
+      damage: [{ dice: dmg(die(w.damage)), type: w.damageType }],
       costs: [{ economy: "action" }],
-      weapon: { itemKey: it.key, properties: w.properties, mastery, versatile: w.versatile ? dmg(w.versatile) : undefined, range: w.range, equipped: it.equipped },
+      weapon: { itemKey: it.key, properties: w.properties, mastery, versatile: w.versatile ? dmg(die(w.versatile)) : undefined, range: w.range, equipped: it.equipped },
       available: true,
     });
     if (!proficient) {

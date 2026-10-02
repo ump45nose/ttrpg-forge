@@ -1,5 +1,6 @@
 import type { Entity, Grant } from "@forge/core";
 import { CONDITION_TEXT } from "./glossary.generated";
+import { RAGE_DAMAGE } from "./classes/barbarian";
 import { action, mod, t, tag } from "./helpers";
 
 type C = [id: string, en: string, zh: string, textEn: string, textZh: string, icon: string, grants?: Grant[]];
@@ -33,7 +34,17 @@ const EFFECTS: E[] = [
   ["haste", "Haste", "加速术", "+2 AC, doubled Speed, Advantage on Dex saves, one extra limited action.", "AC +2，速度翻倍，敏捷豁免具有优势，额外一个受限动作。", "wind", [mod("ac", 2), tag("haste")]],
   ["aid", "Aid", "援助术", "+5 HP maximum.", "生命值上限 +5。", "heart-pulse", [mod("hp.max", 5)]],
   ["fly", "Fly", "飞行术", "Fly Speed 60 ft.", "飞行速度 60 尺。", "feather", [mod("speed.fly", 60, { op: "atLeast" })]],
-  ["rage", "Rage", "狂暴", "Resistance to physical damage and bonus melee damage.", "物理伤害抗性，近战伤害加值。", "flame", [tag("raging")]],
+  ["rage", "Rage", "狂暴", "Resistance to Bludgeoning, Piercing and Slashing; Rage Damage on Strength attacks; Advantage on Strength checks and saves.", "钝击、穿刺、挥砍伤害抗性；力量攻击获得狂暴伤害加值；力量检定与豁免具有优势。", "flame", [
+    tag("raging"),
+    tag("resist:bludgeoning"),
+    tag("resist:piercing"),
+    tag("resist:slashing"),
+    tag("adv:check.str"),
+    tag("adv:save.str"),
+    mod("damage.melee", RAGE_DAMAGE, { label: t("Rage Damage", "狂暴伤害") }),
+  ]],
+  ["sacred-weapon", "Sacred Weapon", "圣洁武器", "Add your Cha modifier (min +1) to attack rolls with the weapon; it can deal Radiant damage and sheds light.", "该武器的攻击检定加上魅力调整值（至少 +1），可造成光耀伤害并发光。", "sun", [mod("attack.melee", "max(1, @ability.cha.mod)", { label: t("Sacred Weapon", "圣洁武器") })]],
+  ["innate-sorcery", "Innate Sorcery", "先天术法", "+1 Sorcerer spell save DC and Advantage on Sorcerer spell attack rolls for 1 minute.", "1 分钟内术士法术豁免 DC +1，术士法术攻击检定具有优势。", "sparkles", [mod("spell.dc", 1, { label: t("Innate Sorcery", "先天术法") }), tag("adv:attack.spell")]],
   ["draconic-flight", "Draconic Flight", "龙翼飞行", "Fly Speed equal to your Speed for 10 minutes.", "10 分钟内获得等同于速度的飞行速度。", "feather", [mod("speed.fly", "@speed.walk", { op: "atLeast" })]],
   ["large-form", "Large Form", "巨型形态", "Large size, Advantage on Str checks, +10 ft Speed for 10 minutes.", "10 分钟内体型变为大型，力量检定具有优势，速度 +10 尺。", "maximize", [mod("speed.walk", 10)]],
   ["stonecunning", "Stonecunning", "石工知识", "Tremorsense 60 ft for 10 minutes while on stone.", "站在石面上时，10 分钟内获得 60 尺震颤感知。", "radar", [tag("tremorsense")]],

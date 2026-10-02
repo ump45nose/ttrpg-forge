@@ -1,0 +1,11 @@
+{
+  "name": "@forge/pack-phb2024",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "generate": "python3 scripts/build_phb.py" },
+  "dependencies": { "@forge/core": "workspace:*", "@forge/pack-srd52": "workspace:*" }
+}

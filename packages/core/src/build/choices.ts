@@ -41,6 +41,7 @@ export function choiceCandidates(reg: PackRegistry, sheet: Sheet, ch: ChoiceView
     case "entity": {
       let pool: Entity[] = from.ids ? from.ids.map((id) => reg.get(id)).filter((e): e is Entity => !!e) : reg.all(from.entityType);
       if (from.tags?.length) pool = pool.filter((e) => from.tags!.every((t) => e.tags?.includes(t)));
+      if (from.anyTags?.length) pool = pool.filter((e) => from.anyTags!.some((t) => e.tags?.includes(t)));
       const minL = from.minLevel !== undefined ? sheet.stats.eval(from.minLevel) : undefined;
       const maxL = from.maxLevel !== undefined ? sheet.stats.eval(from.maxLevel) : undefined;
       if (from.entityType === "spell") {

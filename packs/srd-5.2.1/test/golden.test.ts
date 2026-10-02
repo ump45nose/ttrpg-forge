@@ -41,6 +41,7 @@ function rogue(): Build {
     { op: "setLevel", level: 5 },
     ...choose({
       "species:elf/lineage": ["wood-elf"],
+      "species:elf/spell-ability": ["wis"],
       "species:elf/keen-senses": ["perception"],
       "global/languages": ["elvish", "halfling"],
       "background:criminal/ability": ["dex:2", "con:1"],
@@ -67,6 +68,7 @@ function cleric(): Build {
     ...choose({
       "global/languages": ["elvish", "dwarvish"],
       "species:human/skillful": ["perception"],
+      "species:human/size": ["medium"],
       "species:human/versatile": ["feat:alert"],
       "background:acolyte/ability": ["wis:2", "cha:1"],
       "background:acolyte/equipment": ["b"],
@@ -101,6 +103,8 @@ function wizard(): Build {
     { op: "setLevel", level: 5 },
     ...choose({
       "species:tiefling/legacy": ["infernal"],
+      "species:tiefling/size": ["medium"],
+      "species:tiefling/spell-ability": ["int"],
       "global/languages": ["draconic", "elvish"],
       "background:sage/ability": ["int:2", "con:1"],
       "background:sage/equipment": ["b"],
@@ -270,7 +274,7 @@ describe("golden: L5 tiefling evoker wizard", () => {
     const book = s.spells.filter((x) => x.classId === "class:wizard" && x.level > 0);
     expect(book).toHaveLength(6 + 2 + 2 + 2 + 2 + 3);
   });
-  it("species fire bolt uses the best casting stat and scales", () => {
+  it("species fire bolt uses the chosen casting stat and scales", () => {
     const fb = en(s, "Fire Bolt")!;
     expect(fb.attack?.bonus).toBe(7);
     expect(fb.damage?.[0]?.dice).toBe("2d10");

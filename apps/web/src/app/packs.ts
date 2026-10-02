@@ -1,3 +1,4 @@
+import { phb2024 } from "@forge/pack-phb2024";
 import { srd52 } from "@forge/pack-srd52";
 import { Engine, type Entity, type RulePack } from "@forge/core";
 import { useMemo } from "react";
@@ -76,7 +77,8 @@ export const usePacks = create<PackStore>()((set, get) => ({
   },
 }));
 
-export const BASE_PACKS: RulePack[] = [srd52];
+/** SRD always; the 2024 PHB only when its data was generated locally (see packs/phb-2024). */
+export const BASE_PACKS: RulePack[] = [srd52, ...(phb2024 ? [phb2024] : [])];
 
 /** One engine over: base SRD → plugin packs → user packs in order → local homebrew. */
 export function useEngine(): Engine {

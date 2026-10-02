@@ -83,7 +83,7 @@ export const featChoice = (id: string, tags: string[], name = t("Feat", "专长"
   from: { kind: "entity", entityType: "feat", tags },
 });
 
-export const spellChoice = (id: string, name: LocalizedText, count: number, list: string, minLevel: number, maxLevel: number, extraTags: string[] = []): Grant => ({
+export const spellChoice = (id: string, name: LocalizedText, count: Formula, list: string, minLevel: Formula, maxLevel: Formula, extraTags: string[] = []): Grant => ({
   type: "choice",
   id,
   name,

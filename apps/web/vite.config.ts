@@ -29,6 +29,8 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,svg,png,woff2}"],
         // CJK display font is split into many unicode-range chunks: cache lazily instead of precaching all
         globIgnores: ["**/noto-serif-sc-*"],
+        // the bundled rule packs (SRD + locally generated PHB) must be available offline at the table
+        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         runtimeCaching: [
           {
             urlPattern: ({ url }) => url.pathname.includes("noto-serif-sc-"),

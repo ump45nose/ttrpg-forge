@@ -109,9 +109,12 @@ export function SettingsPage() {
               badge={
                 <div className="flex items-center gap-1">
                   <Chip tone="accent">{t("settings.builtin")}</Chip>
-                  <Button variant="ghost" size="icon-sm" onClick={() => downloadJson(p, `${p.id}.json`)} aria-label={t("common.export")}>
-                    <Download size={15} />
-                  </Button>
+                  {/* the PHB translation is personal-use only: no one-click export to pass around */}
+                  {p.id !== "phb-2024" && (
+                    <Button variant="ghost" size="icon-sm" onClick={() => downloadJson(p, `${p.id}.json`)} aria-label={t("common.export")}>
+                      <Download size={15} />
+                    </Button>
+                  )}
                 </div>
               }
             />

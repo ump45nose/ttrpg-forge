@@ -32,6 +32,9 @@ importers:
       '@forge/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@forge/pack-phb2024':
+        specifier: workspace:*
+        version: link:../../packs/phb-2024
       '@forge/pack-srd52':
         specifier: workspace:*
         version: link:../../packs/srd-5.2.1
@@ -114,6 +117,15 @@ importers:
       '@forge/core':
         specifier: workspace:*
         version: link:../core
+
+  packs/phb-2024:
+    dependencies:
+      '@forge/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@forge/pack-srd52':
+        specifier: workspace:*
+        version: link:../srd-5.2.1
 
   packs/srd-5.2.1:
     dependencies:
