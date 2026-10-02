@@ -37,6 +37,7 @@ export const zh: Messages = {
     details: { name: "名字", pronouns: "代词", alignment: "阵营", appearance: "外貌", backstory: "背景故事", player: "玩家" },
     review: { issues: "需要处理", ready: "准备就绪", enter: "进入跑团", warnings: "提示" },
     levelUp: "升级", levelDown: "移除一级", customize: "自定义", why: "这个数值怎么来的？",
+    recommended: "推荐分配", swapHint: "点击两项属性即可交换数值。",
   },
   sheet: {
     tabs: { actions: "动作", spells: "法术", resources: "资源", features: "特性", inventory: "装备", log: "日志", skills: "技能" },
@@ -64,6 +65,7 @@ export const zh: Messages = {
     packs: "规则包", importPack: "导入规则包（JSON）", data: "数据", exportAll: "导出全部数据", about: "关于", attribution: "版权声明",
     builtin: "内置", storageHint: "将应用添加到主屏幕，浏览器会更可靠地保留你的数据。",
   },
+  alignment: { LG: "守序善良", NG: "中立善良", CG: "混乱善良", LN: "守序中立", N: "绝对中立", CN: "混乱中立", LE: "守序邪恶", NE: "中立邪恶", CE: "混乱邪恶" },
   activation: { action: "动作", bonus: "附赠动作", reaction: "反应", free: "自由", special: "特殊", minute: "分钟", hour: "小时" },
   ability: { str: "力量", dex: "敏捷", con: "体质", int: "智力", wis: "感知", cha: "魅力" },
   abbr: { str: "力", dex: "敏", con: "体", int: "智", wis: "感", cha: "魅" },

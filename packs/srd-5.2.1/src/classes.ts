@@ -46,7 +46,7 @@ const fighter: Entity = {
   hitDie: 10,
   primaryAbility: ["str", "dex"],
   subclassLevel: 3,
-  accent: "#b45309",
+  accent: "#d9632b",
   tags: ["martial"],
   starting: [
     ...prof("save", "str", "con"),
@@ -120,7 +120,7 @@ const rogue: Entity = {
   hitDie: 8,
   primaryAbility: ["dex"],
   subclassLevel: 3,
-  accent: "#334155",
+  accent: "#5f8fb0",
   tags: ["martial"],
   starting: [
     ...prof("save", "dex", "int"),
@@ -218,7 +218,7 @@ const cleric: Entity = {
   hitDie: 8,
   primaryAbility: ["wis"],
   subclassLevel: 3,
-  accent: "#ca8a04",
+  accent: "#e0b43c",
   tags: ["caster"],
   starting: [
     ...prof("save", "wis", "cha"),
@@ -356,7 +356,7 @@ const wizard: Entity = {
   hitDie: 6,
   primaryAbility: ["int"],
   subclassLevel: 3,
-  accent: "#4338ca",
+  accent: "#7b6cf6",
   tags: ["caster"],
   starting: [
     ...prof("save", "int", "wis"),

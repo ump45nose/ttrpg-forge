@@ -216,6 +216,11 @@ const NAMES = {
   zh: ["莉拉·烬落", "索林·灰须", "瑟拉芬·谷影", "凯尔·暮语", "米拉·棘木", "布拉姆·铁歌", "伊索德·星陨", "芬·疾步"],
 };
 
+export function randomName(locale: "en" | "zh" = useSettings.getState().locale) {
+  const list = NAMES[locale];
+  return list[Math.floor(Math.random() * list.length)]!;
+}
+
 function CreateSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const t = useT();
   const engine = useEngine();
@@ -250,7 +255,7 @@ function CreateSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (o: 
         className="flex gap-2 pt-1"
       >
         <Input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder={t("library.namePlaceholder")} />
-        <Button type="button" variant="secondary" size="icon" className="h-11 w-11 shrink-0" aria-label="random" onClick={() => setName(NAMES[locale][Math.floor(Math.random() * NAMES[locale].length)]!)}>
+        <Button type="button" variant="secondary" size="icon" className="h-11 w-11 shrink-0" aria-label="random" onClick={() => setName(randomName(locale))}>
           🎲
         </Button>
       </form>

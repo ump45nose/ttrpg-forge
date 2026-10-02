@@ -35,6 +35,7 @@ export const en = {
     details: { name: "Name", pronouns: "Pronouns", alignment: "Alignment", appearance: "Appearance", backstory: "Backstory", player: "Player" },
     review: { issues: "Needs attention", ready: "Ready for adventure", enter: "Enter the table", warnings: "Notes" },
     levelUp: "Level up", levelDown: "Remove level", customize: "Customize", why: "Why this number?",
+    recommended: "Recommended", swapHint: "Tap two abilities to swap their scores.",
   },
   sheet: {
     tabs: { actions: "Actions", spells: "Spells", resources: "Resources", features: "Features", inventory: "Gear", log: "Log", skills: "Skills" },
@@ -62,6 +63,7 @@ export const en = {
     packs: "Rule packs", importPack: "Import pack (JSON)", data: "Data", exportAll: "Export everything", about: "About", attribution: "Attribution",
     builtin: "Built-in", storageHint: "Install the app to your home screen so your browser keeps the data safe.",
   },
+  alignment: { LG: "Lawful Good", NG: "Neutral Good", CG: "Chaotic Good", LN: "Lawful Neutral", N: "Neutral", CN: "Chaotic Neutral", LE: "Lawful Evil", NE: "Neutral Evil", CE: "Chaotic Evil" },
   activation: { action: "Action", bonus: "Bonus Action", reaction: "Reaction", free: "Free", special: "Special", minute: "Minutes", hour: "Hours" },
   ability: { str: "Strength", dex: "Dexterity", con: "Constitution", int: "Intelligence", wis: "Wisdom", cha: "Charisma" },
   abbr: { str: "STR", dex: "DEX", con: "CON", int: "INT", wis: "WIS", cha: "CHA" },

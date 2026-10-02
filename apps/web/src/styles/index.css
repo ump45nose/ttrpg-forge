@@ -46,6 +46,13 @@
   color-scheme: dark;
 }
 
+/* Registered so the per-class accent can animate when the class changes. */
+@property --class {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #d6a85c;
+}
+
 @theme inline {
   --color-bg: var(--bg);
   --color-surface: var(--surface);
@@ -146,6 +153,9 @@
   }
   .safe-t {
     padding-top: max(env(safe-area-inset-top), 0px);
+  }
+  .class-transition {
+    transition: --class 700ms var(--ease-out);
   }
   .no-scrollbar {
     scrollbar-width: none;
