@@ -1,4 +1,4 @@
-import type { AbilityScores, Build, InventoryEntry } from "../schema/types";
+import type { AbilityScores, Build, Currency, InventoryEntry } from "../schema/types";
 
 /**
  * Pure build edits. Every UI action and (later) every AI tool call goes through
@@ -18,10 +18,13 @@ export type BuildOp =
   | { op: "setEquipped"; key: string; equipped: boolean }
   | { op: "addItem"; entry: InventoryEntry }
   | { op: "removeItem"; key: string }
-  | { op: "setHpMethod"; method: Build["hpMethod"] };
+  | { op: "setHpMethod"; method: Build["hpMethod"] }
+  | { op: "setCurrency"; currency: Currency }
+  | { op: "setItemQty"; key: string; qty: number };
 
-export function emptyBuild(): Build {
+export function emptyBuild(startLevel = 1): Build {
   return {
+    startLevel,
     abilityMethod: "standard",
     baseAbilities: { str: 15, dex: 14, con: 13, int: 12, wis: 10, cha: 8 },
     levels: [],
@@ -40,8 +43,8 @@ export function applyOp(b: Build, o: BuildOp): Build {
     case "setBackground":
       return { ...b, backgroundId: o.id };
     case "setClass": {
-      // replace the starting class, keeping the level count
-      const n = Math.max(1, b.levels.length);
+      // replace the starting class, keeping the level count (or the planned start level)
+      const n = Math.max(1, b.levels.length || b.startLevel || 1);
       return { ...b, levels: Array.from({ length: n }, () => ({ classId: o.id })) };
     }
     case "addLevel":
@@ -83,6 +86,10 @@ export function applyOp(b: Build, o: BuildOp): Build {
       return { ...b, inventory: b.inventory.filter((i) => i.key !== o.key) };
     case "setHpMethod":
       return { ...b, hpMethod: o.method };
+    case "setCurrency":
+      return { ...b, currency: { ...b.currency, ...o.currency } };
+    case "setItemQty":
+      return { ...b, inventory: b.inventory.map((i) => (i.key === o.key ? { ...i, qty: Math.max(0, o.qty) } : i)).filter((i) => i.qty > 0) };
   }
 }
 

@@ -1,3 +1,4 @@
+import type { SystemConfig } from "../system/dnd5e";
 import type { LocalizedText } from "../text";
 
 /* ───────────────────────── primitives ───────────────────────── */
@@ -248,7 +249,8 @@ export type EntityType =
   | "spell"
   | "item"
   | "condition"
-  | "effect";
+  | "effect"
+  | "rule";
 
 export interface Prereq {
   /** Minimum character level. */
@@ -275,6 +277,8 @@ export interface EntityBase {
   art?: string;
   /** Accent colour used by the builder showcase. */
   accent?: string;
+  /** Id of the entity this one was cloned from (homebrew). */
+  source?: string;
 }
 
 export interface ClassEntity extends EntityBase {
@@ -364,7 +368,15 @@ export interface ConditionEntity extends EntityBase {
   icon?: string;
 }
 
+/** Glossary term (Advantage, Bonus Action, Cone...). Text may link other terms with {{id}}. */
+export interface RuleEntity extends EntityBase {
+  type: "rule";
+  /** Grouping for the tooltip header: "action", "area", "condition", "hazard", "attitude", "term"... */
+  category?: string;
+}
+
 export type Entity =
+  | RuleEntity
   | ClassEntity
   | SubclassEntity
   | SpeciesEntity
@@ -390,6 +402,38 @@ export interface RulePack {
   /** Grants every character of this system receives (basic actions, unarmed strike...). */
   globalGrants?: Grant[];
   entities: Entity[];
+  /** House-rule overrides of system numbers (point buy, level cap, tables...). */
+  systemConfig?: SystemConfig;
+  /** House-rule edits of entities defined by earlier packs. */
+  patches?: EntityPatch[];
+}
+
+/** Matches grants for removal: every field given must match. */
+export interface GrantMatcher {
+  type?: Grant["type"];
+  /** Feature/choice/resource id, action id, spell/item/entity id or tag. */
+  id?: string;
+  /** Proficiency key. */
+  key?: string;
+  /** Modifier target. */
+  target?: string;
+}
+
+export interface GrantEdits {
+  add?: Grant[];
+  remove?: GrantMatcher[];
+}
+
+/** Partial edit of an existing entity (applied in pack order). */
+export interface EntityPatch {
+  target: string;
+  /** Shallow-merged onto the entity (name, text, hitDie, speed...). */
+  set?: Record<string, unknown>;
+  grants?: GrantEdits;
+  /** Class/subclass level grants, keyed by level. */
+  levels?: Record<string, GrantEdits>;
+  /** Class starting grants. */
+  starting?: GrantEdits;
 }
 
 /* ───────────────────────── character ───────────────────────── */
@@ -405,7 +449,19 @@ export interface InventoryEntry {
   notes?: string;
 }
 
+export interface Currency {
+  cp?: number;
+  sp?: number;
+  ep?: number;
+  gp?: number;
+  pp?: number;
+}
+
 export interface Build {
+  /** Level the character starts at; the first class pick creates this many levels. */
+  startLevel?: number;
+  /** Coins added/removed by the player on top of granted gold. */
+  currency?: Currency;
   abilityMethod: "standard" | "pointbuy" | "roll" | "manual";
   baseAbilities: AbilityScores;
   speciesId?: string;

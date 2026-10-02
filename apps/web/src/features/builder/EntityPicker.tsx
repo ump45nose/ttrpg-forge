@@ -1,5 +1,5 @@
 import type { BuildOp, Entity, EntityType } from "@forge/core";
-import { Check } from "lucide-react";
+import { Check, Copy, Pencil, Plus, Trash2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useT } from "../../app/i18n";
@@ -12,6 +12,9 @@ import { useIsDesktop } from "../../ui/hooks";
 import { DiffView } from "../common/DiffView";
 import { useNames } from "../common/names";
 import { useBuilder } from "./state";
+import { RichText } from "../terms/RichText";
+import { LOCAL_PACK_ID, usePacks } from "../../app/packs";
+import { EntityEditor, type EditRequest } from "../homebrew/EntityEditor";
 
 interface Props {
   type: Extract<EntityType, "class" | "species" | "background">;
@@ -19,13 +22,15 @@ interface Props {
   opsFor: (id: string) => BuildOp[];
   /** Extra showcase content (class timeline, origin choices...). */
   showcase?: (e: Entity, isCurrent: boolean) => ReactNode;
+  /** Offer "custom" / "copy & edit" entry points backed by the local homebrew pack. */
+  editable?: boolean;
 }
 
 /**
  * BG3-style big-choice picker: list on the left, showcase in the middle.
  * Hover (desktop) or tap (touch) focuses a candidate and previews it in the live sheet.
  */
-export function EntityPicker({ type, current, opsFor, showcase }: Props) {
+export function EntityPicker({ type, current, opsFor, showcase, editable }: Props) {
   const t = useT();
   const n = useNames();
   const desktop = useIsDesktop();
@@ -35,6 +40,11 @@ export function EntityPicker({ type, current, opsFor, showcase }: Props) {
   const [hoverId, setHoverId] = useState<string>();
   const shownId = hoverId ?? focusId;
   const shown = entities.find((e) => e.id === shownId);
+  const [edit, setEdit] = useState<EditRequest | null>(null);
+  const removeLocal = usePacks((s) => s.removeLocal);
+  const isLocal = (e: Entity) => n.engine.reg.packOf(e.id) === LOCAL_PACK_ID;
+  const editType = type === "class" ? undefined : type;
+  const startCustom = editable && editType ? () => setEdit({ type: editType }) : undefined;
 
   useEffect(() => {
     if (current) setFocusId(current);
@@ -62,11 +72,12 @@ export function EntityPicker({ type, current, opsFor, showcase }: Props) {
       {desktop ? (
         <div className="space-y-1.5" onMouseLeave={() => setHoverId(undefined)}>
           {entities.map((e) => (
-            <ListItem key={e.id} e={e} selected={e.id === current} focused={e.id === shownId} onHover={() => setHoverId(e.id)} onClick={() => choose(e.id)} style={accentStyle(e)} />
+            <ListItem key={e.id} e={e} local={isLocal(e)} selected={e.id === current} focused={e.id === shownId} onHover={() => setHoverId(e.id)} onClick={() => choose(e.id)} style={accentStyle(e)} />
           ))}
+          {startCustom && <CustomItem onClick={startCustom} />}
         </div>
       ) : (
-        <Carousel entities={entities} current={current} focused={focusId} onFocus={(id) => setFocusId(id)} accentStyle={accentStyle} />
+        <Carousel entities={entities} current={current} focused={focusId} onFocus={(id) => setFocusId(id)} accentStyle={accentStyle} onCustom={startCustom} />
       )}
 
       {/* showcase */}
@@ -96,7 +107,35 @@ export function EntityPicker({ type, current, opsFor, showcase }: Props) {
                   {shown.summary && <p className="mt-1.5 text-sm text-ink-2">{n.l(shown.summary)}</p>}
                 </div>
               </header>
-              {shown.text && <p className="relative mt-4 text-sm leading-relaxed text-ink-2">{n.l(shown.text, { mono: true })}</p>}
+              {shown.text && <RichText text={shown.text} selfId={shown.id} className="relative mt-4 text-sm leading-relaxed text-ink-2" />}
+              {editable && editType && (
+                <div className="relative mt-4 flex flex-wrap gap-2">
+                  {isLocal(shown) ? (
+                    <>
+                      <Button size="sm" variant="secondary" onClick={() => setEdit({ type: editType, base: shown })}>
+                        <Pencil size={14} /> {t("homebrew.edit")}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-bad"
+                        onClick={() => {
+                          if (!confirm(t("homebrew.deleteConfirm", { name: n.l(shown.name, { mono: true }) }))) return;
+                          if (shown.id === current) apply([type === "background" ? { op: "setBackground", id: undefined } : { op: "setSpecies", id: undefined }]);
+                          setFocusId(entities.find((e) => e.id !== shown.id)?.id);
+                          void removeLocal(shown.id);
+                        }}
+                      >
+                        <Trash2 size={14} /> {t("homebrew.delete")}
+                      </Button>
+                    </>
+                  ) : (
+                    <Button size="sm" variant="secondary" onClick={() => setEdit({ type: editType, base: shown, clone: true })}>
+                      <Copy size={14} /> {t("homebrew.clone")}
+                    </Button>
+                  )}
+                </div>
+              )}
               <div className="relative mt-5">{showcase?.(shown, shown.id === current)}</div>
 
               {!desktop && (
@@ -124,7 +163,35 @@ export function EntityPicker({ type, current, opsFor, showcase }: Props) {
           )}
         </AnimatePresence>
       </div>
+      <EntityEditor
+        req={edit}
+        onClose={() => setEdit(null)}
+        onSaved={(e) => {
+          setHoverId(undefined);
+          setFocusId(e.id);
+        }}
+      />
     </div>
+  );
+}
+
+function CustomItem({ onClick }: { onClick: () => void }) {
+  const t = useT();
+  return (
+    <motion.button
+      layout
+      onClick={onClick}
+      whileTap={{ scale: 0.98 }}
+      className="flex w-full items-center gap-3 rounded-xl border border-dashed border-line-strong px-3 py-2.5 text-left text-ink-2 transition-colors hover:border-accent hover:text-ink"
+    >
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-dashed border-line-strong">
+        <Plus size={18} />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-medium">{t("homebrew.custom")}</span>
+        <span className="block text-xs text-ink-3">{t("homebrew.customHint")}</span>
+      </span>
+    </motion.button>
   );
 }
 
@@ -137,8 +204,9 @@ function Emblem({ e }: { e: Entity }) {
   );
 }
 
-function ListItem({ e, selected, focused, onHover, onClick, style }: { e: Entity; selected: boolean; focused: boolean; onHover: () => void; onClick: () => void; style?: CSSProperties }) {
+function ListItem({ e, local, selected, focused, onHover, onClick, style }: { e: Entity; local?: boolean; selected: boolean; focused: boolean; onHover: () => void; onClick: () => void; style?: CSSProperties }) {
   const n = useNames();
+  const t = useT();
   const Icon = entityGlyph(e.id);
   return (
     <motion.button
@@ -158,7 +226,10 @@ function ListItem({ e, selected, focused, onHover, onClick, style }: { e: Entity
         <Icon size={18} />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-medium text-ink">{n.l(e.name, { mono: true })}</span>
+        <span className="flex items-center gap-1.5">
+          <span className="truncate text-sm font-medium text-ink">{n.l(e.name, { mono: true })}</span>
+          {local && <span className="shrink-0 rounded bg-accent/15 px-1 text-[10px] text-accent">{t("homebrew.local")}</span>}
+        </span>
         {e.summary && <span className="block truncate text-xs text-ink-3">{n.l(e.summary)}</span>}
       </span>
       {selected && <Check size={16} className="text-class" />}
@@ -172,14 +243,17 @@ function Carousel({
   focused,
   onFocus,
   accentStyle,
+  onCustom,
 }: {
   entities: Entity[];
   current: string | undefined;
   focused: string | undefined;
   onFocus: (id: string) => void;
   accentStyle: (e: Entity) => CSSProperties | undefined;
+  onCustom?: () => void;
 }) {
   const n = useNames();
+  const t = useT();
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = ref.current?.querySelector<HTMLElement>(`[data-id="${CSS.escape(focused ?? "")}"]`);
@@ -218,6 +292,18 @@ function Carousel({
           </motion.button>
         );
       })}
+      {onCustom && (
+        <motion.button
+          whileTap={{ scale: 0.96 }}
+          onClick={onCustom}
+          className="relative flex w-[38%] min-w-[8.5rem] shrink-0 snap-center flex-col items-center justify-center gap-1.5 rounded-2xl border border-dashed border-line-strong px-2 py-3 text-center text-ink-2"
+        >
+          <span className="flex h-11 w-11 items-center justify-center rounded-xl">
+            <Plus size={24} strokeWidth={1.6} />
+          </span>
+          <span className="w-full truncate text-sm font-medium">{t("homebrew.custom")}</span>
+        </motion.button>
+      )}
     </div>
   );
 }

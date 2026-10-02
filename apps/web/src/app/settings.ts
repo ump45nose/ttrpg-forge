@@ -11,6 +11,8 @@ export interface Settings {
   /** Enter physical dice results instead of rolling digitally. */
   physicalDice: boolean;
   haptics: boolean;
+  /** Recognise rules terms in prose and make them hoverable. */
+  autoTerms: boolean;
   disabledPlugins: string[];
   set(patch: Partial<Omit<Settings, "set">>): void;
 }
@@ -26,6 +28,7 @@ export const useSettings = create<Settings>()(
       motion: "system",
       physicalDice: false,
       haptics: true,
+      autoTerms: true,
       disabledPlugins: [],
       set: (patch) => set(patch),
     }),

@@ -14,6 +14,7 @@ import { DiffView } from "../common/DiffView";
 import { GrantList } from "../common/GrantList";
 import { useNames } from "../common/names";
 import { useBuilder } from "./state";
+import { RichText } from "../terms/RichText";
 
 /** One pending/finished choice: skills, fighting style, feat, spells, equipment, ability increases... */
 export function ChoiceBlock({ ch, hideSource = false }: { ch: ChoiceView; hideSource?: boolean }) {
@@ -29,7 +30,7 @@ export function ChoiceBlock({ ch, hideSource = false }: { ch: ChoiceView; hideSo
         <div className="min-w-0 flex-1">
           <h3 className="text-sm font-semibold text-ink">{n.l(ch.choice.name)}</h3>
           {!hideSource && <div className="mt-0.5 truncate text-xs text-ink-3">{n.l(ch.source.name)}</div>}
-          {ch.choice.text && <p className="mt-1 text-xs leading-relaxed text-ink-2">{n.l(ch.choice.text, { mono: true })}</p>}
+          {ch.choice.text && <RichText text={ch.choice.text} className="mt-1 text-xs leading-relaxed text-ink-2" />}
         </div>
         <Counter selected={kind === "ability" ? (ch.selected.length ? 1 : 0) : ch.selected.length} count={ch.count} />
       </header>
@@ -147,7 +148,7 @@ function OptionCards({ ch, candidates }: { ch: ChoiceView; candidates: ChoiceCan
               </span>
               <span className="text-sm font-medium text-ink">{n.l(c.name)}</span>
             </div>
-            {c.text && <p className="mt-1.5 text-xs leading-relaxed text-ink-2">{n.l(c.text, { mono: true })}</p>}
+            {c.text && <RichText text={c.text} className="mt-1.5 text-xs leading-relaxed text-ink-2" />}
             {opt && !c.text && <GrantList grants={opt.grants} dense className="mt-2" />}
             {c.reason && <p className="mt-1 text-xs text-bad">{n.l(c.reason)}</p>}
           </motion.button>
@@ -263,11 +264,11 @@ function CandidateDetail({ ch, candidate, onClose }: { ch: ChoiceView; candidate
       {candidate && (
         <div className="space-y-4">
           {candidate.reason && <Chip tone="bad">{n.l(candidate.reason)}</Chip>}
-          {candidate.text && <p className="text-sm leading-relaxed whitespace-pre-line text-ink-2">{n.l(candidate.text, { mono: true })}</p>}
+          {candidate.text && <RichText text={candidate.text} selfId={candidate.entity?.id} className="text-sm leading-relaxed text-ink-2" />}
           {e?.type === "spell" && e.higherLevels && (
             <p className="text-sm text-ink-2">
               <Sparkles size={13} className="mr-1 inline text-magic" />
-              {n.l(e.higherLevels, { mono: true })}
+              <RichText text={e.higherLevels} inline />
             </p>
           )}
           {e && e.type !== "spell" && <GrantList grants={e.grants} />}

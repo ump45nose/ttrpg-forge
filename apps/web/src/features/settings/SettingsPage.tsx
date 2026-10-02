@@ -1,12 +1,13 @@
 import { localize } from "@forge/core";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Check, FileJson, Package, Puzzle, Trash2 } from "lucide-react";
+import { ArrowLeft, Check, ChevronDown, ChevronUp, Download, FileJson, Package, Pencil, Plus, Puzzle, Trash2 } from "lucide-react";
 import { motion } from "motion/react";
-import { useRef, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
+import { ulid } from "ulid";
 import { useCharacters } from "../../app/characters";
 import { host, useHostRevision } from "../../app/host";
 import { useL, useT } from "../../app/i18n";
-import { BASE_PACKS, usePacks } from "../../app/packs";
+import { BASE_PACKS, LOCAL_PACK_ID, orderedPacks, useEngine, usePacks } from "../../app/packs";
 import { useSettings } from "../../app/settings";
 import { Button } from "../../ui/Button";
 import { Chip } from "../../ui/Chip";
@@ -14,6 +15,7 @@ import { cn } from "../../ui/cn";
 import { Switch } from "../../ui/Field";
 import { Tabs } from "../../ui/Tabs";
 import { toast } from "../../ui/Toast";
+import { PackEditor } from "../homebrew/PackEditor";
 import { downloadJson, importPackFile } from "../library/transfer";
 
 export function SettingsPage() {
@@ -26,6 +28,9 @@ export function SettingsPage() {
   const packs = usePacks();
   const fileRef = useRef<HTMLInputElement>(null);
   const characters = useCharacters((x) => x.byId);
+  const engine = useEngine();
+  const ordered = orderedPacks(packs.packs);
+  const [editing, setEditing] = useState<string>();
 
   return (
     <div className="mx-auto min-h-dvh max-w-2xl px-4 pb-24 sm:px-6">
@@ -46,6 +51,7 @@ export function SettingsPage() {
           onChange={(v) => s.set({ locale: v })}
         />
         <Switch checked={s.bilingual} onChange={(v) => s.set({ bilingual: v })} label={t("settings.bilingual")} hint={t("settings.bilingualHint")} />
+        <Switch checked={s.autoTerms} onChange={(v) => s.set({ autoTerms: v })} label={t("settings.autoTerms")} hint={t("settings.autoTermsHint")} />
       </Section>
 
       <Section title={t("settings.theme")}>
@@ -93,29 +99,85 @@ export function SettingsPage() {
       </Section>
 
       <Section title={t("settings.packs")} icon={<Package size={16} />}>
+        <p className="mb-3 text-xs text-ink-3">{t("homebrew.orderHint")}</p>
         <div className="space-y-2">
           {BASE_PACKS.map((p) => (
-            <Row key={p.id} title={l(p.name)} meta={`${p.id} · v${p.version} · ${p.license ?? ""}`} badge={<Chip tone="accent">{t("settings.builtin")}</Chip>} />
-          ))}
-          {packs.packs.map((p) => (
             <Row
               key={p.id}
-              title={l(p.pack.name)}
-              meta={`${p.id} · v${p.pack.version} · ${p.pack.entities.length}`}
+              title={l(p.name)}
+              meta={`${p.id} · v${p.version} · ${p.license ?? ""}`}
               badge={
                 <div className="flex items-center gap-1">
-                  <Switch checked={p.enabled} onChange={(v) => void packs.save({ ...p, enabled: v })} label="" />
-                  <Button variant="ghost" size="icon-sm" onClick={() => void packs.remove(p.id)} aria-label={t("common.delete")}>
-                    <Trash2 size={15} />
+                  <Chip tone="accent">{t("settings.builtin")}</Chip>
+                  <Button variant="ghost" size="icon-sm" onClick={() => downloadJson(p, `${p.id}.json`)} aria-label={t("common.export")}>
+                    <Download size={15} />
                   </Button>
                 </div>
               }
             />
           ))}
+          {ordered.map((p, i) => {
+            const st = engine.reg.statsOf(p.id);
+            const isLocal = p.id === LOCAL_PACK_ID;
+            const meta = [
+              t("homebrew.entities", { n: p.pack.entities.length }),
+              st?.overrides ? t("homebrew.overrides", { n: st.overrides }) : "",
+              p.pack.patches?.length ? t("homebrew.patches", { n: p.pack.patches.length }) : "",
+              st?.systemConfig ? t("homebrew.systemChanged") : "",
+              st?.missingTargets.length ? t("homebrew.missing", { n: st.missingTargets.length }) : "",
+            ]
+              .filter(Boolean)
+              .join(" · ");
+            return (
+              <Row
+                key={p.id}
+                title={l(p.pack.name)}
+                meta={meta}
+                badge={
+                  <div className="flex items-center gap-0.5">
+                    {!isLocal && (
+                      <>
+                        <Button variant="ghost" size="icon-sm" disabled={i === 0} onClick={() => void packs.move(p.id, -1)} aria-label="up">
+                          <ChevronUp size={15} />
+                        </Button>
+                        <Button variant="ghost" size="icon-sm" disabled={i >= ordered.length - (ordered.at(-1)?.id === LOCAL_PACK_ID ? 2 : 1)} onClick={() => void packs.move(p.id, 1)} aria-label="down">
+                          <ChevronDown size={15} />
+                        </Button>
+                      </>
+                    )}
+                    <Button variant="ghost" size="icon-sm" onClick={() => setEditing(p.id)} aria-label={t("common.edit")}>
+                      <Pencil size={15} />
+                    </Button>
+                    <Button variant="ghost" size="icon-sm" onClick={() => downloadJson(p.pack, `${p.id}.json`)} aria-label={t("common.export")}>
+                      <Download size={15} />
+                    </Button>
+                    <Switch checked={p.enabled} onChange={(v) => void packs.save({ ...p, enabled: v })} label="" />
+                    {!isLocal && (
+                      <Button variant="ghost" size="icon-sm" onClick={() => void packs.remove(p.id)} aria-label={t("common.delete")}>
+                        <Trash2 size={15} />
+                      </Button>
+                    )}
+                  </div>
+                }
+              />
+            );
+          })}
         </div>
-        <Button variant="outline" className="mt-3" onClick={() => fileRef.current?.click()}>
-          <FileJson size={16} /> {t("settings.importPack")}
-        </Button>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            onClick={async () => {
+              const id = `house:${ulid().toLowerCase()}`;
+              await packs.save({ id, origin: "homebrew", enabled: true, updatedAt: Date.now(), pack: { id, version: "1", system: BASE_PACKS[0]!.system, name: { en: "House Rules", zh: "村规" }, entities: [], systemConfig: {}, patches: [] } });
+              setEditing(id);
+            }}
+          >
+            <Plus size={16} /> {t("homebrew.newHouse")}
+          </Button>
+          <Button variant="outline" onClick={() => fileRef.current?.click()}>
+            <FileJson size={16} /> {t("settings.importPack")}
+          </Button>
+        </div>
         <input
           ref={fileRef}
           type="file"
@@ -131,6 +193,7 @@ export function SettingsPage() {
             toast({ content: `${localize(r.value.name, s.locale)} ✓`, tone: "good" });
           }}
         />
+        <PackEditor stored={packs.packs.find((p) => p.id === editing)} onClose={() => setEditing(undefined)} />
       </Section>
 
       <Section title={t("settings.plugins")} icon={<Puzzle size={16} />}>

@@ -2,25 +2,96 @@ import type { Ability, CasterProgression } from "../schema/types";
 import type { LocalizedText } from "../text";
 
 /**
- * System adapter: the numeric tables & vocabulary of a ruleset. Content (classes,
- * spells...) lives in packs; anything structural lives here. 2014 rules would be
- * a second adapter sharing most of this.
+ * Pure-data part of a ruleset: every number a house rule might change. Packs
+ * override any of it through `RulePack.systemConfig` (deep-merged in load order).
  */
-export interface GameSystem {
+export interface GameSystemData {
   id: string;
   name: LocalizedText;
   abilities: readonly Ability[];
   skills: Record<string, { ability: Ability; name: LocalizedText }>;
+  /** Proficiency bonus by character level (index 0 = level 1). */
+  profTable: number[];
+  /** Full-caster slots by caster level (index = caster level; entry index 0 = 1st-level slots). */
+  slotTable: number[][];
+  /** Warlock pact slots by warlock level (index 0 = level 1). */
+  pactTable: { count: number; level: number }[];
+  /** Character levels at which cantrip damage gains another die. */
+  cantripSteps: number[];
+  pointBuy: { budget: number; min: number; max: number; cost: Record<number, number> };
+  standardArray: number[];
+  maxLevel: number;
+  abilityCap: number;
+  hp: {
+    /** Hit points gained at character level 1 ("max" = full hit die). */
+    firstLevel: "max" | "average";
+    /** Default per-level gain when not rolling. */
+    levelUp: "average" | "max";
+  };
+}
+
+/** Everything the engine asks of a ruleset. Built from data by `makeSystem`. */
+export interface GameSystem extends GameSystemData {
   profBonus(level: number): number;
   /** Slots per spell level (index 0 = 1st level) for a combined caster level. */
   slots(casterLevel: number): number[];
   pactSlots(warlockLevel: number): { count: number; level: number };
   casterLevel(progression: CasterProgression, classLevel: number, multiclass: boolean): number;
   cantripTier(characterLevel: number): number;
-  pointBuy: { budget: number; min: number; max: number; cost: Record<number, number> };
-  standardArray: number[];
-  maxLevel: number;
-  abilityCap: number;
+}
+
+type DeepPartial<T> = T extends readonly unknown[] ? T : T extends object ? { [K in keyof T]?: DeepPartial<T[K]> } : T;
+/** House-rule overrides of a system; arrays replace, objects merge. */
+export type SystemConfig = DeepPartial<Omit<GameSystemData, "id">>;
+
+export function makeSystem(data: GameSystemData): GameSystem {
+  const clampLevel = (lvl: number, len: number) => Math.min(len - 1, Math.max(0, lvl));
+  return {
+    ...data,
+    profBonus: (level) => data.profTable[clampLevel(level - 1, data.profTable.length)] ?? 2,
+    slots: (cl) => [...(data.slotTable[clampLevel(cl, data.slotTable.length)] ?? [])],
+    pactSlots: (lvl) => (lvl < 1 ? { count: 0, level: 0 } : { ...(data.pactTable[clampLevel(lvl - 1, data.pactTable.length)] ?? { count: 0, level: 0 }) }),
+    casterLevel: (prog, lvl, multiclass) => {
+      switch (prog) {
+        case "full":
+          return lvl;
+        case "half":
+          return Math.ceil(lvl / 2);
+        case "third":
+          return lvl < 3 ? 0 : multiclass ? Math.floor(lvl / 3) : Math.ceil(lvl / 3);
+        default:
+          return 0;
+      }
+    },
+    cantripTier: (lvl) => 1 + data.cantripSteps.filter((s) => lvl >= s).length,
+  };
+}
+
+function isPlainObject(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null && !Array.isArray(v);
+}
+
+export function deepMerge<T>(base: T, patch: unknown): T {
+  if (!isPlainObject(patch) || !isPlainObject(base)) return (patch === undefined ? base : (patch as T));
+  const out: Record<string, unknown> = { ...base };
+  for (const [k, v] of Object.entries(patch)) {
+    if (v === undefined) continue;
+    out[k] = isPlainObject(v) && isPlainObject(out[k]) ? deepMerge(out[k], v) : v;
+  }
+  return out as T;
+}
+
+/** Apply pack overrides on top of a base system. */
+export function configureSystem(base: GameSystem, configs: (SystemConfig | undefined)[]): GameSystem {
+  const live = configs.filter((c): c is SystemConfig => !!c && Object.keys(c).length > 0);
+  if (!live.length) return base;
+  const data = live.reduce<GameSystemData>((acc, c) => deepMerge(acc, c), dataOf(base));
+  return makeSystem(data);
+}
+
+function dataOf(s: GameSystem): GameSystemData {
+  const { profBonus: _a, slots: _b, pactSlots: _c, casterLevel: _d, cantripTier: _e, ...data } = s;
+  return data;
 }
 
 const FULL_CASTER: number[][] = [
@@ -77,37 +148,24 @@ export const SKILLS_5E: GameSystem["skills"] = {
   survival: { ability: "wis", name: { en: "Survival", zh: "求生" } },
 };
 
-export const DND5E_2024: GameSystem = {
+export const DND5E_2024: GameSystem = makeSystem({
   id: "dnd5e-2024",
   name: { en: "D&D 5e (2024)", zh: "D&D 5.5e（2024）" },
   abilities: ["str", "dex", "con", "int", "wis", "cha"],
   skills: SKILLS_5E,
-  profBonus: (level) => 2 + Math.floor((Math.max(1, level) - 1) / 4),
-  slots: (cl) => [...(FULL_CASTER[Math.min(20, Math.max(0, cl))] ?? [])],
-  pactSlots: (lvl) => {
-    if (lvl < 1) return { count: 0, level: 0 };
-    const count = lvl >= 17 ? 4 : lvl >= 11 ? 3 : lvl >= 2 ? 2 : 1;
-    const level = Math.min(5, Math.ceil(lvl / 2));
-    return { count, level };
-  },
-  casterLevel: (prog, lvl, multiclass) => {
-    switch (prog) {
-      case "full":
-        return lvl;
-      case "half":
-        return Math.ceil(lvl / 2);
-      case "third":
-        return lvl < 3 ? 0 : multiclass ? Math.floor(lvl / 3) : Math.ceil(lvl / 3);
-      default:
-        return 0;
-    }
-  },
-  cantripTier: (lvl) => (lvl >= 17 ? 4 : lvl >= 11 ? 3 : lvl >= 5 ? 2 : 1),
+  profTable: Array.from({ length: 20 }, (_, i) => 2 + Math.floor(i / 4)),
+  slotTable: FULL_CASTER,
+  pactTable: Array.from({ length: 20 }, (_, i) => {
+    const lvl = i + 1;
+    return { count: lvl >= 17 ? 4 : lvl >= 11 ? 3 : lvl >= 2 ? 2 : 1, level: Math.min(5, Math.ceil(lvl / 2)) };
+  }),
+  cantripSteps: [5, 11, 17],
   pointBuy: { budget: 27, min: 8, max: 15, cost: { 8: 0, 9: 1, 10: 2, 11: 3, 12: 4, 13: 5, 14: 7, 15: 9 } },
   standardArray: [15, 14, 13, 12, 10, 8],
   maxLevel: 20,
   abilityCap: 20,
-};
+  hp: { firstLevel: "max", levelUp: "average" },
+});
 
 export const SYSTEMS: Record<string, GameSystem> = { [DND5E_2024.id]: DND5E_2024 };
 

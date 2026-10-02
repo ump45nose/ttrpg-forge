@@ -23,11 +23,12 @@ export function maxLevelOf(c: ClassEntity): number {
 function ClassShowcase({ e, isCurrent }: { e: Entity; isCurrent: boolean }) {
   const t = useT();
   const n = useNames();
-  const { build, apply } = useBuilder();
+  const { build, apply, engine } = useBuilder();
   if (e.type !== "class") return null;
   const saves = e.starting.flatMap((g) => (g.type === "proficiency" && g.kind === "save" ? [g.key] : []));
   const level = build.levels.length;
-  const max = maxLevelOf(e);
+  const contentMax = maxLevelOf(e);
+  const max = Math.min(engine.reg.system.maxLevel, contentMax);
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap gap-1.5">
@@ -47,7 +48,10 @@ function ClassShowcase({ e, isCurrent }: { e: Entity; isCurrent: boolean }) {
         <div className="flex items-center justify-between gap-3 rounded-2xl border border-class/30 bg-class/8 px-4 py-3">
           <div>
             <div className="text-sm font-medium">{t("builder.level")}</div>
-            <div className="text-xs text-ink-3">1 – {max}</div>
+            <div className="text-xs text-ink-3">
+              1 – {max}
+              {contentMax < engine.reg.system.maxLevel && ` · ${t("builder.contentTo", { n: contentMax })}`}
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="secondary" size="icon-sm" disabled={level <= 1} onClick={() => apply([{ op: "setLevel", level: level - 1 }])} aria-label={t("builder.levelDown")}>

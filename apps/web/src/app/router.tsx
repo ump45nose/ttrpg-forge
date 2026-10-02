@@ -3,6 +3,7 @@ import { AnimatePresence, motion, MotionConfig } from "motion/react";
 import { useEffect } from "react";
 import { BuilderPage } from "../features/builder/BuilderPage";
 import { DiceDock } from "../features/dice/DiceDock";
+import { TermLayer } from "../features/terms/TermLayer";
 import { Library } from "../features/library/Library";
 import { SettingsPage } from "../features/settings/SettingsPage";
 import { SheetPage } from "../features/sheet/SheetPage";
@@ -25,6 +26,7 @@ function Root() {
         </motion.main>
       </AnimatePresence>
       <DiceDock />
+      <TermLayer />
       <ToastViewport />
     </MotionConfig>
   );

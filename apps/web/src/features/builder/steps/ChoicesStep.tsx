@@ -8,6 +8,7 @@ import { cn } from "../../../ui/cn";
 import { Tabs } from "../../../ui/Tabs";
 import { useNames } from "../../common/names";
 import { ChoiceBlock, SpellBadges } from "../ChoiceBlock";
+import { InventoryPanel } from "../InventoryPanel";
 import { stepOfChoice, useBuilder } from "../state";
 
 const levelOf = (c: ChoiceView) => Number(/@(\d+)/.exec(c.path)?.[1] ?? c.source.level ?? 1);
@@ -48,6 +49,7 @@ export function ChoicesStep() {
         .map((sc) => (
           <PreparedPanel key={sc.classId} sc={sc} />
         ))}
+      <InventoryPanel />
     </div>
   );
 }

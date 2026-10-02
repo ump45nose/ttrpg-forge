@@ -45,7 +45,7 @@ export class Engine {
     return applyOps(build, ops);
   }
 
-  newCharacter(name: string): Character {
+  newCharacter(name: string, opts: { level?: number } = {}): Character {
     const now = Date.now();
     return {
       schema: 1,
@@ -54,7 +54,7 @@ export class Engine {
       system: this.reg.system.id,
       packs: this.reg.packs.map((p) => ({ id: p.id, version: p.version })),
       meta: {},
-      build: emptyBuild(),
+      build: emptyBuild(Math.max(1, Math.min(this.reg.system.maxLevel, opts.level ?? 1))),
       play: [],
       createdAt: now,
       updatedAt: now,

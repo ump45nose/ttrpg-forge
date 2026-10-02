@@ -6,16 +6,17 @@ import { DropdownMenu } from "radix-ui";
 import { useMemo, useRef, useState } from "react";
 import { useCharacters } from "../../app/characters";
 import { useL, useT } from "../../app/i18n";
-import { useEngine } from "../../app/packs";
+import { LOCAL_PACK_ID, useEngine, usePacks } from "../../app/packs";
 import { useSettings } from "../../app/settings";
 import { useBuildView } from "../../app/views";
 import { Button } from "../../ui/Button";
 import { Chip } from "../../ui/Chip";
+import { cn } from "../../ui/cn";
 import { Crest } from "../../ui/Crest";
 import { Input } from "../../ui/Field";
 import { Sheet } from "../../ui/Sheet";
 import { toast } from "../../ui/Toast";
-import { downloadJson, importCharacterFile } from "./transfer";
+import { exportCharacter, importCharacterFile } from "./transfer";
 
 export function Library() {
   const t = useT();
@@ -48,8 +49,12 @@ export function Library() {
             if (!f) return;
             const r = await importCharacterFile(f);
             if (r.ok) {
-              put(r.value);
-              toast({ content: r.value.name, tone: "good" });
+              // custom content travels with the character; keep any local version that already exists
+              const local = usePacks.getState();
+              const existing = new Set(local.packs.find((p) => p.id === LOCAL_PACK_ID)?.pack.entities.map((x) => x.id));
+              for (const e of r.value.homebrew) if (!existing.has(e.id)) await local.upsertLocal(e);
+              put(r.value.character);
+              toast({ content: r.value.character.name, tone: "good" });
             } else toast({ content: r.errors.join("; "), tone: "bad" }, 6000);
           }}
         />
@@ -192,7 +197,7 @@ function CharacterCard({ c, index }: { c: Character; index: number }) {
               <DropdownMenu.Item className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm text-ink outline-none data-[highlighted]:bg-surface-3" onSelect={() => navigate({ to: "/c/$id/build", params: { id: c.id } })}>
                 {t("library.continue")}
               </DropdownMenu.Item>
-              <DropdownMenu.Item className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm text-ink outline-none data-[highlighted]:bg-surface-3" onSelect={() => downloadJson(c, `${c.name || "character"}.forge.json`)}>
+              <DropdownMenu.Item className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm text-ink outline-none data-[highlighted]:bg-surface-3" onSelect={() => exportCharacter(c, engine)}>
                 {t("common.export")}
               </DropdownMenu.Item>
               <DropdownMenu.Item
@@ -228,11 +233,14 @@ function CreateSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (o: 
   const navigate = useNavigate();
   const locale = useSettings((s) => s.locale);
   const [name, setName] = useState("");
+  const [level, setLevel] = useState(3);
+  const maxLevel = engine.reg.system.maxLevel;
   const create = () => {
-    const c = engine.newCharacter(name.trim() || t("library.unnamed"));
+    const c = engine.newCharacter(name.trim() || t("library.unnamed"), { level });
     put(c);
     onOpenChange(false);
     setName("");
+    setLevel(3);
     void navigate({ to: "/c/$id/build", params: { id: c.id } });
   };
   return (
@@ -259,6 +267,28 @@ function CreateSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (o: 
           🎲
         </Button>
       </form>
+      <div className="mt-5">
+        <div className="mb-2 flex items-baseline justify-between">
+          <span className="text-sm text-ink-2">{t("library.startLevel")}</span>
+          <span className="text-xs text-ink-3">{t("library.startLevelHint")}</span>
+        </div>
+        <div className="grid grid-cols-8 gap-1.5">
+          {Array.from({ length: Math.min(maxLevel, 20) }, (_, i) => i + 1).map((lv) => (
+            <button
+              key={lv}
+              type="button"
+              onClick={() => setLevel(lv)}
+              className={cn(
+                "tnum relative h-10 rounded-xl border font-display text-base transition-colors",
+                lv === level ? "border-accent text-accent-ink" : "border-line text-ink-2 hover:border-line-strong hover:text-ink",
+              )}
+            >
+              {lv === level && <motion.span layoutId="start-level" className="absolute inset-0 rounded-[11px] bg-[linear-gradient(180deg,var(--accent-2),var(--accent))]" transition={{ type: "spring", stiffness: 500, damping: 38 }} />}
+              <span className="relative">{lv}</span>
+            </button>
+          ))}
+        </div>
+      </div>
     </Sheet>
   );
 }

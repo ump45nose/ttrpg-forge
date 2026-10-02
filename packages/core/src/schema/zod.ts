@@ -109,6 +109,7 @@ const entityBase = {
   repeatable: z.boolean().optional(),
   art: z.string().optional(),
   accent: z.string().optional(),
+  source: z.string().optional(),
 };
 
 export const EntitySchema = z.discriminatedUnion("type", [
@@ -158,7 +159,33 @@ export const EntitySchema = z.discriminatedUnion("type", [
     contents: z.array(z.object({ item: z.string(), qty: z.number().optional() })).optional(),
   }),
   z.object({ ...entityBase, type: z.enum(["condition", "effect"]), icon: z.string().optional() }),
+  z.object({ ...entityBase, type: z.literal("rule"), category: z.string().optional() }),
 ]);
+
+const grantMatcher = z.object({ type: z.string().optional(), id: z.string().optional(), key: z.string().optional(), target: z.string().optional() });
+const grantEdits = z.object({ add: grants.optional(), remove: z.array(grantMatcher).optional() });
+const entityPatch = z.object({
+  target: z.string().min(1),
+  set: z.record(z.string(), z.unknown()).optional(),
+  grants: grantEdits.optional(),
+  levels: z.record(z.string(), grantEdits).optional(),
+  starting: grantEdits.optional(),
+});
+
+/** System overrides: known numeric fields are checked, the rest passes through for forward compatibility. */
+const systemConfig = z
+  .object({
+    profTable: z.array(z.number()).optional(),
+    slotTable: z.array(z.array(z.number())).optional(),
+    pactTable: z.array(z.object({ count: z.number(), level: z.number() })).optional(),
+    cantripSteps: z.array(z.number()).optional(),
+    pointBuy: z.object({ budget: z.number().optional(), min: z.number().optional(), max: z.number().optional(), cost: z.record(z.string(), z.number()).optional() }).optional(),
+    standardArray: z.array(z.number()).optional(),
+    maxLevel: z.number().int().min(1).max(30).optional(),
+    abilityCap: z.number().optional(),
+    hp: z.object({ firstLevel: z.enum(["max", "average"]).optional(), levelUp: z.enum(["average", "max"]).optional() }).optional(),
+  })
+  .passthrough();
 
 export const RulePackSchema = z.object({
   id: z.string().min(1),
@@ -170,9 +197,13 @@ export const RulePackSchema = z.object({
   requires: z.array(z.string()).optional(),
   globalGrants: grants.optional(),
   entities: z.array(EntitySchema),
+  systemConfig: systemConfig.optional(),
+  patches: z.array(entityPatch).optional(),
 });
 
 const buildSchema = z.object({
+  startLevel: z.number().int().min(1).max(30).optional(),
+  currency: z.object({ cp: z.number().optional(), sp: z.number().optional(), ep: z.number().optional(), gp: z.number().optional(), pp: z.number().optional() }).optional(),
   abilityMethod: z.enum(["standard", "pointbuy", "roll", "manual"]),
   baseAbilities: z.object({ str: z.number(), dex: z.number(), con: z.number(), int: z.number(), wis: z.number(), cha: z.number() }),
   speciesId: z.string().optional(),

@@ -34,7 +34,7 @@ export function AbilitiesStep() {
   const switchMethod = (m: Method) => {
     if (m === method) return;
     if (m === "standard") setScores(arrange(sys.standardArray, primary), m);
-    else if (m === "pointbuy") setScores(Object.fromEntries(ABILITIES.map((a) => [a, 8])) as AbilityScores, m);
+    else if (m === "pointbuy") setScores(Object.fromEntries(ABILITIES.map((a) => [a, sys.pointBuy.min])) as AbilityScores, m);
     else if (m === "roll") rollAll();
     else setScores({}, m);
   };

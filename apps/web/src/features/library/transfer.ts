@@ -1,5 +1,6 @@
-import { parseCharacter, parseRulePack, type ParseResult, type Character, type RulePack } from "@forge/core";
+import { EntitySchema, parseCharacter, parseRulePack, type Character, type Engine, type Entity, type ParseResult, type RulePack } from "@forge/core";
 import { ulid } from "ulid";
+import { localEntitiesFor } from "../../app/packs";
 
 export function downloadJson(data: unknown, filename: string) {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -15,12 +16,36 @@ async function readJson(file: File): Promise<unknown> {
   return JSON.parse(await file.text());
 }
 
+/** Character file = the character plus any custom content it uses, so a friend can open it. */
+export interface CharacterBundle extends Character {
+  homebrew?: Entity[];
+}
+
+export function exportCharacter(c: Character, engine: Engine) {
+  const { sheet } = engine.evaluate(c.build);
+  const ids = [
+    ...sheet.collected.entities.map((e) => e.entity.id),
+    ...sheet.items.map((i) => i.item),
+    ...sheet.spells.map((s) => s.spellId),
+    ...c.build.inventory.map((i) => i.item),
+  ];
+  const homebrew = localEntitiesFor(engine, ids);
+  const bundle: CharacterBundle = homebrew.length ? { ...c, homebrew } : c;
+  downloadJson(bundle, `${c.name || "character"}.forge.json`);
+}
+
 /** Imported characters get a fresh id so they never overwrite an existing one. */
-export async function importCharacterFile(file: File): Promise<ParseResult<Character>> {
+export async function importCharacterFile(file: File): Promise<ParseResult<{ character: Character; homebrew: Entity[] }>> {
   try {
-    const r = parseCharacter(await readJson(file));
+    const raw = (await readJson(file)) as { homebrew?: unknown };
+    const r = parseCharacter(raw);
     if (!r.ok) return r;
-    return { ok: true, value: { ...r.value, id: ulid(), updatedAt: Date.now() } };
+    const homebrew: Entity[] = [];
+    for (const e of Array.isArray(raw.homebrew) ? raw.homebrew : []) {
+      const p = EntitySchema.safeParse(e);
+      if (p.success) homebrew.push(p.data as Entity);
+    }
+    return { ok: true, value: { character: { ...r.value, id: ulid(), updatedAt: Date.now() }, homebrew } };
   } catch (e) {
     return { ok: false, errors: [(e as Error).message] };
   }

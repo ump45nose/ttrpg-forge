@@ -5,8 +5,10 @@ export interface StoredPack {
   id: string;
   pack: RulePack;
   enabled: boolean;
-  /** "import" for files, "homebrew" for packs made in the editor. */
-  origin: "import" | "homebrew";
+  /** "import" for files, "homebrew" for packs made in the editor, "local" for the built-in homebrew pack. */
+  origin: "import" | "homebrew" | "local";
+  /** Load order among user packs; later packs override earlier ones. */
+  order?: number;
   updatedAt: number;
 }
 

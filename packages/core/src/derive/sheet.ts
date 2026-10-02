@@ -297,7 +297,9 @@ export function derive(reg: PackRegistry, build: Build, opts: DeriveOptions = {}
     let dice = 0;
     build.levels.forEach((l, i) => {
       const die = reg.getOf("class", l.classId)?.hitDie ?? 8;
-      dice += i === 0 ? die : build.hpMethod === "rolled" && l.hp ? l.hp : Math.floor(die / 2) + 1;
+      const avg = Math.floor(die / 2) + 1;
+      if (i === 0) dice += reg.system.hp.firstLevel === "max" ? die : avg;
+      else dice += build.hpMethod === "rolled" && l.hp ? l.hp : reg.system.hp.levelUp === "max" ? die : avg;
     });
     const conTotal = con * level;
     return {

@@ -1,4 +1,5 @@
 import type { Entity, Grant } from "@forge/core";
+import { CONDITION_TEXT } from "./glossary.generated";
 import { action, mod, t, tag } from "./helpers";
 
 type C = [id: string, en: string, zh: string, textEn: string, textZh: string, icon: string, grants?: Grant[]];
@@ -43,7 +44,8 @@ export const conditions: Entity[] = [
     id: `condition:${id}`,
     type: "condition",
     name: t(en, zh),
-    text: t(ten, tzh),
+    summary: t(ten, tzh),
+    text: CONDITION_TEXT[`condition:${id}`] ?? t(ten, tzh),
     icon,
     tags: ["condition"],
     grants,

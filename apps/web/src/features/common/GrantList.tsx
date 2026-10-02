@@ -3,6 +3,8 @@ import { Sparkles } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "../../ui/cn";
 import { useNames } from "./names";
+import { RichText } from "../terms/RichText";
+import { Term } from "../terms/Term";
 
 /** Human-readable rendering of what an entity grants (features first, then the small stuff). */
 export function GrantList({ grants, className, dense = false }: { grants: Grant[] | undefined; className?: string; dense?: boolean }) {
@@ -19,7 +21,7 @@ export function GrantList({ grants, className, dense = false }: { grants: Grant[
               {n.l(g.name)}
               {g.minLevel && <span className="text-[10px] text-ink-3">Lv{g.minLevel}+</span>}
             </div>
-            {g.text && <p className={cn("mt-0.5 text-xs leading-relaxed text-ink-2", dense && "line-clamp-2")}>{n.l(g.text, { mono: true })}</p>}
+            {g.text && <RichText text={g.text} className={cn("mt-0.5 text-xs leading-relaxed text-ink-2", dense && "line-clamp-3")} />}
           </div>,
         );
         break;
@@ -51,14 +53,16 @@ export function GrantList({ grants, className, dense = false }: { grants: Grant[
       case "grant":
         chips.push(
           <Pill key={i} tone="accent">
-            {n.entity(g.entity)}
+            <Term id={g.entity} plain>
+              {n.entity(g.entity)}
+            </Term>
           </Pill>,
         );
         break;
       case "spell":
         chips.push(
           <Pill key={i} tone="magic">
-            <Sparkles size={11} /> {n.entity(g.spell)}
+            <Sparkles size={11} /> <Term id={g.spell} plain>{n.entity(g.spell)}</Term>
             {g.minLevel && <span className="text-[10px] text-ink-3">Lv{g.minLevel}</span>}
           </Pill>,
         );

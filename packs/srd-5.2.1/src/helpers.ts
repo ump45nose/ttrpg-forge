@@ -44,7 +44,18 @@ export const equipmentChoice = (id: string, options: { id: string; name: Localiz
   id,
   name: t("Starting Equipment", "起始装备"),
   count: 1,
-  from: { kind: "options", options: options.map((o) => ({ id: o.id, name: o.name, grants: o.items })) },
+  from: {
+    kind: "options",
+    options: [
+      ...options.map((o) => ({ id: o.id, name: o.name, grants: o.items })),
+      {
+        id: "custom",
+        name: t("Custom", "自定义"),
+        text: t("Take nothing here and assemble your own gear under Equipment & Inventory.", "不领取预设装备，在「装备与背包」中自行添加。"),
+        grants: [],
+      },
+    ],
+  },
 });
 
 export const skillChoice = (count: number, keys: string[] | "any", id = "skills"): Grant => ({
