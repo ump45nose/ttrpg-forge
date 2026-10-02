@@ -8,9 +8,10 @@ import { haptic } from "../../app/settings";
 import { Button } from "../../ui/Button";
 import { cn } from "../../ui/cn";
 import { useNames } from "../common/names";
-import { EntityEditor, Stepper, type EditRequest } from "../homebrew/EntityEditor";
-import { EntitySearch } from "../homebrew/EntitySearch";
-import { isLocalId } from "../homebrew/templates";
+import { openCreator, useCanCreate } from "../../app/creator";
+import { useUserEntity } from "../../app/packs";
+import { Stepper } from "../../ui/Stepper";
+import { EntitySearch } from "../common/EntitySearch";
 import { Term } from "../terms/Term";
 import { useBuilder } from "./state";
 
@@ -22,7 +23,7 @@ const isCoin = (id: string) => COINS.some((c) => id === `item:${c}`);
 export function InventoryPanel() {
   const t = useT();
   const { sheet, build, apply } = useBuilder();
-  const [edit, setEdit] = useState<EditRequest | null>(null);
+  const canCreate = useCanCreate("item");
   const items = sheet.items.filter((i) => !isCoin(i.item));
 
   const add = (item: string) => {
@@ -54,11 +55,12 @@ export function InventoryPanel() {
         <div className="min-w-0 flex-1">
           <EntitySearch type="item" filter={(id) => !isCoin(id)} onPick={add} placeholder={t("inventory.search")} />
         </div>
-        <Button variant="secondary" className="h-11 shrink-0" onClick={() => setEdit({ type: "item" })}>
-          <Plus size={15} /> {t("inventory.newItem")}
-        </Button>
+        {canCreate && (
+          <Button variant="secondary" className="h-11 shrink-0" onClick={() => openCreator({ type: "item", mode: "new", onSaved: (e) => add(e.id) })}>
+            <Plus size={15} /> {t("inventory.newItem")}
+          </Button>
+        )}
       </div>
-      <EntityEditor req={edit} onClose={() => setEdit(null)} onSaved={(e) => edit && !edit.base && add(e.id)} />
     </section>
   );
 }
@@ -67,9 +69,11 @@ function ItemRow({ it }: { it: ItemView }) {
   const t = useT();
   const n = useNames();
   const { apply } = useBuilder();
-  const [edit, setEdit] = useState<EditRequest | null>(null);
+  const canEdit = useCanCreate("item");
+  const userPack = useUserEntity(it.item);
   const e = it.entity;
-  const equippable = !!(e?.armor || e?.weapon);
+  // magic items with mechanics only work while equipped
+  const equippable = !!(e?.armor || e?.weapon || e?.grants?.length);
   const Icon = e?.armor ? Shield : e?.weapon ? Sword : Backpack;
   const stat = e?.armor ? (e.armor.category === "shield" ? `AC +${e.armor.ac}` : `AC ${e.armor.ac}`) : e?.weapon ? `${e.weapon.damage} ${n.damage(e.weapon.damageType)}` : undefined;
 
@@ -86,8 +90,8 @@ function ItemRow({ it }: { it: ItemView }) {
         <span className="flex items-center gap-1.5 text-sm">
           {e ? <Term id={it.item}>{n.l(e.name)}</Term> : <span className="truncate">{it.item}</span>}
           {it.granted && <span className="shrink-0 rounded bg-surface-3 px-1 text-[10px] text-ink-3">{t("inventory.granted")}</span>}
-          {isLocalId(it.item) && (
-            <button className="shrink-0 rounded bg-accent/15 px-1 text-[10px] text-accent" onClick={() => e && setEdit({ type: "item", base: e })}>
+          {userPack && canEdit && (
+            <button className="shrink-0 rounded bg-accent/15 px-1 text-[10px] text-accent" onClick={() => e && openCreator({ type: "item", mode: "edit", base: e })}>
               {t("homebrew.local")} ✎
             </button>
           )}
@@ -115,7 +119,6 @@ function ItemRow({ it }: { it: ItemView }) {
           </Button>
         </>
       )}
-      <EntityEditor req={edit} onClose={() => setEdit(null)} />
     </motion.div>
   );
 }

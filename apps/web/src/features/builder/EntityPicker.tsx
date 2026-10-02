@@ -13,8 +13,8 @@ import { DiffView } from "../common/DiffView";
 import { useNames } from "../common/names";
 import { useBuilder } from "./state";
 import { RichText } from "../terms/RichText";
-import { LOCAL_PACK_ID, usePacks } from "../../app/packs";
-import { EntityEditor, type EditRequest } from "../homebrew/EntityEditor";
+import { usePacks } from "../../app/packs";
+import { openCreator, useCanCreate } from "../../app/creator";
 
 interface Props {
   type: Extract<EntityType, "class" | "species" | "background">;
@@ -22,15 +22,13 @@ interface Props {
   opsFor: (id: string) => BuildOp[];
   /** Extra showcase content (class timeline, origin choices...). */
   showcase?: (e: Entity, isCurrent: boolean) => ReactNode;
-  /** Offer "custom" / "copy & edit" entry points backed by the local homebrew pack. */
-  editable?: boolean;
 }
 
 /**
  * BG3-style big-choice picker: list on the left, showcase in the middle.
  * Hover (desktop) or tap (touch) focuses a candidate and previews it in the live sheet.
  */
-export function EntityPicker({ type, current, opsFor, showcase, editable }: Props) {
+export function EntityPicker({ type, current, opsFor, showcase }: Props) {
   const t = useT();
   const n = useNames();
   const desktop = useIsDesktop();
@@ -40,11 +38,20 @@ export function EntityPicker({ type, current, opsFor, showcase, editable }: Prop
   const [hoverId, setHoverId] = useState<string>();
   const shownId = hoverId ?? focusId;
   const shown = entities.find((e) => e.id === shownId);
-  const [edit, setEdit] = useState<EditRequest | null>(null);
-  const removeLocal = usePacks((s) => s.removeLocal);
-  const isLocal = (e: Entity) => n.engine.reg.packOf(e.id) === LOCAL_PACK_ID;
-  const editType = type === "class" ? undefined : type;
-  const startCustom = editable && editType ? () => setEdit({ type: editType }) : undefined;
+  const userPacks = usePacks((s) => s.packs);
+  const removeIn = usePacks((s) => s.removeIn);
+  // entry points exist only while a content-editor plugin (the Workshop) is enabled
+  const editable = useCanCreate(type);
+  const ownerOf = (e: Entity) => {
+    const p = n.engine.reg.packOf(e.id);
+    return p && userPacks.some((u) => u.id === p) ? p : undefined;
+  };
+  const isLocal = (e: Entity) => !!ownerOf(e);
+  const focusSaved = (e: Entity) => {
+    setHoverId(undefined);
+    setFocusId(e.id);
+  };
+  const startCustom = editable ? () => openCreator({ type, mode: "new", onSaved: focusSaved }) : undefined;
 
   useEffect(() => {
     if (current) setFocusId(current);
@@ -108,11 +115,11 @@ export function EntityPicker({ type, current, opsFor, showcase, editable }: Prop
                 </div>
               </header>
               {shown.text && <RichText text={shown.text} selfId={shown.id} className="relative mt-4 text-sm leading-relaxed text-ink-2" />}
-              {editable && editType && (
+              {editable && (
                 <div className="relative mt-4 flex flex-wrap gap-2">
                   {isLocal(shown) ? (
                     <>
-                      <Button size="sm" variant="secondary" onClick={() => setEdit({ type: editType, base: shown })}>
+                      <Button size="sm" variant="secondary" onClick={() => openCreator({ type, mode: "edit", base: shown })}>
                         <Pencil size={14} /> {t("homebrew.edit")}
                       </Button>
                       <Button
@@ -121,16 +128,17 @@ export function EntityPicker({ type, current, opsFor, showcase, editable }: Prop
                         className="text-bad"
                         onClick={() => {
                           if (!confirm(t("homebrew.deleteConfirm", { name: n.l(shown.name, { mono: true }) }))) return;
-                          if (shown.id === current) apply([type === "background" ? { op: "setBackground", id: undefined } : { op: "setSpecies", id: undefined }]);
+                          const owner = ownerOf(shown);
+                          if (shown.id === current && type !== "class") apply([type === "background" ? { op: "setBackground", id: undefined } : { op: "setSpecies", id: undefined }]);
                           setFocusId(entities.find((e) => e.id !== shown.id)?.id);
-                          void removeLocal(shown.id);
+                          if (owner) void removeIn(owner, shown.id);
                         }}
                       >
                         <Trash2 size={14} /> {t("homebrew.delete")}
                       </Button>
                     </>
                   ) : (
-                    <Button size="sm" variant="secondary" onClick={() => setEdit({ type: editType, base: shown, clone: true })}>
+                    <Button size="sm" variant="secondary" onClick={() => openCreator({ type, mode: "clone", base: shown, onSaved: focusSaved })}>
                       <Copy size={14} /> {t("homebrew.clone")}
                     </Button>
                   )}
@@ -163,14 +171,6 @@ export function EntityPicker({ type, current, opsFor, showcase, editable }: Prop
           )}
         </AnimatePresence>
       </div>
-      <EntityEditor
-        req={edit}
-        onClose={() => setEdit(null)}
-        onSaved={(e) => {
-          setHoverId(undefined);
-          setFocusId(e.id);
-        }}
-      />
     </div>
   );
 }

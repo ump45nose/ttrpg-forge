@@ -37,6 +37,9 @@ interface PackStore {
   /** Add or replace an entity in the local homebrew pack. */
   upsertLocal(e: Entity): Promise<void>;
   removeLocal(id: string): Promise<void>;
+  /** Add or replace an entity in any user pack (keeps its position when replacing). */
+  upsertIn(packId: string, e: Entity): Promise<void>;
+  removeIn(packId: string, id: string): Promise<void>;
 }
 
 export const usePacks = create<PackStore>()((set, get) => ({
@@ -65,13 +68,21 @@ export const usePacks = create<PackStore>()((set, get) => ({
     await db.packs.bulkPut(renumbered);
     set({ packs: [...renumbered, ...get().packs.filter((p) => p.id === LOCAL_PACK_ID)] });
   },
-  async upsertLocal(e) {
-    const cur = get().packs.find((p) => p.id === LOCAL_PACK_ID) ?? localPack();
-    const entities = [...cur.pack.entities.filter((x) => x.id !== e.id), e];
+  upsertLocal(e) {
+    return get().upsertIn(LOCAL_PACK_ID, e);
+  },
+  removeLocal(id) {
+    return get().removeIn(LOCAL_PACK_ID, id);
+  },
+  async upsertIn(packId, e) {
+    const cur = get().packs.find((p) => p.id === packId) ?? (packId === LOCAL_PACK_ID ? localPack() : undefined);
+    if (!cur) throw new Error(`unknown pack ${packId}`);
+    const i = cur.pack.entities.findIndex((x) => x.id === e.id);
+    const entities = i < 0 ? [...cur.pack.entities, e] : cur.pack.entities.map((x, j) => (j === i ? e : x));
     await get().save({ ...cur, pack: { ...cur.pack, entities } });
   },
-  async removeLocal(id) {
-    const cur = get().packs.find((p) => p.id === LOCAL_PACK_ID);
+  async removeIn(packId, id) {
+    const cur = get().packs.find((p) => p.id === packId);
     if (!cur) return;
     await get().save({ ...cur, pack: { ...cur.pack, entities: cur.pack.entities.filter((x) => x.id !== id) } });
   },
@@ -91,6 +102,15 @@ export function useEngine(): Engine {
     return new Engine([...BASE_PACKS, ...host.get("rulePacks"), ...enabledUser]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rev, user]);
+}
+
+/** Id of the user pack (local homebrew, house rules, imports) that currently provides an entity, if any. */
+export function useUserEntity(id: string | undefined): string | undefined {
+  const engine = useEngine();
+  const user = usePacks((s) => s.packs);
+  if (!id) return undefined;
+  const owner = engine.reg.packOf(id);
+  return owner && user.some((p) => p.id === owner) ? owner : undefined;
 }
 
 /** Entities from the local pack that a character's build depends on (bundled into exports). */

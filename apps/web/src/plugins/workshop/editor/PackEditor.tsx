@@ -1,13 +1,13 @@
 import { DND5E_2024, parseRulePack, type RulePack, type SystemConfig } from "@forge/core";
 import { useEffect, useState } from "react";
-import { useL, useT } from "../../app/i18n";
-import type { StoredPack } from "../../app/db";
-import { useEngine, usePacks } from "../../app/packs";
-import { Button } from "../../ui/Button";
-import { Input, Label } from "../../ui/Field";
-import { Sheet } from "../../ui/Sheet";
-import { Tabs } from "../../ui/Tabs";
-import { toast } from "../../ui/Toast";
+import { useL, useT } from "../../../app/i18n";
+import type { StoredPack } from "../../../app/db";
+import { useEngine, usePacks } from "../../../app/packs";
+import { Button } from "../../../ui/Button";
+import { Input, Label } from "../../../ui/Field";
+import { Sheet } from "../../../ui/Sheet";
+import { Tabs } from "../../../ui/Tabs";
+import { toast } from "../../../ui/Toast";
 import { JsonEditor } from "./JsonEditor";
 
 /** Edit a user pack: common house-rule numbers as a form, anything else as JSON. */

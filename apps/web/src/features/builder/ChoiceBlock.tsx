@@ -1,8 +1,10 @@
 import { choiceCandidates, type Ability, type BuildOp, type ChoiceCandidate, type ChoiceView, type Entity } from "@forge/core";
-import { Check, Info, Search, Sparkles } from "lucide-react";
+import { Check, Info, Pencil, Plus, Search, Sparkles } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useMemo, useState } from "react";
+import { openCreator, useCanCreate } from "../../app/creator";
 import { useT } from "../../app/i18n";
+import { useUserEntity } from "../../app/packs";
 import { haptic } from "../../app/settings";
 import { Button } from "../../ui/Button";
 import { Chip } from "../../ui/Chip";
@@ -214,8 +216,57 @@ function EntityList({ ch, candidates }: { ch: ChoiceView; candidates: ChoiceCand
           </div>
         ))}
       </div>
+      <QuickCreate ch={ch} />
       <CandidateDetail ch={ch} candidate={detail} onClose={() => setDetail(undefined)} />
     </>
+  );
+}
+
+const FEAT_CATS = ["origin", "general", "fighting-style", "epic-boon"];
+
+/** Preset for a brand-new entity that would be a candidate of this choice. */
+function presetFor(ch: ChoiceView, evalF: (f: string | number) => number): Partial<Entity> | undefined {
+  const from = ch.choice.from;
+  if (from.kind !== "entity") return undefined;
+  const tags = from.tags ?? [];
+  if (from.entityType === "subclass") return tags[0] ? ({ classId: `class:${tags[0]}` } as Partial<Entity>) : undefined;
+  if (from.entityType === "feat") {
+    const cat = [...tags, ...(from.anyTags ?? [])].find((x) => FEAT_CATS.includes(x)) ?? "general";
+    return { category: cat, tags: [cat] } as Partial<Entity>;
+  }
+  if (from.entityType === "spell") {
+    const max = from.maxLevel !== undefined ? evalF(from.maxLevel) : 9;
+    const min = from.minLevel !== undefined ? evalF(from.minLevel) : 0;
+    const level = max <= 0 ? 0 : Math.max(1, min);
+    const lists = from.anyTags?.length ? [from.anyTags[0]!] : tags.slice(0, 1);
+    return { level, tags: lists } as Partial<Entity>;
+  }
+  return undefined;
+}
+
+/** "+ custom …" at the end of an entity choice: create it in the Workshop and pick it right away. */
+function QuickCreate({ ch }: { ch: ChoiceView }) {
+  const t = useT();
+  const { sheet, apply } = useBuilder();
+  const type = ch.choice.from.kind === "entity" ? ch.choice.from.entityType : undefined;
+  const can = useCanCreate(type) && (type === "subclass" || type === "spell" || type === "feat");
+  if (!can || !type) return null;
+  return (
+    <button
+      type="button"
+      onClick={() =>
+        openCreator({
+          type,
+          mode: "new",
+          preset: presetFor(ch, (f) => Number(sheet.stats.eval(f)) || 0),
+          onSaved: (e) => ch.selected.length < ch.count && apply(toggleOp(ch, e.id)),
+        })
+      }
+      className="mt-2 flex w-full items-center gap-2 rounded-xl border border-dashed border-line-strong px-3 py-2.5 text-left text-sm text-ink-2 transition-colors hover:border-accent hover:text-ink"
+    >
+      <Plus size={16} />
+      {t("workshop.quickCreate", { type: t(`workshop.type.${type}`) })}
+    </button>
   );
 }
 
@@ -263,6 +314,7 @@ function CandidateDetail({ ch, candidate, onClose }: { ch: ChoiceView; candidate
     >
       {candidate && (
         <div className="space-y-4">
+          {e && <EditOwn e={e} />}
           {candidate.reason && <Chip tone="bad">{n.l(candidate.reason)}</Chip>}
           {candidate.text && <RichText text={candidate.text} selfId={candidate.entity?.id} className="text-sm leading-relaxed text-ink-2" />}
           {e?.type === "spell" && e.higherLevels && (
@@ -282,6 +334,19 @@ function CandidateDetail({ ch, candidate, onClose }: { ch: ChoiceView; candidate
         </div>
       )}
     </Sheet>
+  );
+}
+
+/** Homebrew candidates can be edited in place. */
+function EditOwn({ e }: { e: Entity }) {
+  const t = useT();
+  const owner = useUserEntity(e.id);
+  const can = useCanCreate(e.type);
+  if (!owner || !can) return null;
+  return (
+    <Button size="sm" variant="secondary" onClick={() => openCreator({ type: e.type, mode: "edit", base: e })}>
+      <Pencil size={14} /> {t("homebrew.edit")}
+    </Button>
   );
 }
 

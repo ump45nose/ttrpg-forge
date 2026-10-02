@@ -1,9 +1,8 @@
 import { localize } from "@forge/core";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Check, ChevronDown, ChevronUp, Download, FileJson, Package, Pencil, Plus, Puzzle, Trash2 } from "lucide-react";
+import { ArrowLeft, Check, ChevronDown, ChevronUp, Download, FileJson, Package, Puzzle, Trash2 } from "lucide-react";
 import { motion } from "motion/react";
-import { useRef, useState, type ReactNode } from "react";
-import { ulid } from "ulid";
+import { useRef, type ReactNode } from "react";
 import { useCharacters } from "../../app/characters";
 import { host, useHostRevision } from "../../app/host";
 import { useL, useT } from "../../app/i18n";
@@ -15,7 +14,7 @@ import { cn } from "../../ui/cn";
 import { Switch } from "../../ui/Field";
 import { Tabs } from "../../ui/Tabs";
 import { toast } from "../../ui/Toast";
-import { PackEditor } from "../homebrew/PackEditor";
+import { Slot } from "../../app/slot";
 import { downloadJson, importPackFile } from "../library/transfer";
 
 export function SettingsPage() {
@@ -30,7 +29,6 @@ export function SettingsPage() {
   const characters = useCharacters((x) => x.byId);
   const engine = useEngine();
   const ordered = orderedPacks(packs.packs);
-  const [editing, setEditing] = useState<string>();
 
   return (
     <div className="mx-auto min-h-dvh max-w-2xl px-4 pb-24 sm:px-6">
@@ -98,6 +96,8 @@ export function SettingsPage() {
         <Switch checked={s.haptics} onChange={(v) => s.set({ haptics: v })} label={t("settings.haptics")} />
       </Section>
 
+      <Slot name="settings.section" />
+
       <Section title={t("settings.packs")} icon={<Package size={16} />}>
         <p className="mb-3 text-xs text-ink-3">{t("homebrew.orderHint")}</p>
         <div className="space-y-2">
@@ -148,9 +148,6 @@ export function SettingsPage() {
                         </Button>
                       </>
                     )}
-                    <Button variant="ghost" size="icon-sm" onClick={() => setEditing(p.id)} aria-label={t("common.edit")}>
-                      <Pencil size={15} />
-                    </Button>
                     <Button variant="ghost" size="icon-sm" onClick={() => downloadJson(p.pack, `${p.id}.json`)} aria-label={t("common.export")}>
                       <Download size={15} />
                     </Button>
@@ -167,16 +164,6 @@ export function SettingsPage() {
           })}
         </div>
         <div className="mt-3 flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            onClick={async () => {
-              const id = `house:${ulid().toLowerCase()}`;
-              await packs.save({ id, origin: "homebrew", enabled: true, updatedAt: Date.now(), pack: { id, version: "1", system: BASE_PACKS[0]!.system, name: { en: "House Rules", zh: "村规" }, entities: [], systemConfig: {}, patches: [] } });
-              setEditing(id);
-            }}
-          >
-            <Plus size={16} /> {t("homebrew.newHouse")}
-          </Button>
           <Button variant="outline" onClick={() => fileRef.current?.click()}>
             <FileJson size={16} /> {t("settings.importPack")}
           </Button>
@@ -196,7 +183,6 @@ export function SettingsPage() {
             toast({ content: `${localize(r.value.name, s.locale)} ✓`, tone: "good" });
           }}
         />
-        <PackEditor stored={packs.packs.find((p) => p.id === editing)} onClose={() => setEditing(undefined)} />
       </Section>
 
       <Section title={t("settings.plugins")} icon={<Puzzle size={16} />}>
@@ -205,9 +191,9 @@ export function SettingsPage() {
             <Row
               key={plugin.manifest.id}
               title={l(plugin.manifest.name)}
-              meta={`${plugin.manifest.id} · v${plugin.manifest.version}`}
+              meta={plugin.manifest.description ? `${l(plugin.manifest.description, { mono: true })} · v${plugin.manifest.version}` : `${plugin.manifest.id} · v${plugin.manifest.version}`}
               badge={
-                plugin.manifest.builtin && plugin.manifest.kind !== "presentation" ? (
+                plugin.manifest.builtin && plugin.manifest.kind === "data" ? (
                   <Chip tone="accent">{t("settings.builtin")}</Chip>
                 ) : (
                   <Switch

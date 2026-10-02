@@ -40,7 +40,6 @@ export function OriginStep() {
         current={current}
         opsFor={(id) => [sub === "background" ? { op: "setBackground", id } : { op: "setSpecies", id }]}
         showcase={(e) => <OriginShowcase e={e} />}
-        editable
       />
       {choices.length > 0 && (
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">

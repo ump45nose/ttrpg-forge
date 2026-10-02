@@ -7,18 +7,24 @@ import { ulid } from "ulid";
  * cloning official content and editing it never loses mechanics.
  */
 
-const L = (s: string): LocalizedText => ({ en: s, zh: s });
+export const L = (s: string): LocalizedText => ({ en: s, zh: s });
 /** Unnamed drafts are stored as "?" (names are required by the schema); show them as empty. */
-const plain = (t: LocalizedText | undefined, locale: "en" | "zh") => {
+export const plain = (t: LocalizedText | undefined, locale: "en" | "zh") => {
   const s = t === undefined ? "" : typeof t === "string" ? t : (t[locale] ?? t.en);
   return s === "?" ? "" : s;
 };
 
-export const newLocalId = (type: string) => `${type}:local-${ulid().toLowerCase().slice(-10)}`;
+/** Local ids start with a letter after each hyphen so they work inside formula refs (@class.local-h….level). */
+/** Keep the original (possibly bilingual) text when the field wasn't touched; otherwise store the new text for both locales. */
+export const keepL = (prev: LocalizedText | undefined, locale: "en" | "zh", value: string): LocalizedText | undefined =>
+  !value ? undefined : prev !== undefined && plain(prev, locale) === value ? prev : L(value);
+
+export const newLocalId = (type: string) => `${type}:local-h${ulid().toLowerCase().slice(-9)}`;
 
 export interface Kit {
   item: string;
   qty: number;
+  equipped?: boolean;
 }
 
 export interface BackgroundForm {
@@ -52,7 +58,7 @@ export function backgroundToForm(e: BackgroundEntity | undefined, locale: "en" |
       for (const it of kit?.grants ?? []) {
         if (it.type !== "item") continue;
         if (it.item === "item:gp") f.kitGold += it.qty ?? 1;
-        else f.kit.push({ item: it.item, qty: it.qty ?? 1 });
+        else f.kit.push({ item: it.item, qty: it.qty ?? 1, ...(it.equipped ? { equipped: true } : {}) });
       }
       const altGold = alt?.grants.find((x) => x.type === "item" && x.item === "item:gp");
       if (altGold?.type === "item") f.altGold = altGold.qty ?? 0;
@@ -76,7 +82,7 @@ export function formToBackground(f: BackgroundForm): BackgroundEntity {
   for (const key of f.skills) grants.push({ type: "proficiency", kind: "skill", key });
   for (const key of f.tools) grants.push({ type: "proficiency", kind: "tool", key });
   if (f.kit.length || f.kitGold || f.altGold) {
-    const kitItems: Grant[] = [...f.kit.map((k): Grant => ({ type: "item", item: k.item, qty: k.qty })), ...(f.kitGold ? [{ type: "item", item: "item:gp", qty: f.kitGold } as Grant] : [])];
+    const kitItems: Grant[] = [...f.kit.map((k): Grant => ({ type: "item", item: k.item, qty: k.qty, ...(k.equipped ? { equipped: true } : {}) })), ...(f.kitGold ? [{ type: "item", item: "item:gp", qty: f.kitGold } as Grant] : [])];
     grants.push({
       type: "choice",
       id: "equipment",
@@ -166,6 +172,10 @@ export function formToSpecies(f: SpeciesForm): SpeciesEntity {
   };
 }
 
+export const WEAPON_PROPS = ["ammunition", "finesse", "heavy", "light", "loading", "reach", "thrown", "two-handed", "versatile"] as const;
+export const MASTERIES = ["cleave", "graze", "nick", "push", "sap", "slow", "topple", "vex"] as const;
+export const RARITIES = ["common", "uncommon", "rare", "very-rare", "legendary", "artifact"] as const;
+
 export interface ItemForm {
   id: string;
   name: string;
@@ -176,29 +186,75 @@ export interface ItemForm {
   /** Weapons */
   damage: string;
   damageType: string;
+  weaponCategory: "simple" | "martial";
+  weaponKind: "melee" | "ranged";
+  properties: string[];
+  range: string;
+  versatile: string;
+  mastery: string;
   /** Armor */
   ac: number;
   armorCategory: "light" | "medium" | "heavy" | "shield";
+  /** Magic items: "" = mundane. */
+  rarity: string;
+  attunement: boolean;
+  /** Mechanics that apply while the item is equipped. */
+  grants: Grant[];
 }
 
 export function itemToForm(e: ItemEntity | undefined, locale: "en" | "zh"): ItemForm {
+  const tags = e?.tags ?? [];
   return {
     id: e?.id ?? newLocalId("item"),
     name: plain(e?.name, locale),
     text: plain(e?.text, locale),
-    itemType: (e?.itemType as ItemForm["itemType"]) ?? "gear",
+    itemType: (["gear", "weapon", "armor", "tool"].includes(e?.itemType ?? "") ? e?.itemType : "gear") as ItemForm["itemType"],
     weight: e?.weight ?? 0,
     cost: e?.cost ?? "",
     damage: e?.weapon?.damage ?? "1d6",
     damageType: e?.weapon?.damageType ?? "slashing",
+    weaponCategory: e?.weapon?.category ?? "simple",
+    weaponKind: e?.weapon?.kind ?? "melee",
+    properties: e?.weapon?.properties ?? [],
+    range: e?.weapon?.range ?? "",
+    versatile: e?.weapon?.versatile ?? "",
+    mastery: e?.weapon?.mastery ?? "",
     ac: e?.armor?.ac ?? 11,
     armorCategory: (e?.armor?.category as ItemForm["armorCategory"]) ?? "light",
+    rarity: tags.find((t) => t.startsWith("rarity:"))?.slice(7) ?? "",
+    attunement: tags.includes("attunement"),
+    grants: e?.grants ?? [],
   };
 }
 
-export function formToItem(f: ItemForm, base?: ItemEntity): ItemEntity {
-  const out: ItemEntity = { ...(base ?? {}), id: f.id, type: "item", itemType: f.itemType, name: L(f.name || "?"), text: f.text ? L(f.text) : undefined, weight: f.weight || undefined, cost: f.cost || undefined, tags: ["homebrew", f.itemType] } as ItemEntity;
-  if (f.itemType === "weapon") out.weapon = { ...(base?.weapon ?? { category: "simple", kind: "melee", properties: [] }), damage: f.damage, damageType: f.damageType } as ItemEntity["weapon"];
+export function formToItem(f: ItemForm, base?: ItemEntity, locale: "en" | "zh" = "zh"): ItemEntity {
+  const keptTags = (base?.tags ?? []).filter((t) => !t.startsWith("rarity:") && t !== "attunement" && t !== "magic" && !["gear", "weapon", "armor", "tool", "homebrew"].includes(t));
+  const tags = [...new Set(["homebrew", f.itemType, ...keptTags, ...(f.rarity ? ["magic", `rarity:${f.rarity}`] : []), ...(f.attunement ? ["attunement"] : [])])];
+  const out: ItemEntity = {
+    ...(base ?? {}),
+    id: f.id,
+    type: "item",
+    // keep pack / focus types the form doesn't offer
+    itemType: base && !["gear", "weapon", "armor", "tool"].includes(base.itemType) && f.itemType === "gear" ? base.itemType : f.itemType,
+    name: keepL(base?.name, locale, f.name) ?? L("?"),
+    text: keepL(base?.text, locale, f.text),
+    weight: f.weight || undefined,
+    cost: f.cost || undefined,
+    tags,
+    grants: f.grants.length ? f.grants : undefined,
+  } as ItemEntity;
+  if (f.itemType === "weapon")
+    out.weapon = {
+      ...(base?.weapon ?? {}),
+      category: f.weaponCategory,
+      kind: f.weaponKind,
+      damage: f.damage,
+      damageType: f.damageType,
+      properties: f.properties,
+      range: f.range || undefined,
+      versatile: f.properties.includes("versatile") ? f.versatile || undefined : undefined,
+      mastery: f.mastery || undefined,
+    };
   else delete out.weapon;
   if (f.itemType === "armor") out.armor = { ...(base?.armor ?? {}), category: f.armorCategory, ac: f.ac, dexCap: f.armorCategory === "medium" ? 2 : f.armorCategory === "heavy" ? 0 : undefined } as ItemEntity["armor"];
   else delete out.armor;

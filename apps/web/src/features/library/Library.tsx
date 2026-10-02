@@ -8,6 +8,7 @@ import { useCharacters } from "../../app/characters";
 import { useL, useT } from "../../app/i18n";
 import { LOCAL_PACK_ID, useEngine, usePacks } from "../../app/packs";
 import { useSettings } from "../../app/settings";
+import { Slot } from "../../app/slot";
 import { useBuildView } from "../../app/views";
 import { Button } from "../../ui/Button";
 import { Chip } from "../../ui/Chip";
@@ -32,6 +33,7 @@ export function Library() {
       <header className="safe-t flex items-center gap-3 pt-5 pb-2">
         <Wordmark />
         <div className="flex-1" />
+        <Slot name="library.action" />
         <Button variant="ghost" size="icon" aria-label={t("library.importChar")} onClick={() => fileRef.current?.click()}>
           <Download size={19} />
         </Button>

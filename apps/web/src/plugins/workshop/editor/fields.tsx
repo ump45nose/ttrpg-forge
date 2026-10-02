@@ -1,6 +1,7 @@
 import { Check, X } from "lucide-react";
+import { useSettings } from "../../../app/settings";
 import type { ReactNode } from "react";
-import { cn } from "../../ui/cn";
+import { cn } from "../../../ui/cn";
 
 /** Toggle chips for picking from a small fixed set. */
 export function MultiPick<T extends string>({ options, value, onChange, max }: { options: { id: T; label: ReactNode }[]; value: T[]; onChange: (v: T[]) => void; max?: number }) {
@@ -58,3 +59,26 @@ export function Field({ label, hint, children }: { label: ReactNode; hint?: Reac
     </div>
   );
 }
+
+/** Native select styled like Input (best on phones: the OS picker). */
+export function Select<T extends string>({ value, onChange, options, className }: { value: T; onChange: (v: T) => void; options: { id: T; label: string }[]; className?: string }) {
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value as T)}
+      className={cn("h-11 w-full min-w-0 rounded-xl border border-line bg-surface px-3 text-sm text-ink outline-none focus:border-accent", className)}
+    >
+      {options.map((o) => (
+        <option key={o.id} value={o.id}>
+          {o.label}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+/** Number or formula: numeric strings become numbers so plain values stay plain in JSON. */
+export const toFormula = (s: string): string | number => (/^-?\d+(\.\d+)?$/.test(s.trim()) ? Number(s.trim()) : s.trim());
+
+/** Locale the author is writing in: form text is stored for both languages unless untouched. */
+export const useLocale = (): "en" | "zh" => useSettings((s) => (s.locale === "en" ? "en" : "zh"));

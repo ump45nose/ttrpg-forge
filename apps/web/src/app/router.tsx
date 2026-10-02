@@ -9,6 +9,8 @@ import { SettingsPage } from "../features/settings/SettingsPage";
 import { SheetPage } from "../features/sheet/SheetPage";
 import { ToastViewport } from "../ui/Toast";
 import { useSettings } from "./settings";
+import { PluginPage } from "./PluginPage";
+import { Slot } from "./slot";
 
 function Root() {
   const motionPref = useSettings((s) => s.motion);
@@ -27,6 +29,7 @@ function Root() {
       </AnimatePresence>
       <DiceDock />
       <TermLayer />
+      <Slot name="app.overlay" />
       <ToastViewport />
     </MotionConfig>
   );
@@ -42,9 +45,10 @@ export const buildRoute = createRoute({
   validateSearch: (s: Record<string, unknown>): { step?: string } => ({ step: typeof s.step === "string" ? s.step : undefined }),
   component: BuilderPage,
 });
+export const pluginRoute = createRoute({ getParentRoute: () => rootRoute, path: "/p/$page", component: PluginPage });
 export const sheetRoute = createRoute({ getParentRoute: () => rootRoute, path: "/c/$id", component: SheetPage });
 
-const routeTree = rootRoute.addChildren([indexRoute, settingsRoute, buildRoute, sheetRoute]);
+const routeTree = rootRoute.addChildren([indexRoute, settingsRoute, pluginRoute, buildRoute, sheetRoute]);
 
 export const router = createRouter({ routeTree, defaultPreload: "intent", scrollRestoration: true });
 

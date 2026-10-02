@@ -1,7 +1,7 @@
 import { CircleCheck, TriangleAlert } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useT } from "../../app/i18n";
-import { cn } from "../../ui/cn";
+import { useT } from "../../../app/i18n";
+import { cn } from "../../../ui/cn";
 
 /** JSON text editor with live validation; calls onValid only with values that parse and validate. */
 export function JsonEditor<T>({ value, validate, onValid, rows = 18 }: { value: T; validate: (v: unknown) => { ok: true; value: T } | { ok: false; errors: string[] }; onValid: (v: T) => void; rows?: number }) {

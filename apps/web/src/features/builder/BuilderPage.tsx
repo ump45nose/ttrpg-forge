@@ -1,4 +1,5 @@
 import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
+import { Slot } from "../../app/slot";
 import { ArrowLeft, ArrowRight, Check, ChevronUp, Redo2, Undo2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
@@ -97,6 +98,7 @@ function Builder() {
             <div className="truncate font-display text-lg leading-tight">{character.name}</div>
             <div className="truncate text-xs text-ink-3">{t(`builder.stepHint.${step}`)}</div>
           </div>
+          <Slot name="builder.toolbar" />
           <Button variant="ghost" size="icon-sm" disabled={!canUndo} onClick={undo} aria-label={t("common.undo")}>
             <Undo2 size={17} />
           </Button>
