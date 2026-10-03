@@ -12,7 +12,7 @@ test('Pages: manifest, icons, scoped worker and real PHB pack', async ({ page, r
   expect(manifest.scope).toBe(base);
   expect(manifest.start_url).toBe(app());
   for (const icon of manifest.icons) {
-    expect((await request.get(new URL(icon.src, `http://127.0.0.1:4181${base}`))).ok()).toBe(true);
+    expect((await request.get(new URL(icon.src, `http://127.0.0.1:4181${base}`).toString())).ok()).toBe(true);
   }
   const scope = await page.evaluate(async () => (await navigator.serviceWorker.ready).scope);
   expect(new URL(scope).pathname).toBe(base);
