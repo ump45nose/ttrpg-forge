@@ -1,0 +1,57 @@
+name: Build Android debug APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/android-debug.yml']
+permissions:
+  contents: read
+concurrency:
+  group: android-debug-${{ github.ref }}
+  cancel-in-progress: false
+env:
+  PHB_SOURCE_COMMIT: 63995fe26649fa49ac2cfa196e912f57a2693396
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86
+      - name: Select Java 21 and Android SDK
+        shell: bash
+        run: |
+          test -d "$JAVA_HOME_21_X64"
+          echo "JAVA_HOME=$JAVA_HOME_21_X64" >> "$GITHUB_ENV"
+          echo "$JAVA_HOME_21_X64/bin" >> "$GITHUB_PATH"
+          sdkmanager 'platforms;android-36' 'build-tools;36.0.0' 'platform-tools'
+      - run: pnpm install --frozen-lockfile
+      - name: Generate pinned PHB input
+        run: python3 packs/phb-2024/scripts/build_phb.py --commit "$PHB_SOURCE_COMMIT"
+      - run: pnpm check:phb
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+      - run: pnpm --filter @forge/web exec cap sync android
+      - name: Build APK
+        working-directory: apps/web/android
+        run: bash ./gradlew --no-daemon assembleDebug
+      - name: Verify and identify artifact
+        shell: bash
+        run: |
+          mkdir -p artifacts
+          cp apps/web/android/app/build/outputs/apk/debug/app-debug.apk "artifacts/forge-${GITHUB_SHA}-debug.apk"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs "artifacts/forge-${GITHUB_SHA}-debug.apk" > artifacts/signing-certificate.txt
+          (cd artifacts && sha256sum *.apk > SHA256SUMS)
+          printf 'Source: %s\nPHB source: %s\nBuilt by GitHub Actions with a fresh runner debug key. This is a test APK, not a drop-in update for an existing install with another signer. Back up local characters and settings before any uninstall. Original release remains unchanged.\n' "$GITHUB_SHA" "$PHB_SOURCE_COMMIT" > artifacts/README.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: forge-android-debug-${{ github.sha }}
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 14
