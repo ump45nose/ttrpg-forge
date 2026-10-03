@@ -22,7 +22,7 @@ export const THEMES: ThemeDef[] = [
       "--line-strong": "rgb(255 255 255 / 0.16)",
       "--ink": "#ece8f4",
       "--ink-2": "#a9a4bd",
-      "--ink-3": "#6f6b86",
+      "--ink-3": "#8b879e",
       "--accent": "#d6a85c",
       "--accent-2": "#f3d79a",
       "--accent-ink": "#1a1408",
@@ -36,6 +36,7 @@ export const THEMES: ThemeDef[] = [
       "--shadow-lg": "0 24px 60px -24px rgb(0 0 0 / 0.7)",
       "--shadow-md": "0 10px 30px -12px rgb(0 0 0 / 0.6)",
       "--inner-hi": "inset 0 1px 0 rgb(255 255 255 / 0.05)",
+      "--art-shadow": "0 1px 2px rgb(0 0 0 / 0.55), 0 0 14px rgb(0 0 0 / 0.45)",
     },
   },
   {
@@ -54,7 +55,7 @@ export const THEMES: ThemeDef[] = [
       "--line-strong": "rgb(255 220 200 / 0.16)",
       "--ink": "#f6ebe4",
       "--ink-2": "#bfa79a",
-      "--ink-3": "#80685c",
+      "--ink-3": "#958074",
       "--accent": "#ff8a3d",
       "--accent-2": "#ffc178",
       "--accent-ink": "#1d0d03",
@@ -68,6 +69,7 @@ export const THEMES: ThemeDef[] = [
       "--shadow-lg": "0 24px 60px -24px rgb(0 0 0 / 0.75)",
       "--shadow-md": "0 10px 30px -12px rgb(0 0 0 / 0.65)",
       "--inner-hi": "inset 0 1px 0 rgb(255 230 210 / 0.05)",
+      "--art-shadow": "0 1px 2px rgb(0 0 0 / 0.55), 0 0 14px rgb(0 0 0 / 0.45)",
     },
   },
   {
@@ -86,7 +88,7 @@ export const THEMES: ThemeDef[] = [
       "--line-strong": "rgb(70 45 20 / 0.24)",
       "--ink": "#2a1f16",
       "--ink-2": "#6b5a48",
-      "--ink-3": "#9c8a76",
+      "--ink-3": "#837261",
       "--accent": "#9b3b2f",
       "--accent-2": "#c0573f",
       "--accent-ink": "#fff7ee",
@@ -100,6 +102,7 @@ export const THEMES: ThemeDef[] = [
       "--shadow-lg": "0 24px 50px -24px rgb(80 50 20 / 0.35)",
       "--shadow-md": "0 8px 24px -12px rgb(80 50 20 / 0.3)",
       "--inner-hi": "inset 0 1px 0 rgb(255 255 255 / 0.7)",
+      "--art-shadow": "0 0 2px rgb(255 252 245 / 0.9), 0 0 14px rgb(255 252 245 / 0.75)",
     },
   },
 ];
@@ -116,4 +119,12 @@ export function applyTheme(theme: ThemeDef | undefined) {
   root.dataset.theme = theme.id;
   root.style.colorScheme = theme.scheme;
   document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme.tokens["--bg"] ?? "#0e0f17");
+  // dark text in the status bar on light themes
+  document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]')?.setAttribute("content", theme.scheme === "light" ? "default" : "black-translucent");
+  // remembered for index.html, which paints the next launch in this theme before any code loads
+  try {
+    localStorage.setItem("forge.theme", JSON.stringify({ id: theme.id, scheme: theme.scheme, tokens: theme.tokens }));
+  } catch {
+    // storage blocked: the next launch starts in the default theme, then switches
+  }
 }

@@ -391,7 +391,7 @@ export function ActionForm({ g, onChange, resources, bare = false }: { g: Action
   const dmg = a.damage?.[0];
   return (
     <div className="space-y-3">
-      <div className={bare ? "" : "grid grid-cols-[1fr_auto] gap-2"}>
+      <div className={bare ? "" : "grid grid-cols-[minmax(0,1fr)_auto] gap-2"}>
         {!bare && (
           <Field label={t("homebrew.name")}>
             <LocalizedInput value={a.name} onChange={(name) => set({ name: name ?? L("?") })} />
@@ -457,6 +457,7 @@ function SpellGrantForm({ g, onChange }: { g: SpellGrant; onChange: (g: Grant) =
         <Field label={t("workshop.freeUses")} hint={t("homebrew.zeroNone")}>
           <Input
             type="number"
+            inputMode="numeric"
             min={0}
             value={g.free ? String(g.free.max) : "0"}
             onChange={(e) => {
@@ -466,10 +467,10 @@ function SpellGrantForm({ g, onChange }: { g: SpellGrant; onChange: (g: Grant) =
           />
         </Field>
         <Field label={t("workshop.classLevel")} hint={t("common.optional")}>
-          <Input type="number" min={0} value={g.classLevel ?? ""} onChange={(e) => onChange({ ...g, classLevel: Number(e.target.value) || undefined })} />
+          <Input type="number" inputMode="numeric" min={0} value={g.classLevel ?? ""} onChange={(e) => onChange({ ...g, classLevel: Number(e.target.value) || undefined })} />
         </Field>
         <Field label={t("workshop.charLevel")} hint={t("common.optional")}>
-          <Input type="number" min={0} value={g.minLevel ?? ""} onChange={(e) => onChange({ ...g, minLevel: Number(e.target.value) || undefined })} />
+          <Input type="number" inputMode="numeric" min={0} value={g.minLevel ?? ""} onChange={(e) => onChange({ ...g, minLevel: Number(e.target.value) || undefined })} />
         </Field>
       </div>
       <MultiPick options={[{ id: "always", label: t("spell.always") }]} value={g.alwaysPrepared ? ["always"] : []} onChange={(v) => onChange({ ...g, alwaysPrepared: v.length ? true : undefined })} />
@@ -511,7 +512,7 @@ function ChoiceForm({ g, onChange }: { g: ChoiceGrant; onChange: (g: Grant) => v
   const lists = useMemo(() => spellLists(n.engine.reg), [n.engine]);
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-[1fr_6rem] gap-2">
+      <div className="grid grid-cols-[minmax(0,1fr)_6rem] gap-2">
         <Field label={t("homebrew.name")}>
           <LocalizedInput value={g.name} onChange={(name) => onChange({ ...g, name: name ?? L("?") })} />
         </Field>

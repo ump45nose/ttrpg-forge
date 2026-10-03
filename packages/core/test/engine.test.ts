@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyOps, emptyBuild, Engine, parseRulePack, type Build } from "../src";
+import { applyOps, canUse, emptyBuild, Engine, gearIssues, parseRulePack, type Build } from "../src";
 import { fixturePack } from "./fixture";
 
 const engine = new Engine([fixturePack]);
@@ -211,5 +211,30 @@ describe("pack schema", () => {
   it("bilingual search", () => {
     expect(engine.reg.search("警觉").map((e) => e.id)).toEqual(["feat:alert"]);
     expect(engine.reg.search("fire", "spell").map((e) => e.id)).toEqual(["spell:fire-bolt"]);
+  });
+});
+
+describe("derive: armor training and Strength (2024 rules)", () => {
+  const wear = (b: Build, item: string) => applyOps(b, [{ op: "addItem", entry: { key: `t/${item}`, item, qty: 1, equipped: true } }]);
+
+  it("an untrained shield adds no AC and says why", () => {
+    const before = engine.evaluate(wizard()).sheet;
+    const { sheet } = engine.evaluate(wear(wizard(), "item:shield"));
+    expect(sheet.ac).toBe(before.ac);
+    expect(gearIssues(sheet, "t/item:shield").map((i) => i.code)).toEqual(["shield-proficiency"]);
+  });
+
+  it("heavy armor below its Strength score costs 10 ft; untrained armor stops spellcasting", () => {
+    const { sheet, state } = engine.play({ ...engine.newCharacter("T"), build: wear(wizard(), "item:chain-mail") });
+    expect(sheet.speed.walk).toBe(20);
+    expect(gearIssues(sheet, "t/item:chain-mail").map((i) => i.code).sort()).toEqual(["armor-proficiency", "armor-strength"]);
+    const missile = sheet.actions.find((a) => a.spell?.id === "spell:magic-missile")!;
+    expect(canUse(missile, state, sheet).ok).toBe(false);
+  });
+
+  it("strong enough and trained: no penalty", () => {
+    const { sheet } = engine.evaluate(fighter());
+    expect(sheet.speed.walk).toBe(30);
+    expect(sheet.issues.filter((i) => i.code.startsWith("armor") || i.code.startsWith("shield"))).toEqual([]);
   });
 });

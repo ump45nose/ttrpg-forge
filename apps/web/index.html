@@ -9,9 +9,45 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <title>Forge · 冒险者工坊</title>
+    <script>
+      // paint the first frame in the last-used theme (plugins/themes.ts applyTheme stores it)
+      try {
+        const t = JSON.parse(localStorage.getItem("forge.theme") || "null");
+        if (t && t.tokens) {
+          const r = document.documentElement;
+          for (const k in t.tokens) r.style.setProperty(k, t.tokens[k]);
+          r.style.colorScheme = t.scheme;
+          r.dataset.theme = t.id;
+          document.querySelector('meta[name="theme-color"]').content = t.tokens["--bg"];
+          if (t.scheme === "light") document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]').content = "default";
+        }
+      } catch {}
+    </script>
+    <style>
+      html,
+      body {
+        background: var(--bg, #0e0f17);
+      }
+      .boot {
+        min-height: 100dvh;
+        display: grid;
+        place-items: center;
+      }
+      .boot img {
+        width: 56px;
+        height: 56px;
+        opacity: 0;
+        animation: boot-in 0.6s 0.25s ease-out forwards;
+      }
+      @keyframes boot-in {
+        to {
+          opacity: 0.85;
+        }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><div class="boot"><img src="/icon.svg" alt="" /></div></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "motion/react";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { create } from "zustand";
+import { cn } from "./cn";
 
 interface Toast {
   id: number;
@@ -33,8 +34,17 @@ export const toast = (t: Omit<Toast, "id">, ms?: number) => useToasts.getState()
 export function ToastViewport() {
   const toasts = useToasts((s) => s.toasts);
   const dismiss = useToasts((s) => s.dismiss);
+  const covered = useModalOpen();
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] z-[60] flex flex-col items-center gap-2 px-4 lg:bottom-6">
+    <div
+      role="status"
+      aria-live="polite"
+      className={cn(
+        "pointer-events-none fixed inset-x-0 z-[60] flex flex-col items-center gap-2 px-4",
+        // over a drawer, the bottom is its footer buttons: say it at the top instead
+        covered ? "top-[calc(env(safe-area-inset-top)+0.75rem)]" : "bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] lg:bottom-6",
+      )}
+    >
       <AnimatePresence initial={false}>
         {toasts.map((t) => (
           <motion.div
@@ -63,4 +73,17 @@ export function ToastViewport() {
       </AnimatePresence>
     </div>
   );
+}
+
+/** Whether a dialog or drawer is open (they lock page scroll while they are). */
+function useModalOpen() {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const check = () => setOpen(document.body.hasAttribute("data-scroll-locked"));
+    const mo = new MutationObserver(check);
+    mo.observe(document.body, { attributes: true, attributeFilter: ["data-scroll-locked"] });
+    check();
+    return () => mo.disconnect();
+  }, []);
+  return open;
 }

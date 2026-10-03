@@ -7,7 +7,7 @@ import { useMemo, useRef, useState, type ReactNode } from "react";
 import { ulid } from "ulid";
 import { openCreator } from "../../app/creator";
 import { useL, useT } from "../../app/i18n";
-import { BASE_PACKS, LOCAL_PACK_ID, orderedPacks, useEngine, usePacks } from "../../app/packs";
+import { BASE_PACKS, isBaseEntity, LOCAL_PACK_ID, orderedPacks, useEngine, usePacks } from "../../app/packs";
 import { useSettings } from "../../app/settings";
 import { downloadJson, importPackFile } from "../../features/library/transfer";
 import { Button } from "../../ui/Button";
@@ -18,6 +18,7 @@ import { toast } from "../../ui/Toast";
 import { WORKSHOP_TYPES, type WorkshopType } from "./editor/factory";
 import { PackEditor } from "./editor/PackEditor";
 import { CueSounds } from "./CueSounds";
+import { confirmDialog } from "../../ui/Confirm";
 
 export const TYPE_ICON: Record<WorkshopType, LucideIcon> = {
   class: Swords,
@@ -30,7 +31,6 @@ export const TYPE_ICON: Record<WorkshopType, LucideIcon> = {
   rule: BookA,
 };
 
-const baseIds = new Set(BASE_PACKS.flatMap((p) => p.entities.map((e) => e.id)));
 
 interface Row {
   e: Entity;
@@ -169,7 +169,7 @@ function ContentRow({ r }: { r: Row }) {
   const engine = useEngine();
   const removeIn = usePacks((s) => s.removeIn);
   const Icon = TYPE_ICON[r.e.type as WorkshopType] ?? Hammer;
-  const overrides = baseIds.has(r.e.id);
+  const overrides = isBaseEntity(r.e.id);
   const parent = r.e.type === "subclass" ? engine.reg.get(r.e.classId) : undefined;
   return (
     <motion.div layout initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0 }} className="flex items-center gap-3 rounded-xl border border-line bg-surface/60 py-2 pr-1.5 pl-3">
@@ -206,9 +206,9 @@ function ContentRow({ r }: { r: Row }) {
         variant="ghost"
         size="icon-sm"
         aria-label={t("common.delete")}
-        onClick={() => {
-          if (!confirm(t(overrides ? "workshop.restoreConfirm" : "homebrew.deleteConfirm", { name: l(r.e.name, { mono: true }) }))) return;
-          void removeIn(r.packId, r.e.id);
+        onClick={async () => {
+          const ok = await confirmDialog({ title: t(overrides ? "workshop.restoreConfirm" : "homebrew.deleteConfirm", { name: l(r.e.name, { mono: true }) }), confirmLabel: t(overrides ? "workshop.restore" : "common.delete"), tone: "danger" });
+          if (ok) void removeIn(r.packId, r.e.id);
         }}
       >
         <Trash2 size={15} />
@@ -226,7 +226,7 @@ function RemixSearch() {
     if (!q.trim()) return [];
     return engine.reg
       .search(q)
-      .filter((e) => (WORKSHOP_TYPES as readonly string[]).includes(e.type) && baseIds.has(e.id))
+      .filter((e) => (WORKSHOP_TYPES as readonly string[]).includes(e.type) && isBaseEntity(e.id))
       .slice(0, 12);
   }, [engine, q]);
   return (

@@ -2,8 +2,8 @@ import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { Slot } from "../../app/slot";
 import { ArrowLeft, ArrowRight, Check, ChevronUp, Redo2, Undo2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useState } from "react";
-import { useCharacter } from "../../app/characters";
+import { useEffect, useRef, useState } from "react";
+import { useCharacter, useLeaveIfMissing } from "../../app/characters";
 import { useT } from "../../app/i18n";
 import { Button } from "../../ui/Button";
 import { cn } from "../../ui/cn";
@@ -21,10 +21,7 @@ import { ReviewStep } from "./steps/ReviewStep";
 export function BuilderPage() {
   const { id } = useParams({ from: "/c/$id/build" });
   const character = useCharacter(id);
-  const navigate = useNavigate();
-  useEffect(() => {
-    if (!character) void navigate({ to: "/" });
-  }, [character, navigate]);
+  useLeaveIfMissing(character);
   if (!character) return null;
   return (
     <BuilderProvider character={character}>
@@ -45,11 +42,34 @@ function Builder() {
   const pending = pendingByStep(sheet, build);
   const accent = engine.reg.get(build.levels[0]?.classId ?? "")?.accent;
 
-  const goto = (s: StepId) => {
+  /** Switch step; with `anchor`, land on that element of the new step (e.g. a choice still open). */
+  const goto = (s: StepId, anchor?: string) => {
     setDir(STEPS.indexOf(s) >= idx ? 1 : -1);
     void navigate({ to: "/c/$id/build", params: { id: character.id }, search: { step: s }, replace: true });
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (!anchor) return window.scrollTo({ top: 0, behavior: "smooth" });
+    const until = Date.now() + 1500;
+    const find = () => {
+      const el = document.getElementById(anchor);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      else if (Date.now() < until) requestAnimationFrame(find);
+    };
+    // wait out the step transition so the target is the new step's element
+    setTimeout(find, s === step ? 0 : 320);
   };
+
+  // the header's height, for things that stick right under it (the step's to-do bar)
+  const head = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = head.current;
+    if (!el) return;
+    const root = document.documentElement;
+    const ro = new ResizeObserver(() => root.style.setProperty("--builder-head", `${el.offsetHeight}px`));
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      root.style.removeProperty("--builder-head");
+    };
+  }, []);
 
   // set on <html> so portaled drawers/popovers share the class colour
   useEffect(() => {
@@ -66,9 +86,10 @@ function Builder() {
     [],
   );
 
-  // pin the initial step so later build changes don't move the user
+  // pin the initial step so later build changes don't move the user (and land on `focus` once)
   useEffect(() => {
-    if (search.step !== step) void navigate({ to: "/c/$id/build", params: { id: character.id }, search: { step }, replace: true });
+    if (search.focus) goto(step, search.focus);
+    else if (search.step !== step) void navigate({ to: "/c/$id/build", params: { id: character.id }, search: { step }, replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -89,7 +110,7 @@ function Builder() {
       {/* class-tinted ambience */}
       <div className="pointer-events-none fixed inset-0 -z-0 bg-[radial-gradient(900px_500px_at_80%_-10%,color-mix(in_oklab,var(--class)_22%,transparent),transparent_70%)] transition-opacity" />
 
-      <header className="safe-t glass sticky top-0 z-30 border-b border-line">
+      <header ref={head} className="safe-t glass sticky top-0 z-30 border-b border-line">
         <div className="mx-auto flex max-w-[90rem] items-center gap-2 px-3 pt-3 pb-2 sm:px-6">
           <Button variant="ghost" size="icon" onClick={() => navigate({ to: "/" })} aria-label={t("common.back")}>
             <ArrowLeft size={20} />
@@ -109,7 +130,7 @@ function Builder() {
         <StepNav step={step} pending={pending} onStep={goto} />
       </header>
 
-      <div className="relative mx-auto max-w-[90rem] px-4 pt-5 pb-32 sm:px-6 lg:grid lg:grid-cols-[1fr_22rem] lg:gap-6 lg:pb-16">
+      <div className="relative mx-auto max-w-[90rem] px-4 pt-5 pb-32 sm:px-6 lg:grid lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-6 lg:pb-16">
         <main className="min-w-0">
           <AnimatePresence mode="wait" initial={false} custom={dir}>
             <motion.div
@@ -168,17 +189,19 @@ function StepNav({ step, pending, onStep }: { step: StepId; pending: Record<Step
         const active = s === step;
         const done = pending[s] === 0 && s !== "review" && s !== "details";
         return (
-          <button key={s} onClick={() => onStep(s)} className={cn("relative flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm transition-colors", active ? "text-ink" : "text-ink-3 hover:text-ink-2")}>
+          <button key={s} onClick={() => onStep(s)} aria-label={pending[s] > 0 ? `${t(`builder.steps.${s}`)} · ${t("builder.pending", { n: pending[s] })}` : undefined} className={cn("relative flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm transition-colors", active ? "text-ink" : "text-ink-3 hover:text-ink-2")}>
             {active && <motion.span layoutId="step-pill" className="absolute inset-0 rounded-full border border-class/50 bg-class/15" transition={{ type: "spring", stiffness: 500, damping: 40 }} />}
+            {/* the circle is always the step's number (or ✓); what's still open is a separate badge */}
             <span
               className={cn(
                 "tnum relative flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold transition-colors",
-                pending[s] > 0 ? "bg-warn text-bg" : done ? "bg-class text-white" : active ? "bg-ink text-bg" : "bg-surface-3 text-ink-3",
+                done ? "bg-class text-class-ink" : active ? "bg-ink text-bg" : "bg-surface-3 text-ink-3",
               )}
             >
-              {pending[s] > 0 ? pending[s] : done ? <Check size={11} strokeWidth={3.5} /> : i + 1}
+              {done ? <Check size={11} strokeWidth={3.5} /> : i + 1}
             </span>
             <span className="relative">{t(`builder.steps.${s}`)}</span>
+            {pending[s] > 0 && <span className="tnum relative -ml-0.5 rounded-full bg-warn/20 px-1.5 text-[10px] leading-4 font-semibold text-warn">{pending[s]}</span>}
           </button>
         );
       })}
@@ -220,7 +243,7 @@ function MobileBar({ idx, goto }: { idx: number; goto: (s: StepId) => void }) {
 function Stat({ label, value, tone, signed }: { label: string; value: number; tone?: string; signed?: boolean }) {
   return (
     <div className="text-center">
-      <div className="text-[9px] tracking-wider text-ink-3 uppercase">{label}</div>
+      <div className="text-[10px] tracking-wider text-ink-3 uppercase">{label}</div>
       <div className={cn("tnum font-display text-base leading-tight", tone)}>{signed && value >= 0 ? `+${value}` : value}</div>
     </div>
   );

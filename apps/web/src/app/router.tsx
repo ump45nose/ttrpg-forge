@@ -7,6 +7,8 @@ import { FxLayer } from "../ui/Fx";
 import { StudioHost } from "../features/media/StudioHost";
 import { Library } from "../features/library/Library";
 import { SheetPage } from "../features/sheet/SheetPage";
+import { ConfirmHost } from "../ui/Confirm";
+import { NotFound, RouteError, RoutePending } from "./RouteStates";
 import { ToastViewport } from "../ui/Toast";
 import { useSettings } from "./settings";
 import { PluginPage } from "./PluginPage";
@@ -36,6 +38,7 @@ function Root() {
       <Slot name="app.overlay" />
       <StudioHost />
       <ToastViewport />
+      <ConfirmHost />
     </MotionConfig>
   );
 }
@@ -47,7 +50,11 @@ const settingsRoute = createRoute({ getParentRoute: () => rootRoute, path: "/set
 export const buildRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/c/$id/build",
-  validateSearch: (s: Record<string, unknown>): { step?: string } => ({ step: typeof s.step === "string" ? s.step : undefined }),
+  validateSearch: (s: Record<string, unknown>): { step?: string; focus?: string } => ({
+    step: typeof s.step === "string" ? s.step : undefined,
+    // an element to land on, e.g. a class's prepared-spells panel
+    focus: typeof s.focus === "string" ? s.focus : undefined,
+  }),
   // the builder is only needed between sessions: keep it out of the table-side bundle
   component: lazyRouteComponent(() => import("../features/builder/BuilderPage"), "BuilderPage"),
 });
@@ -64,6 +71,11 @@ export const router = createRouter({
   basepath: hashRouting ? undefined : import.meta.env.BASE_URL,
   defaultPreload: "intent",
   scrollRestoration: true,
+  defaultNotFoundComponent: NotFound,
+  defaultErrorComponent: RouteError,
+  defaultPendingComponent: RoutePending,
+  // only show the skeleton when loading is actually slow
+  defaultPendingMs: 300,
 });
 
 declare module "@tanstack/react-router" {

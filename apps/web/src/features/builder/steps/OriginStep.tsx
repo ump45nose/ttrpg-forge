@@ -1,4 +1,4 @@
-import type { Entity } from "@forge/core";
+import type { ChoiceView, Entity } from "@forge/core";
 import { motion } from "motion/react";
 import { useState } from "react";
 import { useT } from "../../../app/i18n";
@@ -39,16 +39,22 @@ export function OriginStep() {
         type={sub}
         current={current}
         opsFor={(id) => [sub === "background" ? { op: "setBackground", id } : { op: "setSpecies", id }]}
+        // what's left to decide sits right under the chosen entry's title, not below the whole list
+        lead={(_e, cur) => cur && choices.length > 0 && <ChoiceList choices={choices} />}
         showcase={(e) => <OriginShowcase e={e} />}
       />
-      {choices.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
-          {choices.map((c) => (
-            <ChoiceBlock key={c.path} ch={c} />
-          ))}
-        </motion.div>
-      )}
+      {!current && choices.length > 0 && <ChoiceList choices={choices} />}
     </div>
+  );
+}
+
+function ChoiceList({ choices }: { choices: ChoiceView[] }) {
+  return (
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+      {choices.map((c) => (
+        <ChoiceBlock key={c.path} ch={c} hideSource />
+      ))}
+    </motion.div>
   );
 }
 

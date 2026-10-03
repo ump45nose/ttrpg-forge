@@ -63,7 +63,7 @@ export function ResourcesPanel() {
           {features.map((r) => {
             const left = resourceRemaining(state, sheet, r.id);
             return (
-              <Row key={r.id} label={n.l(r.name, { mono: true })} hint={r.recovery.map((x) => t(`sheet.recovers.${x.on}`)).join(" · ")} right={`${left}/${r.max}`}>
+              <Row key={r.id} label={n.l(r.name, { mono: true })} hint={r.recovery.map((x) => t(`sheet.recovers.${x.on}`)).join(" · ")} right={r.max > 12 ? undefined : `${left}/${r.max}`}>
                 <Pips max={r.max} remaining={left} tone="class" onSpend={() => push({ type: "resource.spend", resource: r.id, amount: 1 })} onRestore={() => push({ type: "resource.restore", resource: r.id, amount: 1 })} />
               </Row>
             );
@@ -94,7 +94,7 @@ function HitDieRow({ id }: { id: string }) {
     if (res) push({ type: "hitdie.spend", die, roll: res.result.total });
   };
   return (
-    <Row label={`d${die}`} hint={t("sheet.hitDieHint", { con: sheet.abilities.con.mod >= 0 ? `+${sheet.abilities.con.mod}` : sheet.abilities.con.mod })} right={`${left}/${r.max}`}>
+    <Row label={`d${die}`} hint={t("sheet.hitDieHint", { con: sheet.abilities.con.mod >= 0 ? `+${sheet.abilities.con.mod}` : sheet.abilities.con.mod })} right={r.max > 12 ? undefined : `${left}/${r.max}`}>
       <div className="flex items-center gap-3">
         <Pips max={r.max} remaining={left} tone="hp" size="sm" onSpend={() => push({ type: "hitdie.spend", die })} onRestore={() => push({ type: "resource.restore", resource: id, amount: 1 })} />
         <Button size="sm" disabled={left <= 0} onClick={() => void spend()}>
@@ -118,7 +118,7 @@ function Row({ label, hint, right, children }: { label: string; hint?: string; r
   return (
     <div>
       <div className="mb-1.5 flex items-baseline justify-between gap-2">
-        <span className="min-w-0 truncate text-sm text-ink">
+        <span className="min-w-0 text-sm break-words text-ink">
           {label}
           {hint && <span className="ml-1.5 text-[11px] text-ink-3">{hint}</span>}
         </span>

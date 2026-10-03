@@ -35,7 +35,7 @@ export function StatsPanel() {
               <button
                 type="button"
                 onClick={() => save(a)}
-                className={cn("flex w-full items-center justify-center gap-1 border-t border-line py-1 text-[11px] transition-colors hover:bg-surface-3/60", v.saveProf ? "text-class" : "text-ink-3")}
+                className={cn("flex min-h-8 w-full items-center justify-center gap-1 border-t border-line py-1.5 text-xs transition-colors hover:bg-surface-3/60", v.saveProf ? "text-class" : "text-ink-3")}
               >
                 {v.saveProf && <span className="h-1.5 w-1.5 rounded-full bg-class" />}
                 {t("sheet.saveShort")} <b className="tnum">{signed(v.save)}</b>
@@ -76,7 +76,7 @@ export function StatsPanel() {
           return (
             <div key={k}>
               <span className="mr-2 text-[11px] font-semibold tracking-wider text-ink-3 uppercase">{n.profKind(k)}</span>
-              <span className="text-ink-2">{list.map((p) => n.prof(k, p.key)).join("、")}</span>
+              <span className="text-ink-2">{list.map((p) => n.prof(k, p.key)).join(t("common.listSep"))}</span>
             </div>
           );
         })}

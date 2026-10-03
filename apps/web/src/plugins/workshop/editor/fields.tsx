@@ -1,4 +1,5 @@
 import { Check, X } from "lucide-react";
+import { useT } from "../../../app/i18n";
 import { useSettings } from "../../../app/settings";
 import type { ReactNode } from "react";
 import { cn } from "../../../ui/cn";
@@ -33,13 +34,14 @@ export function MultiPick<T extends string>({ options, value, onChange, max }: {
 
 /** Removable tag list (picked entities). */
 export function TagList({ items, onRemove }: { items: { id: string; label: ReactNode }[]; onRemove: (id: string) => void }) {
+  const t = useT();
   if (!items.length) return null;
   return (
     <div className="mb-2 flex flex-wrap gap-1.5">
       {items.map((it) => (
         <span key={it.id} className="inline-flex items-center gap-1 rounded-lg border border-line bg-surface-3/60 py-1 pr-1 pl-2.5 text-sm">
           {it.label}
-          <button type="button" onClick={() => onRemove(it.id)} className="rounded p-0.5 text-ink-3 hover:bg-surface-3 hover:text-ink">
+          <button type="button" onClick={() => onRemove(it.id)} aria-label={t("common.remove")} className="hit relative rounded p-0.5 text-ink-3 hover:bg-surface-3 hover:text-ink">
             <X size={13} />
           </button>
         </span>

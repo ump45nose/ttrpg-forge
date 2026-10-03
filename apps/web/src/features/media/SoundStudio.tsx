@@ -81,7 +81,7 @@ function Pick({ onPick }: { onPick: (s: Source) => void }) {
   };
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <label className="flex h-40 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-line-strong text-ink-3 transition-colors hover:border-accent/60 hover:text-ink-2">
         <FileAudio size={28} />
         <span className="text-sm">{t("sound.pickFile")}</span>

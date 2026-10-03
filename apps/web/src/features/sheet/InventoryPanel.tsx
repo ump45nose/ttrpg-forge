@@ -1,5 +1,5 @@
-import { makeEvent, type Currency, type ItemView, type NewEvent, type ResolvedAction, type Sheet } from "@forge/core";
-import { Backpack, Coins as CoinsIcon, Gem, Minus, Plus, Shield, Sparkles, Sword, Trash2, Wand2 } from "lucide-react";
+import { gearIssues, makeEvent, type Currency, type ItemView, type NewEvent, type ResolvedAction, type Sheet } from "@forge/core";
+import { AlertTriangle, Backpack, Coins as CoinsIcon, Gem, Plus, Shield, Sparkles, Sword, Trash2, Wand2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { ulid } from "ulid";
@@ -19,6 +19,8 @@ import { useNames } from "../common/names";
 import { RichText } from "../terms/RichText";
 import { ActionSheet } from "./ActionSheet";
 import { usePlay } from "./play";
+import { confirmDialog } from "../../ui/Confirm";
+import { Stepper } from "../../ui/Stepper";
 
 const COINS = ["pp", "gp", "ep", "sp", "cp"] as const;
 type Coin = (typeof COINS)[number];
@@ -28,6 +30,8 @@ const MAX_ATTUNED = 3;
 const equippable = (it: ItemView) => !!(it.entity?.armor || it.entity?.weapon || it.entity?.grants?.length);
 const isBodyArmor = (it: ItemView) => !!it.entity?.armor && it.entity.armor.category !== "shield";
 const isShield = (it: ItemView) => it.entity?.armor?.category === "shield";
+/** Armor is worn (穿戴); weapons and other gear are equipped (装备). */
+const equipWord = (it: ItemView, state: "do" | "done" | "undo") => (it.entity?.armor ? { do: "inventory.equip", done: "inventory.equipped", undo: "inventory.unequip" } : { do: "inventory.wield", done: "inventory.wielded", undo: "inventory.unwield" })[state];
 
 /** What you carry right now: coins, equipped gear, the backpack; find, use, swap and drop things. */
 export function InventoryPanel() {
@@ -123,13 +127,17 @@ function useItemStat() {
 /** Equip / unequip with a toast showing what changed (AC 14 → 16). */
 function useEquip() {
   const t = useT();
+  const { l } = useNames();
   const { sheet, push, engine, character } = usePlay();
-  return (it: ItemView) => {
+  return async (it: ItemView) => {
     const on = !it.equipped;
     // one body armor and one shield at a time: wearing a new one takes the old one off
     const unequip = on ? sheet.items.filter((o) => o.key !== it.key && o.equipped && ((isBodyArmor(it) && isBodyArmor(o)) || (isShield(it) && isShield(o)))).map((o) => o.key) : [];
     const ev: NewEvent = { type: "item.equip", key: it.key, equipped: on, ...(unequip.length ? { unequip } : {}) };
     const after = engine.play({ ...character, play: [...character.play, makeEvent(ev)] }).sheet;
+    // gear you lack the training (or Strength) for can still be worn, but say what it costs first
+    const problems = gearIssues(after, it.key).filter((p) => !gearIssues(sheet, it.key).some((q) => q.code === p.code));
+    if (on && problems.length && !(await confirmDialog({ title: t("inventory.equipAnyway"), body: problems.map((p) => l(p.message)).join("\n"), confirmLabel: t(equipWord(it, "do")) }))) return;
     const e = push(ev);
     haptic(6);
     const changes = statChanges(t, sheet, after);
@@ -157,6 +165,7 @@ function ItemRow({ it, onUse, onOpen }: { it: ItemView; onUse: (a: ResolvedActio
   const { sheet, push } = usePlay();
   const stat = useItemStat()(it);
   const equip = useEquip();
+  const problems = gearIssues(sheet, it.key);
   const e = it.entity;
   const use = sheet.actions.find((a) => a.item?.key === it.key);
   const Icon = e?.armor ? Shield : e?.weapon ? Sword : e?.use ? Wand2 : e?.tags?.includes("magic") ? Sparkles : Backpack;
@@ -170,15 +179,21 @@ function ItemRow({ it, onUse, onOpen }: { it: ItemView; onUse: (a: ResolvedActio
       exit={{ opacity: 0, height: 0 }}
       className={cn("flex items-center gap-2 rounded-xl border px-2.5 py-2", it.equipped ? "border-class/45 bg-class/8" : "border-line bg-surface/60")}
     >
-      <button type="button" onClick={onOpen} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
+      <button type="button" onClick={onOpen} className="flex min-h-8 min-w-0 flex-1 items-center gap-2.5 text-left">
         <Icon size={16} className={cn("shrink-0", it.equipped ? "text-class" : magic ? "text-magic" : "text-ink-3")} />
         <span className="min-w-0">
           <span className={cn("block truncate text-sm", magic ? "text-magic" : "text-ink")}>{e ? n.l(e.name, { mono: true }) : it.item}</span>
           {stat && <span className="tnum block truncate text-[11px] text-ink-3">{stat}</span>}
+          {it.equipped && problems.map((p) => (
+            <span key={p.code} className="flex items-start gap-1 text-[11px] leading-snug text-warn">
+              <AlertTriangle size={11} className="mt-0.5 shrink-0" />
+              {n.l(p.message)}
+            </span>
+          ))}
         </span>
       </button>
       {use && (
-        <Button size="sm" variant="primary" className="h-7 shrink-0 px-2 text-xs" onClick={() => onUse(use)}>
+        <Button size="sm" variant="primary" className="shrink-0 px-2.5 text-xs" onClick={() => onUse(use)}>
           {t("sheet.use")}
         </Button>
       )}
@@ -186,20 +201,14 @@ function ItemRow({ it, onUse, onOpen }: { it: ItemView; onUse: (a: ResolvedActio
         <button
           type="button"
           onClick={() => equip(it)}
-          className={cn("h-7 shrink-0 rounded-lg border px-2 text-xs transition-colors", it.equipped ? "border-class bg-class text-white" : "border-line text-ink-2 hover:border-line-strong")}
+          className={cn("h-8 shrink-0 rounded-lg border px-2.5 text-xs transition-colors", it.equipped ? "border-class bg-class text-class-ink" : "border-line text-ink-2 hover:border-line-strong")}
         >
-          {it.equipped ? t("inventory.equipped") : t("inventory.equip")}
+          {t(equipWord(it, it.equipped ? "done" : "do"))}
         </button>
       )}
-      <div className="flex shrink-0 items-center">
-        <button type="button" aria-label="−1" className="rounded-md p-1 text-ink-3 hover:bg-surface-3 hover:text-ink" onClick={() => push({ type: "item.qty", key: it.key, delta: -1 })}>
-          <Minus size={13} />
-        </button>
-        <span className="tnum w-6 text-center text-sm text-ink">{it.qty}</span>
-        <button type="button" aria-label="+1" className="rounded-md p-1 text-ink-3 hover:bg-surface-3 hover:text-ink" onClick={() => push({ type: "item.qty", key: it.key, delta: 1 })}>
-          <Plus size={13} />
-        </button>
-      </div>
+      <span className="shrink-0">
+        <Stepper value={it.qty} onChange={(q) => push({ type: "item.qty", key: it.key, delta: q - it.qty })} />
+      </span>
     </motion.div>
   );
 }
@@ -247,7 +256,7 @@ function ItemDetail({ itemKey, onClose, onUse }: { itemKey: string | null; onClo
           )}
           {equippable(it) && (
             <Button className="flex-1" onClick={() => equip(it)}>
-              {it.equipped ? t("inventory.unequip") : t("inventory.equip")}
+              {t(equipWord(it, it.equipped ? "undo" : "do"))}
             </Button>
           )}
           <Button

@@ -134,3 +134,35 @@ export function useArtIds(prefix: string): string[] {
   const on = useSettings((s) => s.art);
   return useMemo(() => (on ? [...map.keys()].filter((k) => k.startsWith(prefix)).sort() : []), [map, on, prefix]);
 }
+
+/**
+ * A whole painting behind a panel's content: never cropped, pinned to the top and
+ * fading into the panel. Portrait-shaped art keeps to the right of wide panels so
+ * text runs beside it. Renders a spacer too, so the subject shows above the text.
+ * The parent needs `relative @container` and should clip (`overflow-clip`).
+ */
+export function ArtBackdrop({ id, img: givenImg, className }: { id?: string | (string | undefined)[]; img?: ArtImage; className?: string }) {
+  const found = useFirstArt(givenImg ? [] : Array.isArray(id) ? id : [id])?.img;
+  const img = givenImg ?? found;
+  const [loaded, setLoaded] = useState<string>();
+  if (!img) return null;
+  const src = artUrl(img, "lg");
+  // inline pictures don't record their size; they're treated as wide
+  const tall = img.h > img.w;
+  return (
+    <>
+      <div aria-hidden className={cn("pointer-events-none absolute top-0 flex justify-end", !/inset-x/.test(className ?? "") && "inset-x-0", className)}>
+        <img
+          src={src}
+          alt=""
+          decoding="async"
+          draggable={false}
+          onLoad={() => setLoaded(src)}
+          className={cn("h-auto w-full transition-opacity duration-700", tall ? "art-fade-tall max-w-[26rem]" : "art-fade", loaded === src ? "opacity-60" : "opacity-0")}
+        />
+      </div>
+      {/* down to just below the subject's head, measured against the painting's width */}
+      <div aria-hidden className={tall ? "h-[min(80cqw,20.8rem)]" : "aspect-[3/1]"} />
+    </>
+  );
+}

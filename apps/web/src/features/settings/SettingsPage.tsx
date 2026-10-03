@@ -6,7 +6,7 @@ import { useRef, type ReactNode } from "react";
 import { useCharacters } from "../../app/characters";
 import { host, useHostRevision } from "../../app/host";
 import { useL, useT } from "../../app/i18n";
-import { BASE_PACKS, LOCAL_PACK_ID, orderedPacks, useEngine, usePacks } from "../../app/packs";
+import { BASE_PACKS, LOCAL_PACK_ID, orderedPacks, removePackUndoable, useEngine, usePacks } from "../../app/packs";
 import { useSettings } from "../../app/settings";
 import { Button } from "../../ui/Button";
 import { Chip } from "../../ui/Chip";
@@ -68,7 +68,7 @@ export function SettingsPage() {
               >
                 <div className="flex gap-1.5">
                   {(th.swatch ?? []).map((c, i) => (
-                    <span key={i} className="h-6 w-6 rounded-full border border-white/10" style={{ background: c }} />
+                    <span key={i} className="h-6 w-6 rounded-full border border-line-strong" style={{ background: c }} />
                   ))}
                 </div>
                 <div className="mt-3 text-sm font-medium" style={{ color: th.tokens["--ink"] }}>
@@ -149,10 +149,10 @@ export function SettingsPage() {
                   <div className="flex items-center gap-0.5">
                     {!isLocal && (
                       <>
-                        <Button variant="ghost" size="icon-sm" disabled={i === 0} onClick={() => void packs.move(p.id, -1)} aria-label="up">
+                        <Button variant="ghost" size="icon-sm" disabled={i === 0} onClick={() => void packs.move(p.id, -1)} aria-label={t("common.moveUp")}>
                           <ChevronUp size={15} />
                         </Button>
-                        <Button variant="ghost" size="icon-sm" disabled={i >= ordered.length - (ordered.at(-1)?.id === LOCAL_PACK_ID ? 2 : 1)} onClick={() => void packs.move(p.id, 1)} aria-label="down">
+                        <Button variant="ghost" size="icon-sm" disabled={i >= ordered.length - (ordered.at(-1)?.id === LOCAL_PACK_ID ? 2 : 1)} onClick={() => void packs.move(p.id, 1)} aria-label={t("common.moveDown")}>
                           <ChevronDown size={15} />
                         </Button>
                       </>
@@ -160,9 +160,9 @@ export function SettingsPage() {
                     <Button variant="ghost" size="icon-sm" onClick={() => downloadJson(p.pack, `${p.id}.json`)} aria-label={t("common.export")}>
                       <Download size={15} />
                     </Button>
-                    <Switch checked={p.enabled} onChange={(v) => void packs.save({ ...p, enabled: v })} label="" />
+                    <Switch checked={p.enabled} onChange={(v) => void packs.save({ ...p, enabled: v })} label="" ariaLabel={t("homebrew.enabledFor", { name: l(p.pack.name) })} />
                     {!isLocal && (
-                      <Button variant="ghost" size="icon-sm" onClick={() => void packs.remove(p.id)} aria-label={t("common.delete")}>
+                      <Button variant="ghost" size="icon-sm" onClick={() => void removePackUndoable(p, l(p.pack.name))} aria-label={t("common.delete")}>
                         <Trash2 size={15} />
                       </Button>
                     )}

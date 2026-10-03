@@ -20,7 +20,7 @@ async function swipe(page: Page, selector: string, dx: number) {
 
 test("dice tumble before the result lands, and a tap skips it", async ({ page }) => {
   await startFromSample(page, "布伦·铁誓");
-  await page.getByRole("button", { name: "dice" }).click();
+  await page.getByRole("button", { name: "骰子", exact: true }).click();
   await page.getByRole("button", { name: "d20", exact: true }).click();
   const tray = page.locator(".z-\\[55\\]");
   await expect(tray.getByText("点击跳过")).toBeVisible();

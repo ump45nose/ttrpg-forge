@@ -27,7 +27,7 @@ type Phase = { step: "hp" } | { step: "gains"; before: Build; diff: SheetDiff };
  */
 export function LevelUpSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const t = useT();
-  const { character, engine, sheet } = usePlay();
+  const { character, engine, sheet, push } = usePlay();
   const update = useCharacters((s) => s.update);
   const [phase, setPhase] = useState<Phase>({ step: "hp" });
   const level = phase.step === "gains" ? sheet.level : sheet.level + 1;
@@ -35,6 +35,11 @@ export function LevelUpSheet({ open, onClose }: { open: boolean; onClose: () => 
   const close = () => {
     setPhase({ step: "hp" });
     onClose();
+  };
+  const finish = () => {
+    push({ type: "note", text: t("levelUp.logged", { n: level }) });
+    toast({ content: t("levelUp.done", { n: level }), tone: "accent" }, 4000);
+    close();
   };
   const cancel = () => {
     if (phase.step === "gains") update(character.id, (c) => ({ ...c, build: phase.before }));
@@ -52,10 +57,11 @@ export function LevelUpSheet({ open, onClose }: { open: boolean; onClose: () => 
   return (
     <Sheet
       open={open}
-      onOpenChange={(o) => !o && cancel()}
+      // once the level is in, swiping the sheet away keeps it: only the explicit button takes it back
+      onOpenChange={(o) => !o && (phase.step === "gains" ? finish() : cancel())}
       title={t("levelUp.title", { n: level })}
       width="lg"
-      footer={phase.step === "gains" ? <GainsFooter onDone={close} onCancel={cancel} level={level} /> : undefined}
+      footer={phase.step === "gains" ? <GainsFooter onDone={finish} onCancel={cancel} level={level} /> : undefined}
     >
       {phase.step === "hp" ? <HpStep onSettle={settleHp} /> : <Gains diff={phase.diff} level={level} />}
     </Sheet>
@@ -94,7 +100,7 @@ function HpStep({ onSettle }: { onSettle: (roll?: number) => void }) {
         </Chip>
       </div>
       <p className="text-sm text-ink-2">{t("levelUp.hpHint")}</p>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <HpCard icon={<HeartPulse size={18} />} title={rule === "max" ? t("levelUp.max") : t("levelUp.average")} value={plus(avg)} note={`${avg} ${con >= 0 ? "+" : "−"} ${Math.abs(con)}`} onPick={() => settle()} />
         {rule !== "max" && (
           <HpCard
@@ -189,19 +195,15 @@ function GainsBody({ diff, level }: { diff: SheetDiff; level: number }) {
 
 function GainsFooter({ onDone, onCancel, level }: { onDone: () => void; onCancel: () => void; level: number }) {
   const t = useT();
-  const { push, engine, character } = usePlay();
+  const { engine, character } = usePlay();
   const open = engine.evaluate(character.build).sheet.choices.filter((c) => c.remaining > 0).length;
-  const done = useOnce(level, () => {
-    push({ type: "note", text: t("levelUp.logged", { n: level }) });
-    toast({ content: t("levelUp.done", { n: level }), tone: "accent" }, 4000);
-    onDone();
-  });
+  const done = useOnce(level, onDone);
   return (
     <div className="space-y-2">
       {open > 0 && <div className="text-xs text-warn">{t("levelUp.pending", { n: open })}</div>}
       <div className="flex gap-2">
         <Button variant="secondary" size="lg" onClick={onCancel}>
-          {t("common.cancel")}
+          {t("levelUp.undo")}
         </Button>
         <Button variant="class" size="lg" className={cn("flex-1")} onClick={done}>
           {t("levelUp.finish", { n: level })}

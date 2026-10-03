@@ -19,6 +19,7 @@ import { RichText } from "../terms/RichText";
 import { useEventText } from "./logText";
 import { usePlay } from "./play";
 import { d20, edge, effectName } from "./util";
+import { AdvToggle } from "../../ui/AdvToggle";
 
 type Edge = "normal" | "adv" | "dis";
 
@@ -178,18 +179,7 @@ function Body({ action }: { action: ResolvedAction }) {
                 {t("sheet.attack")} <b className="tnum">{signed(action.attack.bonus)}</b>
                 {lastAttack && <LastRoll rec={lastAttack} />}
               </div>
-              <div className="mt-1 flex gap-1">
-                {(["dis", "normal", "adv"] as const).map((m) => (
-                  <button
-                    key={m}
-                    type="button"
-                    onClick={() => setMode(m)}
-                    className={cn("rounded-md border px-1.5 py-0.5 text-[11px]", mode === m ? (m === "adv" ? "border-good/50 bg-good/12 text-good" : m === "dis" ? "border-bad/50 bg-bad/12 text-bad" : "border-line-strong bg-surface-3 text-ink") : "border-line text-ink-3")}
-                  >
-                    {m === "normal" ? t("dice.normal") : m === "adv" ? t("dice.advantage") : t("dice.disadvantage")}
-                  </button>
-                ))}
-              </div>
+              <AdvToggle mode={mode} onChange={setMode} className="mt-1.5" />
             </div>
             <Button size="sm" variant="primary" onClick={() => void rollAttack()}>
               <Dices size={14} /> {t("common.roll")}

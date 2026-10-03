@@ -1,4 +1,5 @@
 import type { Entity } from "@forge/core";
+import { TriangleAlert } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { CreateRequest } from "../../../app/creator";
 import { useL, useT } from "../../../app/i18n";
@@ -9,11 +10,12 @@ import { Tabs } from "../../../ui/Tabs";
 import { toast } from "../../../ui/Toast";
 import { blankEntity, cloneEntity, isWorkshopType, overrideEntity } from "./factory";
 import { Field, Select, useLocale } from "./fields";
-import { JsonEditor } from "./JsonEditor";
+import { JsonEditor, JsonGuard, useJsonGuard } from "./JsonEditor";
 import { MediaFields } from "./MediaFields";
 import { BackgroundFormView, ItemFormView, SpeciesFormView } from "./originForms";
 import { ClassFormView, FeatFormView, RuleFormView, SpellFormView, SubclassFormView } from "./ruleForms";
 import { parseEntity } from "./shared";
+import { confirmDialog } from "../../../ui/Confirm";
 
 /** Packs the user can write into: the built-in homebrew pack and house-rule packs made in the app. */
 export function useWritablePacks() {
@@ -48,6 +50,8 @@ export function EntityEditor({ req, onClose }: { req: CreateRequest | null; onCl
   const [target, setTarget] = useState(LOCAL_PACK_ID);
   // the typed forms rebuild the entity from their own fields, so media lives beside them
   const [media, setMedia] = useState<Pick<Entity, "art" | "sound">>({});
+  // invalid JSON must never "save" the last valid version and close: keep the text, refuse to save
+  const guard = useJsonGuard();
 
   // a picture is a long data URL: keep it out of the JSON text (the placeholder stands for "unchanged")
   const jsonValue = useMemo(
@@ -58,6 +62,7 @@ export function EntityEditor({ req, onClose }: { req: CreateRequest | null; onCl
   useEffect(() => {
     setTab("form");
     setFormKey((k) => k + 1);
+    guard.reset();
     const e = req ? initial(req, locale) : null;
     setEntity(e);
     setMedia({ art: e?.art, sound: e?.sound });
@@ -69,7 +74,12 @@ export function EntityEditor({ req, onClose }: { req: CreateRequest | null; onCl
   if (!req || !entity) return <Sheet open={false} onOpenChange={onClose}>{null}</Sheet>;
 
   const withMedia: Entity = { ...entity, ...media };
+  const close = async () => {
+    if (guard.invalid && !(await confirmDialog({ title: t("workshop.discardInvalid"), confirmLabel: t("workshop.discard"), tone: "danger" }))) return;
+    onClose();
+  };
   const save = async () => {
+    if (guard.invalid) return toast({ content: t("workshop.fixJsonFirst"), tone: "bad" }, 6000);
     if (l(entity.name, { mono: true }).trim() === "?") return toast({ content: t("homebrew.nameRequired"), tone: "bad" });
     const r = parseEntity(withMedia);
     if (!r.ok) return toast({ content: r.errors[0], tone: "bad" }, 6000);
@@ -88,7 +98,8 @@ export function EntityEditor({ req, onClose }: { req: CreateRequest | null; onCl
         ? t("workshop.overrideOf", { name: l(req.base.name, { mono: true }) })
         : t("workshop.savedTo");
 
-  const props = { e: entity as never, locale, onChange: setEntity };
+  // editing the form means leaving the broken JSON behind
+  const props = { e: entity as never, locale, onChange: (e: Entity) => (guard.setDraft(null), setEntity(e)) };
   const form =
     entity.type === "class" ? <ClassFormView {...props} />
     : entity.type === "subclass" ? <SubclassFormView {...props} />
@@ -103,23 +114,29 @@ export function EntityEditor({ req, onClose }: { req: CreateRequest | null; onCl
   return (
     <Sheet
       open
-      onOpenChange={(o) => !o && onClose()}
+      onOpenChange={(o) => !o && close()}
       title={title}
       description={description}
       width="lg"
       footer={
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {guard.invalid && (
+            <p role="alert" className="flex w-full items-center gap-1.5 text-xs text-bad">
+              <TriangleAlert size={13} className="shrink-0" /> {t("workshop.fixJsonFirst")}
+            </p>
+          )}
           {writable.length > 1 && (
             <div className="min-w-0 flex-1">
               <Select value={target} onChange={setTarget} options={writable.map((p) => ({ id: p.id, label: `${t("workshop.saveTo")} ${l(p.pack.name, { mono: true })}` }))} />
             </div>
           )}
-          <Button variant="primary" size="lg" className={writable.length > 1 ? "shrink-0" : "w-full"} onClick={save}>
+          <Button variant="primary" size="lg" className={writable.length > 1 ? "shrink-0" : "w-full"} disabled={guard.invalid} onClick={save}>
             {t("common.save")}
           </Button>
         </div>
       }
     >
+      <JsonGuard.Provider value={guard.report}>
       <Tabs
         className="mb-4"
         items={[
@@ -135,6 +152,8 @@ export function EntityEditor({ req, onClose }: { req: CreateRequest | null; onCl
       {tab === "json" ? (
         <JsonEditor
           value={jsonValue}
+          draft={guard.draft ?? undefined}
+          onDraft={guard.setDraft}
           validate={parseEntity}
           onValid={(e) => {
             setEntity({ ...e, id: entity.id });
@@ -144,6 +163,15 @@ export function EntityEditor({ req, onClose }: { req: CreateRequest | null; onCl
         />
       ) : (
         <div className="space-y-5">
+          {guard.draft && (
+            <div className="flex items-center gap-2 rounded-xl border border-bad/40 bg-bad/8 px-3 py-2 text-sm text-ink-2">
+              <TriangleAlert size={15} className="shrink-0 text-bad" />
+              <span className="min-w-0 flex-1">{t("workshop.jsonDraftKept")}</span>
+              <Button size="sm" variant="secondary" onClick={() => setTab("json")}>
+                {t("workshop.backToJson")}
+              </Button>
+            </div>
+          )}
           <MediaFields
             type={entity.type}
             art={media.art}
@@ -153,6 +181,7 @@ export function EntityEditor({ req, onClose }: { req: CreateRequest | null; onCl
           <div key={formKey}>{form ?? <Field label="">{t("workshop.jsonOnly")}</Field>}</div>
         </div>
       )}
+      </JsonGuard.Provider>
     </Sheet>
   );
 }

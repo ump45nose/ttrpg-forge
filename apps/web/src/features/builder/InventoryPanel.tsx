@@ -1,5 +1,5 @@
-import type { Currency, ItemView } from "@forge/core";
-import { Backpack, Plus, Shield, Sword, Trash2 } from "lucide-react";
+import { gearIssues, type Currency, type ItemView } from "@forge/core";
+import { AlertTriangle, Backpack, Plus, Shield, Sword, Trash2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { ulid } from "ulid";
@@ -68,7 +68,7 @@ export function InventoryPanel() {
 function ItemRow({ it }: { it: ItemView }) {
   const t = useT();
   const n = useNames();
-  const { apply } = useBuilder();
+  const { apply, sheet } = useBuilder();
   const canEdit = useCanCreate("item");
   const userPack = useUserEntity(it.item);
   const e = it.entity;
@@ -97,6 +97,13 @@ function ItemRow({ it }: { it: ItemView }) {
           )}
         </span>
         {stat && <span className="block text-xs text-ink-3">{stat}</span>}
+        {it.equipped &&
+          gearIssues(sheet, it.key).map((p) => (
+            <span key={p.code} className="flex items-start gap-1 text-[11px] leading-snug text-warn">
+              <AlertTriangle size={11} className="mt-0.5 shrink-0" />
+              {n.l(p.message)}
+            </span>
+          ))}
       </span>
       {equippable && (
         <button
@@ -104,9 +111,9 @@ function ItemRow({ it }: { it: ItemView }) {
             haptic(6);
             apply([{ op: "setEquipped", key: it.key, equipped: !it.equipped }]);
           }}
-          className={cn("h-7 shrink-0 rounded-lg border px-2 text-xs transition-colors", it.equipped ? "border-class bg-class text-white" : "border-line text-ink-2 hover:border-line-strong")}
+          className={cn("h-8 shrink-0 rounded-lg border px-2.5 text-xs transition-colors", it.equipped ? "border-class bg-class text-class-ink" : "border-line text-ink-2 hover:border-line-strong")}
         >
-          {it.equipped ? t("inventory.equipped") : t("inventory.equip")}
+          {e?.armor ? t(it.equipped ? "inventory.equipped" : "inventory.equip") : t(it.equipped ? "inventory.wielded" : "inventory.wield")}
         </button>
       )}
       {it.granted ? (

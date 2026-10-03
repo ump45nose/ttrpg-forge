@@ -288,7 +288,19 @@ export function derive(reg: PackRegistry, build: Build, opts: DeriveOptions = {}
       parts: [{ label: armor!.entity!.name, value: a.ac }, ...(a.category !== "heavy" ? [{ label: L("Dexterity", "敏捷"), value: dexPart }] : [])],
     };
   });
-  if (shield?.entity?.armor) {
+  // 2024 rules: a shield's AC needs training; heavy armor below its Strength score slows you
+  const shieldTrained = !shield || !!proficiency("armor", "shield");
+  if (shield?.entity?.armor && !shieldTrained) {
+    issues.push({ severity: "warning", code: "shield-proficiency", path: shield.key, message: L("No shield training: the shield adds no AC", "未受训使用盾牌：盾牌不提供 AC 加值") });
+  }
+  const strNeed = armor?.entity?.armor?.strength;
+  if (strNeed) {
+    stats.addModifier({
+      grant: { type: "modifier", target: "speed.walk", op: "add", value: -10, when: `@ability.str.score < ${strNeed}`, label: L(`Strength below ${strNeed}`, `力量低于 ${strNeed}`) },
+      source: { path: `item:${armor!.key}`, kind: "item", name: armor!.entity!.name, entityId: armor!.item },
+    });
+  }
+  if (shield?.entity?.armor && shieldTrained) {
     stats.addModifier({
       grant: { type: "modifier", target: "ac", op: "add", value: shield.entity.armor.ac },
       source: { path: `item:${shield.key}`, kind: "item", name: shield.entity.name, entityId: shield.item },
@@ -651,7 +663,15 @@ export function derive(reg: PackRegistry, build: Build, opts: DeriveOptions = {}
   const subclassOf = (classId: string) => col.entities.find((e) => e.entity.type === "subclass" && (e.entity as EntityOf<"subclass">).classId === classId)?.entity.id;
 
   if (armor?.entity?.armor && !proficiency("armor", armor.entity.armor.category)) {
-    issues.push({ severity: "warning", code: "armor-proficiency", path: armor.key, message: L("Wearing armor without proficiency", "穿着未熟练的护甲") });
+    issues.push({
+      severity: "warning",
+      code: "armor-proficiency",
+      path: armor.key,
+      message: L("Untrained armor: Disadvantage on Strength and Dexterity tests, and no spellcasting", "未受训的护甲：力量、敏捷相关检定、豁免和攻击具有劣势，且无法施法"),
+    });
+  }
+  if (strNeed && abilities.str.score < strNeed) {
+    issues.push({ severity: "warning", code: "armor-strength", path: armor!.key, message: L(`Strength ${abilities.str.score} is below ${strNeed}: Speed −10 ft`, `力量 ${abilities.str.score} 低于 ${strNeed}：速度 −10 尺`) });
   }
 
   const sheet: Sheet = {
@@ -690,6 +710,10 @@ export function derive(reg: PackRegistry, build: Build, opts: DeriveOptions = {}
   };
   return sheet;
 }
+
+const GEAR_CODES = ["armor-proficiency", "shield-proficiency", "armor-strength"];
+/** Rule problems one stack of gear causes: untrained armor or shield, too heavy to move freely in. */
+export const gearIssues = (sheet: Sheet, key: string): Issue[] => sheet.issues.filter((i) => i.path === key && GEAR_CODES.includes(i.code));
 
 /* ───────────────────────── helpers ───────────────────────── */
 

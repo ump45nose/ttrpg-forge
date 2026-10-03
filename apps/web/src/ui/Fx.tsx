@@ -21,10 +21,10 @@ export function flash(kind: FxKind, text?: string) {
 }
 
 const EDGE: Record<FxKind, string> = {
-  hurt: "rgb(229 72 77 / 0.35)",
-  down: "rgb(229 72 77 / 0.6)",
+  hurt: "color-mix(in oklab, var(--hp) 35%, transparent)",
+  down: "color-mix(in oklab, var(--hp) 60%, transparent)",
   conc: "color-mix(in oklab, var(--magic) 55%, transparent)",
-  heal: "rgb(95 211 154 / 0.3)",
+  heal: "color-mix(in oklab, var(--good) 30%, transparent)",
 };
 
 export function FxLayer() {

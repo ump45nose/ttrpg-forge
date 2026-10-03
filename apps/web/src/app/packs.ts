@@ -3,7 +3,9 @@ import { srd52 } from "@forge/pack-srd52";
 import { Engine, type Entity, type RulePack } from "@forge/core";
 import { useMemo } from "react";
 import { create } from "zustand";
+import { toast } from "../ui/Toast";
 import { db, type StoredPack } from "./db";
+import i18n from "i18next";
 import { host, useHostRevision } from "./host";
 
 /** The always-present pack that holds custom backgrounds, species, items... made in the app. */
@@ -89,12 +91,28 @@ export const usePacks = create<PackStore>()((set, get) => ({
 }));
 
 /** SRD always; the 2024 PHB only when its data was generated locally (see packs/phb-2024). */
+/** Delete a pack at once, with a few seconds to take it back (nothing else is lost: it's put back whole). */
+export async function removePackUndoable(p: StoredPack, name: string) {
+  await usePacks.getState().remove(p.id);
+  toast({ content: i18n.t("homebrew.packDeleted", { name }), action: { label: i18n.t("common.undo"), run: () => void usePacks.getState().save(p) } }, 8000);
+}
+
 export const BASE_PACKS: RulePack[] = [srd52];
 
 /** Adds the PHB (a separate chunk) before the first render, so no character ever sees it missing. */
 export async function loadBasePacks() {
   const phb = await loadPhb2024();
   if (phb && !BASE_PACKS.some((p) => p.id === phb.id)) BASE_PACKS.push(phb);
+}
+
+let baseIdCache: { n: number; ids: Set<string> } | undefined;
+/**
+ * Whether an id comes from a built-in pack (SRD, PHB). Looked up lazily: the PHB arrives
+ * as a separate chunk, so anything computed at import time would miss it.
+ */
+export function isBaseEntity(id: string): boolean {
+  if (baseIdCache?.n !== BASE_PACKS.length) baseIdCache = { n: BASE_PACKS.length, ids: new Set(BASE_PACKS.flatMap((p) => p.entities.map((e) => e.id))) };
+  return baseIdCache.ids.has(id);
 }
 
 /** One engine over: base SRD → plugin packs → user packs in order → local homebrew. */
@@ -119,14 +137,18 @@ export function useUserEntity(id: string | undefined): string | undefined {
   return owner && user.some((p) => p.id === owner) ? owner : undefined;
 }
 
-/** Entities from the local pack that a character's build depends on (bundled into exports). */
-export function localEntitiesFor(engine: Engine, ids: Iterable<string>): Entity[] {
+/**
+ * Entities a character depends on that come from the user's own packs (local homebrew,
+ * house rules, imported packs; including their versions of built-in entries), bundled into
+ * exports so the file opens elsewhere.
+ */
+export function userEntitiesFor(engine: Engine, ids: Iterable<string>, userPackIds: ReadonlySet<string> = new Set(usePacks.getState().packs.map((p) => p.id))): Entity[] {
   const out = new Map<string, Entity>();
   for (const id of ids) {
-    if (engine.reg.packOf(id) === LOCAL_PACK_ID) {
-      const e = engine.reg.get(id);
-      if (e) out.set(id, e);
-    }
+    const owner = engine.reg.packOf(id);
+    if (!owner || !userPackIds.has(owner)) continue;
+    const e = engine.reg.get(id);
+    if (e) out.set(id, e);
   }
   return [...out.values()];
 }

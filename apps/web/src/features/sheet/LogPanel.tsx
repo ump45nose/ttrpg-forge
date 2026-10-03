@@ -60,7 +60,7 @@ function Entries({ limit }: { limit?: number }) {
             </span>
             <span className="tnum shrink-0 text-[10px] text-ink-3">{time.format(e.at)}</span>
             {e.type !== "roll" && e.type !== "note" && (
-              <button type="button" onClick={() => toggle(e.id)} title={off ? t("common.redo") : t("common.undo")} className="shrink-0 rounded-md p-1 text-ink-3 transition-colors hover:bg-surface-3 hover:text-ink">
+              <button type="button" onClick={() => toggle(e.id)} title={off ? t("common.redo") : t("common.undo")} aria-label={off ? t("common.redo") : t("common.undo")} className="hit relative shrink-0 rounded-md p-1 text-ink-3 transition-colors hover:bg-surface-3 hover:text-ink">
                 {off ? <RotateCw size={13} /> : <RotateCcw size={13} />}
               </button>
             )}

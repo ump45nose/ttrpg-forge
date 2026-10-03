@@ -172,7 +172,7 @@ function EffectRow() {
         <span className="inline-flex items-center gap-1 rounded-full border border-magic/40 bg-magic/12 py-0.5 pr-0.5 pl-2 text-xs text-magic">
           <Brain size={12} />
           {t("sheet.concentrating", { name: l(effectName(engine, sheet, { effect: state.effects.find((e) => e.key === conc.key)?.effect ?? conc.source, source: conc.source, label: conc.label }), { mono: true }) })}
-          <button type="button" aria-label={t("sheet.endConcentration")} className="rounded-full p-0.5 hover:bg-magic/20" onClick={() => push({ type: "concentration.end" })}>
+          <button type="button" aria-label={t("sheet.endConcentration")} className="hit relative rounded-full p-0.5 hover:bg-magic/20" onClick={() => push({ type: "concentration.end" })}>
             <X size={12} />
           </button>
         </span>
@@ -231,7 +231,8 @@ function EffectRow() {
             );
           })}
       </AnimatePresence>
-      <button type="button" onClick={() => setPick(true)} className="inline-flex items-center gap-1 rounded-full border border-dashed border-line-strong px-2 py-0.5 text-xs text-ink-3 transition-colors hover:border-accent/50 hover:text-accent">
+      {/* small to look at, but a finger-sized target */}
+      <button type="button" onClick={() => setPick(true)} aria-label={t("sheet.addEffect")} className="hit relative inline-flex items-center gap-1 rounded-full border border-dashed border-line-strong px-2 py-0.5 text-xs text-ink-3 transition-colors hover:border-accent/50 hover:text-accent">
         <Plus size={12} /> {groups.length || conc ? "" : t("sheet.addEffect")}
       </button>
       <EffectPicker open={pick} onOpenChange={setPick} />

@@ -1,4 +1,5 @@
 import { DND5E_2024, parseRulePack, type RulePack, type SystemConfig } from "@forge/core";
+import { TriangleAlert } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useL, useT } from "../../../app/i18n";
 import type { StoredPack } from "../../../app/db";
@@ -8,7 +9,8 @@ import { Input, Label } from "../../../ui/Field";
 import { Sheet } from "../../../ui/Sheet";
 import { Tabs } from "../../../ui/Tabs";
 import { toast } from "../../../ui/Toast";
-import { JsonEditor } from "./JsonEditor";
+import { JsonEditor, useJsonGuard } from "./JsonEditor";
+import { confirmDialog } from "../../../ui/Confirm";
 
 /** Edit a user pack: common house-rule numbers as a form, anything else as JSON. */
 export function PackEditor({ stored, onClose }: { stored: StoredPack | undefined; onClose: () => void }) {
@@ -18,25 +20,41 @@ export function PackEditor({ stored, onClose }: { stored: StoredPack | undefined
   const sys = useEngine().reg.system;
   const [tab, setTab] = useState<"rules" | "json">("rules");
   const [draft, setDraft] = useState<RulePack | undefined>(stored?.pack);
-  useEffect(() => setDraft(stored?.pack), [stored]);
+  const guard = useJsonGuard();
+  useEffect(() => {
+    setDraft(stored?.pack);
+    guard.reset();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stored]);
   if (!stored || !draft) return <Sheet open={false} onOpenChange={onClose}>{null}</Sheet>;
 
   const cfg = draft.systemConfig ?? {};
-  const setCfg = (patch: SystemConfig) => setDraft({ ...draft, systemConfig: mergeConfig(cfg, patch) });
+  const setCfg = (patch: SystemConfig) => (guard.setDraft(null), setDraft({ ...draft, systemConfig: mergeConfig(cfg, patch) }));
   const num = (v: string) => (v.trim() === "" ? undefined : Number(v));
 
   return (
     <Sheet
       open
-      onOpenChange={(o) => !o && onClose()}
+      onOpenChange={async (o) => {
+        if (o) return;
+        if (guard.invalid && !(await confirmDialog({ title: t("workshop.discardInvalid"), confirmLabel: t("workshop.discard"), tone: "danger" }))) return;
+        onClose();
+      }}
       title={l(draft.name)}
       description={`${draft.id} · ${t("homebrew.entities", { n: draft.entities.length })} · ${t("homebrew.patches", { n: draft.patches?.length ?? 0 })}`}
       width="lg"
       footer={
+        <>
+        {guard.invalid && (
+          <p role="alert" className="mb-2 flex items-center gap-1.5 text-xs text-bad">
+            <TriangleAlert size={13} className="shrink-0" /> {t("workshop.fixJsonFirst")}
+          </p>
+        )}
         <Button
           variant="primary"
           size="lg"
           className="w-full"
+          disabled={guard.invalid}
           onClick={async () => {
             await save({ ...stored, pack: draft });
             toast({ content: t("common.save") + " ✓", tone: "good" });
@@ -45,6 +63,7 @@ export function PackEditor({ stored, onClose }: { stored: StoredPack | undefined
         >
           {t("common.save")}
         </Button>
+        </>
       }
     >
       <Tabs className="mb-4" items={[{ id: "rules", label: t("homebrew.rulesTab") }, { id: "json", label: "JSON" }]} value={tab} onChange={setTab} />
@@ -52,7 +71,7 @@ export function PackEditor({ stored, onClose }: { stored: StoredPack | undefined
         <div className="space-y-5">
           <div>
             <Label>{t("homebrew.packName")}</Label>
-            <Input value={typeof draft.name === "string" ? draft.name : draft.name.zh ?? draft.name.en} onChange={(e) => setDraft({ ...draft, name: { en: e.target.value, zh: e.target.value } })} />
+            <Input value={typeof draft.name === "string" ? draft.name : draft.name.zh ?? draft.name.en} onChange={(e) => (guard.setDraft(null), setDraft({ ...draft, name: { en: e.target.value, zh: e.target.value } }))} />
           </div>
           <p className="text-xs text-ink-3">{t("homebrew.rulesHint")}</p>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -87,7 +106,7 @@ export function PackEditor({ stored, onClose }: { stored: StoredPack | undefined
           </div>
         </div>
       ) : (
-        <JsonEditor value={draft} validate={parseRulePack} onValid={setDraft} rows={22} />
+        <JsonEditor value={draft} draft={guard.draft ?? undefined} onDraft={guard.setDraft} validate={parseRulePack} onValid={setDraft} rows={22} />
       )}
     </Sheet>
   );

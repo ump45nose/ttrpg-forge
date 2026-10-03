@@ -6,7 +6,7 @@ import { DropdownMenu } from "radix-ui";
 import { useMemo, useRef, useState } from "react";
 import { useCharacters } from "../../app/characters";
 import { useL, useT } from "../../app/i18n";
-import { LOCAL_PACK_ID, useEngine, usePacks } from "../../app/packs";
+import { useEngine, usePacks } from "../../app/packs";
 import { useSettings } from "../../app/settings";
 import { Slot } from "../../app/slot";
 import { useBuildView } from "../../app/views";
@@ -62,7 +62,7 @@ export function Library() {
             if (r.ok) {
               // custom content travels with the character; keep any local version that already exists
               const local = usePacks.getState();
-              const existing = new Set(local.packs.find((p) => p.id === LOCAL_PACK_ID)?.pack.entities.map((x) => x.id));
+              const existing = new Set(local.packs.flatMap((p) => p.pack.entities.map((x) => x.id)));
               for (const e of r.value.homebrew) if (!existing.has(e.id)) await local.upsertLocal(e);
               put(r.value.character);
               toast({ content: r.value.character.name, tone: "good" });
@@ -115,7 +115,7 @@ function BackupNudge() {
       <Button size="sm" variant="secondary" onClick={downloadBackup}>
         {t("backup.now")}
       </Button>
-      <button type="button" onClick={snoozeBackup} aria-label={t("common.close")} className="rounded-lg p-1 text-ink-3 hover:bg-surface-3 hover:text-ink">
+      <button type="button" onClick={snoozeBackup} aria-label={t("common.close")} className="hit relative rounded-lg p-1 text-ink-3 hover:bg-surface-3 hover:text-ink">
         <X size={16} />
       </button>
     </div>
@@ -149,7 +149,7 @@ function EmptyState({ onCreate, onImport }: { onCreate: () => void; onImport: ()
       <div className="relative mx-auto mb-6 flex justify-center gap-[-8px]">
         {["class:fighter", "class:wizard", "class:cleric", "class:rogue"].map((id, i) => (
           <motion.div key={id} initial={{ opacity: 0, y: 16, rotate: (i - 1.5) * 8 }} animate={{ opacity: 1, y: 0, rotate: (i - 1.5) * 8 }} transition={{ delay: 0.08 * i, type: "spring", stiffness: 260, damping: 20 }} className="-mx-1.5">
-            <ArtImg id={id} size="sm" focus={[0.5, 0.45]} className="h-24 w-16 rounded-xl border border-white/15 shadow-lg" fallback={<Crest id={id} accent={["#b45309", "#4338ca", "#ca8a04", "#334155"][i]} size={64} />} />
+            <ArtImg id={id} size="sm" focus={[0.5, 0.45]} className="h-24 w-16 rounded-xl border border-line-strong shadow-lg" fallback={<Crest id={id} accent={["#b45309", "#4338ca", "#ca8a04", "#334155"][i]} size={64} />} />
           </motion.div>
         ))}
       </div>
@@ -201,6 +201,7 @@ function CharacterCard({ c, index }: { c: Character; index: number }) {
   const view = useBuildView(c);
   const navigate = useNavigate();
   const remove = useCharacters((s) => s.remove);
+  const put = useCharacters((s) => s.put);
   const locale = useSettings((s) => s.locale);
   if (!view) return null;
   const { sheet } = view;
@@ -244,8 +245,8 @@ function CharacterCard({ c, index }: { c: Character; index: number }) {
               <Chip tone="warn">{pending > 0 ? t("library.pending", { n: pending }) : t("library.continue")}</Chip>
             ) : (
               <>
-                <Chip>AC {sheet.ac}</Chip>
-                <Chip tone="bad">HP {sheet.hpMax}</Chip>
+                <Chip>{t("sheet.ac")} {sheet.ac}</Chip>
+                <Chip tone="bad">{t("sheet.hp")} {sheet.hpMax}</Chip>
               </>
             )}
             <span className="text-[11px] leading-5 text-ink-3">{relativeTime(c.updatedAt, locale)}</span>
@@ -262,13 +263,20 @@ function CharacterCard({ c, index }: { c: Character; index: number }) {
               <DropdownMenu.Item className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm text-ink outline-none data-[highlighted]:bg-surface-3" onSelect={() => navigate({ to: "/c/$id/build", params: { id: c.id } })}>
                 {t("library.continue")}
               </DropdownMenu.Item>
+              {incomplete && (
+                <DropdownMenu.Item className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm text-ink outline-none data-[highlighted]:bg-surface-3" onSelect={() => navigate({ to: "/c/$id", params: { id: c.id } })}>
+                  {t("library.play")}
+                </DropdownMenu.Item>
+              )}
               <DropdownMenu.Item className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm text-ink outline-none data-[highlighted]:bg-surface-3" onSelect={() => exportCharacter(c, engine)}>
                 {t("common.export")}
               </DropdownMenu.Item>
               <DropdownMenu.Item
                 className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm text-bad outline-none data-[highlighted]:bg-bad/10"
                 onSelect={() => {
-                  if (confirm(t("library.deleteConfirm", { name: c.name || t("library.unnamed") }))) remove(c.id);
+                  // gone at once, but one tap brings it back
+                  remove(c.id);
+                  toast({ content: t("library.deleted", { name: c.name || t("library.unnamed") }), action: { label: t("common.undo"), run: () => put(c) } }, 8000);
                 }}
               >
                 <Trash2 size={15} /> {t("common.delete")}
@@ -328,7 +336,7 @@ function CreateSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (o: 
         className="flex gap-2 pt-1"
       >
         <Input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder={t("library.namePlaceholder")} />
-        <Button type="button" variant="secondary" size="icon" className="h-11 w-11 shrink-0" aria-label="random" onClick={() => setName(randomName(locale))}>
+        <Button type="button" variant="secondary" size="icon" className="h-11 w-11 shrink-0" aria-label={t("library.randomName")} onClick={() => setName(randomName(locale))}>
           🎲
         </Button>
       </form>
@@ -385,7 +393,7 @@ function SamplePicker({ compact = false, onPicked }: { compact?: boolean; onPick
     void navigate({ to: "/c/$id", params: { id: c.id } });
   };
   return (
-    <div className={cn("grid gap-2", !compact && "sm:grid-cols-2")}>
+    <div className={cn("grid grid-cols-1 gap-2", !compact && "sm:grid-cols-2")}>
       {samples.map((s) => {
         const accent = engine.reg.get(s.classId)?.accent;
         return (

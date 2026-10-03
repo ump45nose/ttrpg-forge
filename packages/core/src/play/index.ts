@@ -321,6 +321,10 @@ export function canUse(action: ResolvedAction, state: PlayState, sheet: Sheet, s
   const blockers: LocalizedText[] = [];
   const warnings: LocalizedText[] = [];
   if (!action.available) blockers.push(L("Not available", "当前不可用"));
+  if (sheet.issues.some((i) => i.code === "armor-proficiency")) {
+    if (action.spell) blockers.push(L("You can't cast spells in armor you aren't trained with", "穿着未受训的护甲时无法施法"));
+    else if (action.attack && action.attack.kind !== "spell") warnings.push(L("Untrained armor: this attack has Disadvantage", "未受训的护甲：这次攻击具有劣势"));
+  }
   for (const c of action.costs) {
     if ("economy" in c) {
       if (state.inCombat && state.economy[c.economy]) {

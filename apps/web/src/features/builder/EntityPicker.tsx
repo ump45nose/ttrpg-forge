@@ -6,7 +6,7 @@ import { useT } from "../../app/i18n";
 import { haptic } from "../../app/settings";
 import { Button } from "../../ui/Button";
 import { cn } from "../../ui/cn";
-import { ArtImg, useArt } from "../../ui/Art";
+import { ArtBackdrop, ArtImg, useArt } from "../../ui/Art";
 import { Crest } from "../../ui/Crest";
 import { entityGlyph } from "../../ui/glyphs";
 import { useIsDesktop } from "../../ui/hooks";
@@ -16,6 +16,7 @@ import { useBuilder } from "./state";
 import { RichText } from "../terms/RichText";
 import { usePacks } from "../../app/packs";
 import { openCreator, useCanCreate } from "../../app/creator";
+import { confirmDialog } from "../../ui/Confirm";
 
 interface Props {
   type: Extract<EntityType, "class" | "species" | "background">;
@@ -23,13 +24,15 @@ interface Props {
   opsFor: (id: string) => BuildOp[];
   /** Extra showcase content (class timeline, origin choices...). */
   showcase?: (e: Entity, isCurrent: boolean) => ReactNode;
+  /** Shown right under the title, e.g. what is still to decide for the chosen entry. */
+  lead?: (e: Entity, isCurrent: boolean) => ReactNode;
 }
 
 /**
  * BG3-style big-choice picker: list on the left, showcase in the middle.
  * Hover (desktop) or tap (touch) focuses a candidate and previews it in the live sheet.
  */
-export function EntityPicker({ type, current, opsFor, showcase }: Props) {
+export function EntityPicker({ type, current, opsFor, showcase, lead }: Props) {
   const t = useT();
   const n = useNames();
   const desktop = useIsDesktop();
@@ -73,10 +76,11 @@ export function EntityPicker({ type, current, opsFor, showcase }: Props) {
     if (id !== current) apply(opsFor(id));
   };
 
+  const leadNode = shown && lead?.(shown, shown.id === current);
   const accentStyle = (e: Entity | undefined) => (e?.accent ? ({ "--class": e.accent } as CSSProperties) : undefined);
 
   return (
-    <div className="lg:grid lg:grid-cols-[17rem_1fr] lg:gap-5">
+    <div className="lg:grid lg:grid-cols-[17rem_minmax(0,1fr)] lg:gap-5">
       {/* candidates */}
       {desktop ? (
         <div className="space-y-1.5" onMouseLeave={() => setHoverId(undefined)}>
@@ -86,7 +90,7 @@ export function EntityPicker({ type, current, opsFor, showcase }: Props) {
           {startCustom && <CustomItem onClick={startCustom} />}
         </div>
       ) : (
-        <Carousel entities={entities} current={current} focused={focusId} onFocus={(id) => setFocusId(id)} accentStyle={accentStyle} onCustom={startCustom} />
+        <Carousel entities={entities} current={current} focused={focusId} onFocus={(id) => setFocusId(id)} onChoose={choose} accentStyle={accentStyle} onCustom={startCustom} />
       )}
 
       {/* showcase */}
@@ -99,18 +103,12 @@ export function EntityPicker({ type, current, opsFor, showcase }: Props) {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -12 }}
               transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-              className="card class-transition relative overflow-hidden p-5 sm:p-6"
+              className={cn("card class-transition relative overflow-clip p-5 @container sm:p-6", shownArt && "on-art")}
               style={accentStyle(shown)}
             >
               <div className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-class/20 blur-3xl" />
-              {shownArt && (
-                <ArtImg
-                  img={shownArt}
-                  focus={type === "class" ? [0.5, 0.3] : [0.5, 0.45]}
-                  className="-mx-5 -mt-5 mb-1 h-52 bg-transparent [mask-image:linear-gradient(to_bottom,black_55%,transparent)] sm:-mx-6 sm:-mt-6 sm:h-72"
-                />
-              )}
-              <header className={cn("relative flex items-start gap-4", shownArt && "-mt-14")}>
+              {shownArt && <ArtBackdrop img={shownArt} />}
+              <header className="relative flex items-start gap-4">
                 {shownArt ? null : type === "class" ? <Crest id={shown.id} accent={shown.accent} size={72} /> : <Emblem e={shown} />}
                 <div className="min-w-0 flex-1">
                   <div className="text-[11px] font-semibold tracking-[0.14em] text-class uppercase">{t(`entity.${type}`)}</div>
@@ -119,6 +117,13 @@ export function EntityPicker({ type, current, opsFor, showcase }: Props) {
                   {shown.summary && <p className="mt-1.5 text-sm text-ink-2">{n.l(shown.summary)}</p>}
                 </div>
               </header>
+              {leadNode && <div className="relative mt-4">{leadNode}</div>}
+              {!desktop && shown.id !== current && preview && (
+                <div className="relative mt-4 rounded-2xl border border-class/30 bg-class/5 p-3">
+                  <div className="mb-2 text-[11px] font-semibold tracking-wider text-class uppercase">{t("builder.changes")}</div>
+                  <DiffView diff={preview.diff} compact />
+                </div>
+              )}
               {shown.text && <RichText text={shown.text} selfId={shown.id} className="relative mt-4 text-sm leading-relaxed text-ink-2" />}
               {editable && (
                 <div className="relative mt-4 flex flex-wrap gap-2">
@@ -131,8 +136,8 @@ export function EntityPicker({ type, current, opsFor, showcase }: Props) {
                         size="sm"
                         variant="ghost"
                         className="text-bad"
-                        onClick={() => {
-                          if (!confirm(t("homebrew.deleteConfirm", { name: n.l(shown.name, { mono: true }) }))) return;
+                        onClick={async () => {
+                          if (!(await confirmDialog({ title: t("homebrew.deleteConfirm", { name: n.l(shown.name, { mono: true }) }), confirmLabel: t("common.delete"), tone: "danger" }))) return;
                           const owner = ownerOf(shown);
                           if (shown.id === current && type !== "class") apply([type === "background" ? { op: "setBackground", id: undefined } : { op: "setSpecies", id: undefined }]);
                           setFocusId(entities.find((e) => e.id !== shown.id)?.id);
@@ -151,26 +156,13 @@ export function EntityPicker({ type, current, opsFor, showcase }: Props) {
               )}
               <div className="relative mt-5">{showcase?.(shown, shown.id === current)}</div>
 
-              {!desktop && (
-                <>
-                  {shown.id !== current && preview && (
-                    <div className="relative mt-5 rounded-2xl border border-class/30 bg-class/5 p-3">
-                      <div className="mb-2 text-[11px] font-semibold tracking-wider text-class uppercase">{t("builder.changes")}</div>
-                      <DiffView diff={preview.diff} compact />
-                    </div>
-                  )}
-                  <div className="sticky bottom-20 z-10 mt-5">
-                    <Button variant={shown.id === current ? "secondary" : "class"} size="lg" className="w-full" disabled={shown.id === current} onClick={() => choose(shown.id)}>
-                      {shown.id === current ? (
-                        <>
-                          <Check size={18} /> {n.l(shown.name, { mono: true })}
-                        </>
-                      ) : (
-                        `${t("common.choose")} ${n.l(shown.name, { mono: true })}`
-                      )}
-                    </Button>
-                  </div>
-                </>
+              {/* pinned to the bottom of the screen while this card is in view (the card clips, it doesn't scroll) */}
+              {!desktop && shown.id !== current && (
+                <div className="sticky bottom-20 z-10 mt-5">
+                  <Button variant="class" size="lg" className="w-full shadow-float" onClick={() => choose(shown.id)}>
+                    {`${t("common.choose")} ${n.l(shown.name, { mono: true })}`}
+                  </Button>
+                </div>
               )}
             </motion.article>
           )}
@@ -254,6 +246,7 @@ function Carousel({
   current,
   focused,
   onFocus,
+  onChoose,
   accentStyle,
   onCustom,
 }: {
@@ -261,6 +254,8 @@ function Carousel({
   current: string | undefined;
   focused: string | undefined;
   onFocus: (id: string) => void;
+  /** Tapping the focused card again picks it. */
+  onChoose: (id: string) => void;
   accentStyle: (e: Entity) => CSSProperties | undefined;
   onCustom?: () => void;
 }) {
@@ -283,6 +278,7 @@ function Carousel({
             data-id={e.id}
             whileTap={{ scale: 0.96 }}
             onClick={() => {
+              if (isFocused && !selected) return onChoose(e.id);
               haptic(5);
               onFocus(e.id);
             }}
@@ -303,8 +299,13 @@ function Carousel({
               }
             />
             <span className="w-full truncate text-sm font-medium">{n.l(e.name, { mono: true })}</span>
+            {isFocused && !selected && (
+              <motion.span initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="rounded-full bg-class px-3 py-0.5 text-xs font-semibold text-class-ink shadow-[0_6px_16px_-6px_var(--class)]">
+                {t("common.choose")}
+              </motion.span>
+            )}
             {selected && (
-              <span className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-class text-white">
+              <span className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-class text-class-ink">
                 <Check size={12} strokeWidth={3} />
               </span>
             )}

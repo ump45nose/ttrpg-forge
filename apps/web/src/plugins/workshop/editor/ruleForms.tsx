@@ -86,7 +86,7 @@ export function ClassFormView({ e, locale, onChange }: Props<ClassEntity>) {
             )}
           </Field>
           <Field label={t("workshop.maxLevel")} hint={t("workshop.maxLevelHint")}>
-            <Input type="number" min={1} max={20} value={f.maxLevel} onChange={(ev) => set({ maxLevel: Math.min(20, Math.max(1, Number(ev.target.value) || 1)) })} />
+            <Input type="number" inputMode="numeric" min={1} max={20} value={f.maxLevel} onChange={(ev) => set({ maxLevel: Math.min(20, Math.max(1, Number(ev.target.value) || 1)) })} />
           </Field>
         </div>
       )}
@@ -108,7 +108,7 @@ export function ClassFormView({ e, locale, onChange }: Props<ClassEntity>) {
           <Field label={t("workshop.skillChoice")} hint={t("workshop.emptyAny")}>
             <div className="mb-2 flex items-center gap-2 text-sm text-ink-2">
               {t("workshop.chooseN")}
-              <Input type="number" min={0} max={6} className="h-9 w-16" value={f.skillCount} onChange={(ev) => set({ skillCount: Math.max(0, Number(ev.target.value) || 0) })} />
+              <Input type="number" inputMode="numeric" min={0} max={6} className="h-9 w-16" value={f.skillCount} onChange={(ev) => set({ skillCount: Math.max(0, Number(ev.target.value) || 0) })} />
             </div>
             <MultiPick options={skills} value={f.skills} onChange={(s) => set({ skills: s })} />
           </Field>
@@ -119,10 +119,10 @@ export function ClassFormView({ e, locale, onChange }: Props<ClassEntity>) {
                 <KitEditor kit={f.kit} onChange={(kit) => set({ kit })} />
                 <div className="grid grid-cols-2 gap-3">
                   <Field label={t("homebrew.kitGold")}>
-                    <Input type="number" min={0} value={f.kitGold} onChange={(ev) => set({ kitGold: Math.max(0, Number(ev.target.value) || 0) })} />
+                    <Input type="number" inputMode="numeric" min={0} value={f.kitGold} onChange={(ev) => set({ kitGold: Math.max(0, Number(ev.target.value) || 0) })} />
                   </Field>
                   <Field label={t("homebrew.altGold")}>
-                    <Input type="number" min={0} value={f.altGold} onChange={(ev) => set({ altGold: Math.max(0, Number(ev.target.value) || 0) })} />
+                    <Input type="number" inputMode="numeric" min={0} value={f.altGold} onChange={(ev) => set({ altGold: Math.max(0, Number(ev.target.value) || 0) })} />
                   </Field>
                 </div>
               </div>
@@ -213,6 +213,7 @@ function PerLevelTable({ label, slug, value, onChange, presets }: { label: strin
               <span className="text-[10px] text-ink-3">{i + 1}</span>
               <input
                 type="number"
+                inputMode="numeric"
                 min={0}
                 value={v}
                 onChange={(ev) => onChange(tableFormula(slug, vals.map((x, j) => (j === i ? Math.max(0, Number(ev.target.value) || 0) : x))))}
@@ -376,9 +377,9 @@ export function FeatFormView({ e, locale, onChange }: Props<FeatEntity>) {
       <Field label={t("workshop.featCategory")}>
         <Tabs size="sm" items={FEAT_CATEGORIES.map((c) => ({ id: c, label: t(`workshop.featCat.${c}`) }))} value={f.category} onChange={(category) => set({ category })} />
       </Field>
-      <div className="grid grid-cols-[6rem_1fr] gap-3">
+      <div className="grid grid-cols-[6rem_minmax(0,1fr)] gap-3">
         <Field label={t("workshop.prereqLevel")}>
-          <Input type="number" min={0} max={20} value={f.prereqLevel} onChange={(ev) => set({ prereqLevel: Math.max(0, Number(ev.target.value) || 0) })} />
+          <Input type="number" inputMode="numeric" min={0} max={20} value={f.prereqLevel} onChange={(ev) => set({ prereqLevel: Math.max(0, Number(ev.target.value) || 0) })} />
         </Field>
         <Field label={t("workshop.prereqText")} hint={t("common.optional")}>
           <Input value={f.prereqText} placeholder={t("workshop.prereqTextPh")} onChange={(ev) => set({ prereqText: ev.target.value })} />

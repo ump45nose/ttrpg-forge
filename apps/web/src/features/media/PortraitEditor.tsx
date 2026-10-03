@@ -86,7 +86,7 @@ export function PortraitEditor({
               <button key={id} type="button" onClick={() => onChange({ portrait: on ? undefined : PORTRAIT_ART + id })} aria-pressed={on} className="relative shrink-0 rounded-full">
                 <ArtImg id={id} size="sm" className={cn("h-14 w-14 rounded-full ring-2 transition", on ? "ring-class" : "ring-transparent opacity-80 hover:opacity-100")} />
                 {on && (
-                  <span className="absolute -right-0.5 -bottom-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-class text-white">
+                  <span className="absolute -right-0.5 -bottom-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-class text-class-ink">
                     <Check size={12} strokeWidth={3} />
                   </span>
                 )}

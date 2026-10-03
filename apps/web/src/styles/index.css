@@ -21,7 +21,7 @@
   --line-strong: rgb(255 255 255 / 0.16);
   --ink: #ece8f4;
   --ink-2: #a9a4bd;
-  --ink-3: #6f6b86;
+  --ink-3: #8b879e;
   --accent: #d6a85c;
   --accent-2: #f3d79a;
   --accent-ink: #1a1408;
@@ -36,6 +36,8 @@
   --shadow-md: 0 10px 30px -12px rgb(0 0 0 / 0.6);
   --inner-hi: inset 0 1px 0 rgb(255 255 255 / 0.05);
   --radius: 16px;
+  /* keeps text legible over paintings: a dark halo on dark themes, a light one on light themes */
+  --art-shadow: 0 1px 2px rgb(0 0 0 / 0.55), 0 0 14px rgb(0 0 0 / 0.45);
   --font-display: "Cinzel", "Noto Serif SC Variable", "Songti SC", serif;
   --font-body: "Inter Variable", "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", system-ui, sans-serif;
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
@@ -101,6 +103,10 @@
     -moz-osx-font-smoothing: grayscale;
     overscroll-behavior-y: none;
   }
+  /* nothing may widen the page sideways: on phones that zooms the whole layout out */
+  #root {
+    overflow-x: clip;
+  }
   ::selection {
     background: color-mix(in oklab, var(--accent) 40%, transparent);
   }
@@ -138,7 +144,7 @@
     color: transparent;
   }
   .glass {
-    background: color-mix(in oklab, var(--surface) 78%, transparent);
+    background: color-mix(in oklab, var(--surface) 94%, transparent);
     backdrop-filter: blur(18px) saturate(1.2);
     -webkit-backdrop-filter: blur(18px) saturate(1.2);
   }
@@ -157,11 +163,50 @@
   .class-transition {
     transition: --class 700ms var(--ease-out);
   }
+  /* ArtBackdrop: a painting that melts into its panel */
+  .art-fade,
+  .art-fade-tall {
+    mask-image: linear-gradient(to bottom, black 25%, transparent 92%);
+  }
+  @container (width > 26rem) {
+    .art-fade-tall {
+      mask-image: linear-gradient(to bottom, black 30%, transparent 92%), linear-gradient(to right, transparent, black 45%);
+      mask-composite: intersect;
+    }
+  }
+  /* text laid over a painting */
+  .on-art {
+    text-shadow: var(--art-shadow);
+  }
   .no-scrollbar {
     scrollbar-width: none;
   }
   .no-scrollbar::-webkit-scrollbar {
     display: none;
+  }
+}
+
+/* Text on a class-coloured fill: black or white, whichever the colour needs (white where unsupported). */
+@utility text-class-ink {
+  color: white;
+  color: oklch(from var(--class) clamp(0, (0.62 - l) * 1000, 1) 0 0);
+}
+
+/* A finger-sized tap area around a small control, without changing how it looks (needs a positioned element). */
+@utility hit {
+  &::before {
+    content: "";
+    position: absolute;
+    inset: -0.5rem;
+  }
+}
+
+/* iOS zooms the page into any field under 16px when it's focused: on touch screens, fields are 16px. */
+@media (pointer: coarse) {
+  input:not([type="range"], [type="checkbox"], [type="radio"], [type="file"]),
+  textarea,
+  select {
+    font-size: 16px;
   }
 }
 

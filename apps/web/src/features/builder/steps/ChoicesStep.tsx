@@ -9,7 +9,7 @@ import { Tabs } from "../../../ui/Tabs";
 import { useNames } from "../../common/names";
 import { ChoiceBlock, SpellBadges } from "../ChoiceBlock";
 import { InventoryPanel } from "../InventoryPanel";
-import { stepOfChoice, useBuilder } from "../state";
+import { choiceAnchor, preparedAnchor, stepOfChoice, unprepared, useBuilder } from "../state";
 
 const levelOf = (c: ChoiceView) => Number(/@(\d+)/.exec(c.path)?.[1] ?? c.source.level ?? 1);
 
@@ -30,10 +30,11 @@ export function ChoicesStep() {
 
   return (
     <div className="space-y-8">
+      <OpenList />
       {groups.map(([lv, list]) => (
         <section key={lv}>
           <h2 className="mb-3 flex items-center gap-3 text-xs font-semibold tracking-[0.14em] text-ink-3 uppercase">
-            <span className="tnum flex h-6 w-6 items-center justify-center rounded-full bg-class text-[11px] text-white">{lv}</span>
+            <span className="tnum flex h-6 w-6 items-center justify-center rounded-full bg-class text-[11px] text-class-ink">{lv}</span>
             {t("common.levelN", { n: lv })}
             <span className="h-px flex-1 bg-line" />
           </h2>
@@ -83,7 +84,7 @@ export function PreparedPanel({ sc }: { sc: SpellcastingView }) {
   };
 
   return (
-    <section>
+    <section id={preparedAnchor(sc.classId)} className="scroll-mt-[calc(var(--builder-head,0px)+3.5rem)]">
       <h2 className="mb-3 flex items-center gap-3 text-xs font-semibold tracking-[0.14em] text-ink-3 uppercase">
         {t("builder.spellsPrepared")} · {n.entity(sc.classId, true)}
         <span className="h-px flex-1 bg-line" />
@@ -91,10 +92,11 @@ export function PreparedPanel({ sc }: { sc: SpellcastingView }) {
           {count}/{sc.preparedMax}
         </span>
       </h2>
+      {count === 0 && <p className="mb-3 rounded-xl border border-warn/30 bg-warn/8 px-3 py-2 text-xs text-warn">{t("builder.review.preparedNone")}</p>}
       {levels.length > 1 && (
         <Tabs size="sm" className="mb-3" items={[{ id: "all", label: t("common.all") }, ...levels.map((l) => ({ id: String(l), label: t("spell.level", { n: l }) }))]} value={lv} onChange={setLv} />
       )}
-      <div className="grid gap-2 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         {shown.map((s) => {
           const isAlways = always.has(s.id);
           const on = isAlways || prepared.includes(s.id);
@@ -122,5 +124,38 @@ export function PreparedPanel({ sc }: { sc: SpellcastingView }) {
         })}
       </div>
     </section>
+  );
+}
+
+/**
+ * What's still open on this (long) page, as a sticky row of chips: tap one to jump there.
+ * Sits right under the builder header.
+ */
+function OpenList() {
+  const t = useT();
+  const n = useNames();
+  const { sheet, build } = useBuilder();
+  const open = sheet.choices.filter((c) => c.remaining > 0 && stepOfChoice(c.path, c.choice.from.kind) === "choices");
+  const prep = unprepared(sheet, build);
+  if (!open.length && !prep.length) return null;
+  const jump = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  return (
+    <nav aria-label={t("builder.openList")} className="glass sticky top-[var(--builder-head,0px)] z-20 -mx-4 border-b border-line px-4 py-2 sm:-mx-6 sm:px-6 lg:mx-0 lg:rounded-xl lg:border">
+      <div className="no-scrollbar flex items-center gap-1.5 overflow-x-auto">
+        <span className="shrink-0 text-[11px] font-semibold tracking-wider text-ink-3 uppercase">{t("builder.openList")}</span>
+        {open.map((c) => (
+          <button key={c.path} type="button" onClick={() => jump(choiceAnchor(c.path))} className="flex h-7 shrink-0 items-center gap-1 rounded-full border border-warn/40 bg-warn/10 px-2.5 text-xs text-ink hover:border-warn">
+            {n.l(c.choice.name)}
+            <span className="tnum text-warn">{c.selected.length}/{c.count}</span>
+          </button>
+        ))}
+        {prep.map((p) => (
+          <button key={p.classId} type="button" onClick={() => jump(preparedAnchor(p.classId))} className="flex h-7 shrink-0 items-center gap-1 rounded-full border border-magic/40 bg-magic/10 px-2.5 text-xs text-ink hover:border-magic">
+            {t("builder.spellsPrepared")}
+            <span className="tnum text-magic">{p.count}/{p.max}</span>
+          </button>
+        ))}
+      </div>
+    </nav>
   );
 }

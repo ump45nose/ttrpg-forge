@@ -1,12 +1,12 @@
 import { choiceCandidates, type Ability, type BuildOp, type ChoiceCandidate, type ChoiceView, type Entity } from "@forge/core";
-import { Check, Info, Pencil, Plus, Search, Sparkles } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, Info, Pencil, Plus, Search, Sparkles } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useMemo, useState } from "react";
 import { openCreator, useCanCreate } from "../../app/creator";
 import { useT } from "../../app/i18n";
 import { useUserEntity } from "../../app/packs";
 import { haptic } from "../../app/settings";
-import { ArtImg } from "../../ui/Art";
+import { ArtBackdrop, ArtImg, useArt } from "../../ui/Art";
 import { Button } from "../../ui/Button";
 import { Chip } from "../../ui/Chip";
 import { cn } from "../../ui/cn";
@@ -16,7 +16,7 @@ import { Sheet } from "../../ui/Sheet";
 import { DiffView } from "../common/DiffView";
 import { GrantList } from "../common/GrantList";
 import { useNames } from "../common/names";
-import { useBuilder } from "./state";
+import { choiceAnchor, useBuilder } from "./state";
 import { RichText } from "../terms/RichText";
 
 /** One pending/finished choice: skills, fighting style, feat, spells, equipment, ability increases... */
@@ -28,7 +28,7 @@ export function ChoiceBlock({ ch, hideSource = false }: { ch: ChoiceView; hideSo
   const done = ch.remaining <= 0;
 
   return (
-    <motion.section layout="position" className={cn("card p-4", !done && "border-warn/30")}>
+    <motion.section layout="position" id={choiceAnchor(ch.path)} className={cn("card scroll-mt-[calc(var(--builder-head,0px)+3.5rem)] p-4", !done && "border-warn/30")}>
       <header className="mb-3 flex items-start gap-3">
         <div className="min-w-0 flex-1">
           <h3 className="text-sm font-semibold text-ink">{n.l(ch.choice.name)}</h3>
@@ -126,7 +126,7 @@ function OptionCards({ ch, candidates }: { ch: ChoiceView; candidates: ChoiceCan
   const hover = usePreviewHandlers(ch);
   const options = ch.choice.from.kind === "options" ? ch.choice.from.options : [];
   return (
-    <div className="grid gap-2 sm:grid-cols-2">
+    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
       {candidates.map((c) => {
         const opt = options.find((o) => o.id === c.id);
         return (
@@ -146,7 +146,7 @@ function OptionCards({ ch, candidates }: { ch: ChoiceView; candidates: ChoiceCan
             )}
           >
             <div className="flex items-center gap-2">
-              <span className={cn("flex h-4 w-4 shrink-0 items-center justify-center rounded-full border", c.selected ? "border-class bg-class text-white" : "border-line-strong")}>
+              <span className={cn("flex h-4 w-4 shrink-0 items-center justify-center rounded-full border", c.selected ? "border-class bg-class text-class-ink" : "border-line-strong")}>
                 {c.selected && <Check size={10} strokeWidth={4} />}
               </span>
               <span className="text-sm font-medium text-ink">{n.l(c.name)}</span>
@@ -161,6 +161,10 @@ function OptionCards({ ch, candidates }: { ch: ChoiceView; candidates: ChoiceCan
   );
 }
 
+const FOLD_AT = 6;
+const TRIM_AT = 12;
+const TRIM_TO = 8;
+
 function EntityList({ ch, candidates }: { ch: ChoiceView; candidates: ChoiceCandidate[] }) {
   const t = useT();
   const n = useNames();
@@ -170,8 +174,13 @@ function EntityList({ ch, candidates }: { ch: ChoiceView; candidates: ChoiceCand
   const [detail, setDetail] = useState<ChoiceCandidate>();
   const isSpell = ch.choice.from.kind === "entity" && ch.choice.from.entityType === "spell";
   const isSubclass = ch.choice.from.kind === "entity" && ch.choice.from.entityType === "subclass";
+  const [expanded, setExpanded] = useState(false);
+  // a finished long list folds down to what was picked, so the page stays short
+  const folded = ch.remaining <= 0 && !expanded && candidates.length > FOLD_AT;
+  // an open long list starts with a handful (search still covers everything)
   const q = query.trim().toLowerCase();
-  const shown = q ? candidates.filter((c) => [n.l(c.name), ...(c.entity?.aliases ?? [])].join(" ").toLowerCase().includes(q) || c.id.includes(q)) : candidates;
+  const trimmed = !folded && !expanded && !q && candidates.length > TRIM_AT;
+  const shown = folded ? candidates.filter((c) => c.selected) : trimmed ? candidates.filter((c, i) => i < TRIM_TO || c.selected) : q ? candidates.filter((c) => [n.l(c.name), ...(c.entity?.aliases ?? [])].join(" ").toLowerCase().includes(q) || c.id.includes(q)) : candidates;
   const toggle = (c: ChoiceCandidate) => {
     haptic(6);
     apply(toggleOp(ch, c.id));
@@ -179,7 +188,7 @@ function EntityList({ ch, candidates }: { ch: ChoiceView; candidates: ChoiceCand
 
   return (
     <>
-      {candidates.length > 10 && (
+      {!folded && candidates.length > 10 && (
         <div className="relative mb-3">
           <Search size={15} className="absolute top-1/2 left-3 -translate-y-1/2 text-ink-3" />
           <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("common.search")} className="pl-9" />
@@ -188,7 +197,7 @@ function EntityList({ ch, candidates }: { ch: ChoiceView; candidates: ChoiceCand
       {isSubclass ? (
         <SubclassCards candidates={shown} onOpen={setDetail} />
       ) : (
-      <div className={cn("grid gap-2", isSpell ? "sm:grid-cols-2" : "")}>
+      <div className={cn("grid grid-cols-1 gap-2", isSpell ? "sm:grid-cols-2" : "")}>
         {shown.map((c) => (
           <div
             key={c.id}
@@ -204,7 +213,7 @@ function EntityList({ ch, candidates }: { ch: ChoiceView; candidates: ChoiceCand
               onClick={() => (isSpell ? toggle(c) : setDetail(c))}
               className="flex min-w-0 flex-1 items-center gap-2.5 py-2.5 pl-3 text-left"
             >
-              <span className={cn("flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors", c.selected ? "border-class bg-class text-white" : "border-line-strong")}>
+              <span className={cn("flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors", c.selected ? "border-class bg-class text-class-ink" : "border-line-strong")}>
                 {c.selected && <Check size={12} strokeWidth={3} />}
               </span>
               <span className="min-w-0 flex-1">
@@ -222,7 +231,18 @@ function EntityList({ ch, candidates }: { ch: ChoiceView; candidates: ChoiceCand
         ))}
       </div>
       )}
-      <QuickCreate ch={ch} />
+      {trimmed && (
+        <button type="button" onClick={() => setExpanded(true)} className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-line py-2 text-sm text-ink-2 hover:border-line-strong hover:text-ink">
+          <ChevronDown size={16} /> {t("builder.showAll", { n: candidates.length })}
+        </button>
+      )}
+      {candidates.length > FOLD_AT && ch.remaining <= 0 && (
+        <button type="button" onClick={() => setExpanded(!expanded)} className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl py-2 text-sm text-ink-2 hover:bg-surface-3/50 hover:text-ink">
+          {folded ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+          {folded ? t("builder.showAll", { n: candidates.length }) : t("builder.foldPicked")}
+        </button>
+      )}
+      {!folded && <QuickCreate ch={ch} />}
       <CandidateDetail ch={ch} candidate={detail} onClose={() => setDetail(undefined)} />
     </>
   );
@@ -249,7 +269,7 @@ function SubclassCards({ candidates, onOpen }: { candidates: ChoiceCandidate[]; 
           <ArtImg id={c.id} size="sm" focus={[0.5, 0.35]} className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,color-mix(in_oklab,var(--class)_30%,transparent),var(--surface-2))] transition-transform duration-500 group-hover:scale-105" />
           <span className="absolute inset-0 bg-[linear-gradient(to_top,rgb(0_0_0/0.85),rgb(0_0_0/0.15)_55%,transparent)]" />
           {c.selected && (
-            <span className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-class text-white shadow">
+            <span className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-class text-class-ink shadow">
               <Check size={14} strokeWidth={3} />
             </span>
           )}
@@ -330,6 +350,7 @@ function CandidateDetail({ ch, candidate, onClose }: { ch: ChoiceView; candidate
   const { engine, build, sheet, issues, apply } = useBuilder();
   const p = useMemo(() => (candidate ? engine.preview(build, sheet, toggleOp(ch, candidate.id), issues) : undefined), [engine, build, sheet, issues, ch, candidate]);
   const e = candidate?.entity;
+  const art = useArt(e && (e.type === "subclass" || e.type === "class") ? e.id : undefined);
   return (
     <Sheet
       open={!!candidate}
@@ -354,8 +375,8 @@ function CandidateDetail({ ch, candidate, onClose }: { ch: ChoiceView; candidate
       }
     >
       {candidate && (
-        <div className="space-y-4">
-          {e && (e.type === "subclass" || e.type === "class") && <ArtImg id={e.id} focus={[0.5, 0.3]} className="h-56 rounded-2xl sm:h-72" />}
+        <div className={cn("relative space-y-4 @container", art && "on-art")}>
+          {art && <ArtBackdrop img={art} className="-inset-x-5 sm:-inset-x-6" />}
           {e && <EditOwn e={e} />}
           {candidate.reason && <Chip tone="bad">{n.l(candidate.reason)}</Chip>}
           {candidate.text && <RichText text={candidate.text} selfId={candidate.entity?.id} className="text-sm leading-relaxed text-ink-2" />}
@@ -366,7 +387,11 @@ function CandidateDetail({ ch, candidate, onClose }: { ch: ChoiceView; candidate
             </p>
           )}
           {e && e.type !== "spell" && <GrantList grants={e.grants} />}
-          {e?.type === "subclass" && <LevelTimeline levels={e.levels} />}
+          {e?.type === "subclass" && (
+            <div className="pl-3">
+              <LevelTimeline levels={e.levels} />
+            </div>
+          )}
           {p && (
             <div className="rounded-2xl border border-class/30 bg-class/5 p-3">
               <div className="mb-2 text-[11px] font-semibold tracking-wider text-class uppercase">{t("builder.changes")}</div>
@@ -421,7 +446,7 @@ export function LevelTimeline({ levels, from = 1, to = 20, highlight }: { levels
           <span
             className={cn(
               "tnum absolute top-0.5 -left-[31px] flex h-5 w-5 items-center justify-center rounded-full border text-[10px] font-bold",
-              highlight !== undefined && lv <= highlight ? "border-class bg-class text-white" : "border-line-strong bg-surface-2 text-ink-3",
+              highlight !== undefined && lv <= highlight ? "border-class bg-class text-class-ink" : "border-line-strong bg-surface-2 text-ink-3",
             )}
           >
             {lv}
@@ -502,8 +527,8 @@ function AbilityChoiceEditor({ ch }: { ch: ChoiceView }) {
                       disabled={over}
                       onClick={() => assign(a, amt)}
                       className={cn(
-                        "tnum h-7 min-w-9 rounded-lg border px-1.5 text-xs font-semibold transition-colors",
-                        active ? "border-class bg-class text-white" : "border-line text-ink-2 hover:border-class/60",
+                        "tnum h-8 min-w-10 rounded-lg border px-1.5 text-xs font-semibold transition-colors",
+                        active ? "border-class bg-class text-class-ink" : "border-line text-ink-2 hover:border-class/60",
                         over && "opacity-30",
                       )}
                     >

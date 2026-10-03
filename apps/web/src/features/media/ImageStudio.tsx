@@ -252,11 +252,12 @@ function GeneratePanel({ req }: { req: StudioRequest }) {
 }
 
 function RefThumb({ blob, onRemove }: { blob: Blob; onRemove: () => void }) {
+  const t = useT();
   const url = useObjectUrl(blob);
   return (
     <div className="relative h-16 w-16 overflow-hidden rounded-xl border border-line">
       <img src={url} alt="" className="h-full w-full object-cover" />
-      <button type="button" onClick={onRemove} className="absolute top-0.5 right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white" aria-label="remove">
+      <button type="button" onClick={onRemove} className="hit absolute top-0.5 right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white" aria-label={t("common.remove")}>
         <X size={12} />
       </button>
     </div>
@@ -316,13 +317,14 @@ function RecentPanel() {
 }
 
 function RecentThumb({ img, onDelete }: { img: StoredImage; onDelete: () => void }) {
+  const t = useT();
   const url = useObjectUrl(img.blob);
   return (
     <div className="group relative aspect-square overflow-hidden rounded-xl border border-line bg-surface-3">
       <button type="button" className="h-full w-full" onClick={() => cropNext(img.id)} title={img.prompt}>
         <img src={url} alt={img.prompt ?? ""} className="h-full w-full object-cover" loading="lazy" />
       </button>
-      <button type="button" onClick={onDelete} className="absolute top-1 right-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white opacity-80 hover:opacity-100" aria-label="delete">
+      <button type="button" onClick={onDelete} className="absolute top-1 right-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white opacity-80 hover:opacity-100" aria-label={t("common.delete")}>
         <Trash2 size={12} />
       </button>
     </div>
@@ -401,7 +403,7 @@ function CropFlow({ req, source, onBack }: { req: StudioRequest; source: Blob | 
           />
         )}
       </div>
-      <input type="range" min={1} max={3} step={0.01} value={zoom} onChange={(e) => setZoom(Number(e.target.value))} className="w-full accent-[var(--accent)]" aria-label="zoom" />
+      <input type="range" min={1} max={3} step={0.01} value={zoom} onChange={(e) => setZoom(Number(e.target.value))} className="w-full accent-[var(--accent)]" aria-label={t("media.zoom")} />
       <Button variant="primary" size="lg" className="w-full" disabled={busy || !areas[step.key]} onClick={next}>
         {busy ? <LoaderCircle size={17} className="animate-spin" /> : <Check size={17} />} {i < steps.length - 1 ? t("media.next") : t("media.use")}
       </Button>

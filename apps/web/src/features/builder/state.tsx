@@ -141,3 +141,20 @@ export function pendingByStep(sheet: Sheet, build: Build): Record<StepId, number
   for (const c of sheet.choices) if (c.remaining > 0) r[stepOfChoice(c.path, c.choice.from.kind)]++;
   return r;
 }
+
+/** Daily prepared spells still open per class (wizard, cleric...). A reminder, not a requirement. */
+export function unprepared(sheet: Sheet, build: Build): { classId: string; count: number; max: number }[] {
+  return sheet.spellcasting
+    .filter((sc) => sc.mode !== "known" && sc.preparedMax > 0)
+    .map((sc) => {
+      const always = new Set(sheet.spells.filter((s) => s.classId === sc.classId && s.alwaysPrepared).map((s) => s.spellId));
+      const count = (build.prepared[sc.classId] ?? []).filter((id) => !always.has(id)).length;
+      return { classId: sc.classId, count, max: sc.preparedMax };
+    })
+    .filter((p) => p.count < p.max);
+}
+
+/** Element id of a class's prepared-spells panel, for "jump there" links. */
+export const preparedAnchor = (classId: string) => `prepared-${classId.replace(/\W/g, "-")}`;
+/** Element id of a choice block. */
+export const choiceAnchor = (path: string) => `choice-${path.replace(/\W/g, "-")}`;

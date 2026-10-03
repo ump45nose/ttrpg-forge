@@ -3,7 +3,7 @@ import { ArrowLeft, Pencil, Redo2, Undo2, ChevronsUp, Lightbulb } from "lucide-r
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState, type TouchEvent } from "react";
 import { haptic, reducedMotion } from "../../app/settings";
-import { useCharacter } from "../../app/characters";
+import { useCharacter, useLeaveIfMissing } from "../../app/characters";
 import { useT } from "../../app/i18n";
 import { Slot } from "../../app/slot";
 import { Button } from "../../ui/Button";
@@ -28,10 +28,7 @@ import { Vitals } from "./Vitals";
 export function SheetPage() {
   const { id } = useParams({ from: "/c/$id" });
   const character = useCharacter(id);
-  const navigate = useNavigate();
-  useEffect(() => {
-    if (!character) void navigate({ to: "/" });
-  }, [character, navigate]);
+  useLeaveIfMissing(character);
   if (!character) return null;
   return (
     <PlayProvider character={character}>
@@ -135,14 +132,14 @@ function PlaySheet() {
 
       <LevelUpSheet open={levelUp} onClose={() => setLevelUp(false)} />
       <LooksSheet open={looks} onClose={() => setLooks(false)} character={character} speciesId={sheet.speciesId} classId={sheet.classes[0]?.id} />
-      <div className="glass sticky top-0 z-20 mt-2 border-b border-line">
+      <div className="safe-t glass sticky top-0 z-20 mt-2 border-b border-line">
         <div className="mx-auto max-w-6xl space-y-2 px-3 py-2 sm:px-6">
           <Vitals />
           <CombatBar />
         </div>
       </div>
 
-      <div className="relative mx-auto max-w-6xl px-3 pt-4 pb-28 sm:px-6 lg:grid lg:grid-cols-[1fr_24rem] lg:gap-6">
+      <div className="relative mx-auto max-w-6xl px-3 pt-4 pb-28 sm:px-6 lg:grid lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-6">
         <main className="min-w-0 space-y-4">
           <Hint id="sheet-basics" icon={<Lightbulb size={16} />}>
             <div className="font-medium text-ink">{t("onboard.sheetTitle")}</div>

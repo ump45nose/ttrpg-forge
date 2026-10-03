@@ -89,7 +89,7 @@ export function AbilitiesStep() {
       </div>
       {swappable && <p className="text-xs text-ink-3">{t("builder.swapHint")}</p>}
 
-      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
         {ABILITIES.map((a) => {
           const v = sheet.abilities[a];
           const bonus = v.score - base[a];
@@ -124,10 +124,10 @@ export function AbilitiesStep() {
               </div>
               {!swappable && (
                 <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                  <Button variant="secondary" size="icon-sm" onClick={() => step(a, -1)} aria-label="-">
+                  <Button variant="secondary" size="icon-sm" onClick={() => step(a, -1)} aria-label={t("common.decrease")}>
                     <Minus size={14} />
                   </Button>
-                  <Button variant="secondary" size="icon-sm" onClick={() => step(a, 1)} aria-label="+">
+                  <Button variant="secondary" size="icon-sm" onClick={() => step(a, 1)} aria-label={t("common.increase")}>
                     <Plus size={14} />
                   </Button>
                 </div>

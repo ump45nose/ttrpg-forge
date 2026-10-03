@@ -19,12 +19,12 @@ export function DetailsStep() {
         <Label>{t("builder.details.name")}</Label>
         <div className="flex gap-2">
           <Input value={character.name} onChange={(e) => setMeta({ name: e.target.value })} className="font-display text-lg" />
-          <Button variant="secondary" size="icon" onClick={() => setMeta({ name: randomName() })} aria-label="random">
+          <Button variant="secondary" size="icon" onClick={() => setMeta({ name: randomName() })} aria-label={t("library.randomName")}>
             <Dices size={18} />
           </Button>
         </div>
       </div>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <Label>{t("builder.details.player")}</Label>
           <Input value={m.player ?? ""} onChange={(e) => setMeta({ player: e.target.value })} />

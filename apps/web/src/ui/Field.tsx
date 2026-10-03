@@ -34,7 +34,7 @@ export function Label({ children, hint }: { children: ReactNode; hint?: ReactNod
   );
 }
 
-export function Switch({ checked, onChange, label, hint }: { checked: boolean; onChange: (v: boolean) => void; label: ReactNode; hint?: ReactNode }) {
+export function Switch({ checked, onChange, label, hint, ariaLabel }: { checked: boolean; onChange: (v: boolean) => void; label: ReactNode; hint?: ReactNode; ariaLabel?: string }) {
   return (
     <label className="flex cursor-pointer items-center gap-4 py-2">
       <div className="min-w-0 flex-1">
@@ -43,6 +43,7 @@ export function Switch({ checked, onChange, label, hint }: { checked: boolean; o
       </div>
       <RSwitch.Root
         checked={checked}
+        aria-label={ariaLabel}
         onCheckedChange={onChange}
         className="relative h-7 w-12 shrink-0 rounded-full border border-line bg-surface-3 transition-colors data-[state=checked]:border-accent/50 data-[state=checked]:bg-accent"
       >

@@ -10,11 +10,13 @@ import { Input } from "../../ui/Field";
 import { Sheet } from "../../ui/Sheet";
 import { landNow, rollDetail, rollDice, submitPhysical, useDice, type RollRecord } from "./store";
 import { Tumble } from "./Tumble";
+import { AdvToggle } from "../../ui/AdvToggle";
 
 const QUICK = ["1d4", "1d6", "1d8", "1d10", "1d12", "1d20", "1d100"];
 
 /** Global dice: a floating button on play pages, the result tray, and the physical-dice prompt. */
 export function DiceDock() {
+  const t = useT();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const showButton = /^\/c\/[^/]+\/?$/.test(path);
   const open = useDice((s) => s.dockOpen);
@@ -31,8 +33,9 @@ export function DiceDock() {
             exit={{ scale: 0.6, opacity: 0 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => setDock(true)}
-            aria-label="dice"
-            className="safe-b fixed right-4 bottom-4 z-30 flex h-14 w-14 items-center justify-center rounded-2xl border border-accent/40 bg-[linear-gradient(160deg,var(--surface-3),var(--surface-2))] text-accent shadow-float lg:right-6 lg:bottom-6"
+            aria-label={t("dice.title")}
+            // lifted clear of the home indicator (padding would only push the icon up inside it)
+            className="fixed right-4 bottom-[calc(env(safe-area-inset-bottom)+1rem)] z-30 flex h-14 w-14 items-center justify-center rounded-2xl border border-accent/40 bg-[linear-gradient(160deg,var(--surface-3),var(--surface-2))] text-accent shadow-float lg:right-6 lg:bottom-6"
           >
             <Dices size={26} />
           </motion.button>
@@ -180,18 +183,7 @@ function DockSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (o: bo
             </Button>
           ))}
         </div>
-        <div className="flex gap-1.5">
-          {(["normal", "adv", "dis"] as const).map((m) => (
-            <button
-              key={m}
-              type="button"
-              onClick={() => setMode(m)}
-              className={cn("h-8 flex-1 rounded-lg border text-xs font-medium transition-colors", mode === m ? (m === "adv" ? "border-good/50 bg-good/12 text-good" : m === "dis" ? "border-bad/50 bg-bad/12 text-bad" : "border-line-strong bg-surface-3 text-ink") : "border-line text-ink-3")}
-            >
-              {m === "normal" ? t("dice.normal") : m === "adv" ? t("dice.advantage") : t("dice.disadvantage")}
-            </button>
-          ))}
-        </div>
+        <AdvToggle mode={mode} onChange={setMode} />
         <div>
           <div className="mb-2 flex items-center justify-between">
             <div className="text-xs font-semibold tracking-wide text-ink-3 uppercase">{t("dice.history")}</div>

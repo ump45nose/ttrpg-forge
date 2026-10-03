@@ -18,7 +18,9 @@ export default defineConfig(({ mode }) => {
       react(),
       tailwindcss(),
       VitePWA({
-        registerType: "autoUpdate",
+        registerType: "prompt",
+        // registered by main.tsx, which asks before updating
+        injectRegister: false,
         scope: base,
         includeAssets: ["icon.svg", "apple-touch-icon.png"],
         manifest: {

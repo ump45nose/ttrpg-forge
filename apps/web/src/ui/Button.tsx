@@ -12,7 +12,7 @@ const VARIANT: Record<Variant, string> = {
   ghost: "text-ink-2 hover:text-ink hover:bg-surface-3/60",
   outline: "border border-line-strong text-ink hover:border-accent hover:text-accent",
   danger: "bg-bad/15 text-bad border border-bad/30 hover:bg-bad/25",
-  class: "text-white bg-[linear-gradient(180deg,color-mix(in_oklab,var(--class)_80%,white_20%),var(--class))] shadow-[0_8px_24px_-10px_var(--class)] hover:brightness-110",
+  class: "text-class-ink bg-[linear-gradient(180deg,color-mix(in_oklab,var(--class)_80%,white_20%),var(--class))] shadow-[0_8px_24px_-10px_var(--class)] hover:brightness-110",
 };
 
 const SIZE: Record<Size, string> = {

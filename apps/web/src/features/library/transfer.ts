@@ -1,6 +1,6 @@
 import { EntitySchema, parseCharacter, parseRulePack, type Character, type Engine, type Entity, type ParseResult, type RulePack } from "@forge/core";
 import { ulid } from "ulid";
-import { localEntitiesFor } from "../../app/packs";
+import { userEntitiesFor } from "../../app/packs";
 
 export function downloadJson(data: unknown, filename: string) {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -31,7 +31,7 @@ export function exportCharacter(c: Character, engine: Engine) {
     // items picked up during play
     ...c.play.flatMap((e) => (e.type === "item.add" ? [e.item] : [])),
   ];
-  const homebrew = localEntitiesFor(engine, ids);
+  const homebrew = userEntitiesFor(engine, ids);
   const bundle: CharacterBundle = homebrew.length ? { ...c, homebrew } : c;
   downloadJson(bundle, `${c.name || "character"}.forge.json`);
 }

@@ -141,3 +141,32 @@ test("playtest feedback: noted in the log, collected in settings", async ({ page
   expect(md).toContain("偷袭按钮不好找");
   expect(md).toContain("米拉·轻步");
 });
+
+test("builder on a phone: long lists never widen the page, and picks happen where you tap", async ({ page }) => {
+  const wide = () => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  await page.goto("/");
+  await page.getByRole("button", { name: "新建角色" }).first().click();
+  await page.getByPlaceholder(/莉拉/).fill("测试魔契师");
+  await page.getByRole("button", { name: "5", exact: true }).click();
+  await page.getByRole("button", { name: "开始", exact: true }).click();
+  // first tap looks at the class, the second tap on the same card picks it
+  const card = page.getByRole("button", { name: /^魔契师/ }).first();
+  await card.click();
+  await card.click();
+  await expect(card.getByText("选择")).toHaveCount(0);
+
+  // the background's own choices show inside its panel
+  await page.getByText(/^出身$/).first().click();
+  const acolyte = page.getByRole("button", { name: /^侍僧/ }).first();
+  await acolyte.click();
+  await acolyte.click();
+  await expect(page.locator("article").getByRole("heading", { name: "起始装备" })).toBeVisible();
+
+  await page.getByText(/^特性$/).first().click();
+  await expect(page.getByRole("heading", { name: "魔契师子职" })).toBeVisible();
+  expect(await wide()).toBe(0);
+  await page.getByText("天界宗主", { exact: true }).first().click();
+  await page.getByRole("dialog").getByRole("button", { name: "选择", exact: true }).click();
+  await expect(page.getByRole("dialog")).toBeHidden();
+  expect(await wide()).toBe(0);
+});

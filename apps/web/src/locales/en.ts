@@ -1,10 +1,15 @@
 export const en = {
-  app: { name: "Forge", tagline: "Adventurer's Workshop" },
+  app: {
+    name: "Forge", tagline: "Adventurer's Workshop", saveFailed: "Couldn't save: this change wasn't stored on the device.", storageFull: "Storage is full. Delete unused pictures or characters.",
+    notFound: "Nothing here", notFoundHint: "The link may be stale, or the content was deleted.", crashed: "Something went wrong", crashedHint: "Your data is still on this device. Reload, or go back to the library.",
+    reload: "Reload", home: "Back to library", noCharacter: "That character doesn't exist any more.", bootFailed: "Can't open local data", bootFailedHint: "The browser may be in private mode, or site storage is blocked.", retry: "Retry",
+    updateReady: "A new version is ready", updateNow: "Refresh",
+  },
   common: {
     back: "Back", next: "Next", done: "Done", cancel: "Cancel", save: "Save", delete: "Delete", confirm: "Confirm", close: "Close",
     undo: "Undo", redo: "Redo", search: "Search", level: "Level", levelN: "Level {{n}}", edit: "Edit", settings: "Settings", none: "None",
     add: "Add", remove: "Remove", export: "Export", import: "Import", reset: "Reset", apply: "Apply", optional: "Optional", all: "All",
-    choose: "Choose", chosen: "Chosen", selected: "Selected", left: "{{n}} left", ft: "{{n}} ft", undone: "Undone", details: "Details",
+    choose: "Choose", chosen: "Chosen", selected: "Selected", left: "{{n}} left", ft: "{{n}} ft", undone: "Undone", listSep: ", ", decrease: "Decrease", increase: "Increase", moveUp: "Move up", moveDown: "Move down", details: "Details",
     roll: "Roll", source: "Source", unavailable: "Unavailable", more: "More", less: "Less", yes: "Yes", no: "No",
   },
   onboard: {
@@ -33,11 +38,11 @@ export const en = {
     export: "Export playtest notes ({{n}})", none: "No playtest notes yet.",
   },
   library: {
-    startLevel: "Starting level", startLevelHint: "Tables often start at 3–6",
+    randomName: "Random name", startLevel: "Starting level", startLevelHint: "Tables often start at 3–6",
     title: "Your Party", subtitle: "Characters live on this device and work offline.", empty: "No adventurers yet",
     emptyHint: "Forge your first hero — pick a class, an origin, and step into the fray.", newCharacter: "New Character",
     newTitle: "Name your hero", namePlaceholder: "e.g. Lyra Emberfall", create: "Begin", pending: "{{n}} choices left",
-    continue: "Continue building", play: "Open sheet", deleteConfirm: "Delete {{name}}? This can't be undone.", updated: "Updated {{when}}",
+    continue: "Continue building", play: "Open sheet", deleted: "Deleted {{name}}", updated: "Updated {{when}}",
     unnamed: "Unnamed hero", importChar: "Import character",
   },
   builder: {
@@ -53,13 +58,13 @@ export const en = {
     preview: "Preview", changes: "If you pick this", noChanges: "No mechanical change", compare: "Compare", pin: "Pin to compare",
     unpin: "Unpin", comparing: "Comparing {{n}}", gains: "Gains", loses: "Loses", newChoices: "New choices", resolved: "Resolved",
     hitDie: "Hit Die", primary: "Primary ability", saves: "Saving throws", subclassAt: "Subclass at level {{n}}", features: "Features by level",
-    startingLevel: "Starting level", level: "Character level", background: "Background", species: "Species", pickFirst: "Pick a class first",
+    startingLevel: "Starting level", level: "Character level", background: "Background", species: "Species", pickFirst: "Pick a class first", showAll: "Show all {{n}}", foldPicked: "Show picked only",
     methods: { standard: "Standard Array", pointbuy: "Point Buy", roll: "Roll 4d6", manual: "Manual" },
     pointsLeft: "{{n}} points left", rollAll: "Roll scores", assign: "Assign", final: "Final", base: "Base", bonus: "Bonus",
     pending: "{{n}} to choose", allDone: "All choices made", optionsFor: "Options", invalid: "Not available", chooseN: "Choose {{n}}",
-    abilityPattern: "+2 / +1 or +1 / +1 / +1", spellsPrepared: "Prepared spells", prepare: "Prepare",
+    abilityPattern: "+2 / +1 or +1 / +1 / +1", openList: "To do", spellsPrepared: "Prepared spells", prepare: "Prepare",
     details: { name: "Name", pronouns: "Pronouns", alignment: "Alignment", appearance: "Appearance", backstory: "Backstory", player: "Player" },
-    review: { issues: "Needs attention", ready: "Ready for adventure", enter: "Enter the table", warnings: "Notes" },
+    review: { issues: "Needs attention", ready: "Ready for adventure", enter: "Enter the table", warnings: "Notes", unprepared: "{{cls}}: spells not fully prepared ({{n}}/{{max}})", preparedNone: "No spells prepared yet. Only prepared spells can be cast at the table; you can change them on the sheet later." },
     levelUp: "Level up", levelDown: "Remove level", customize: "Customize", why: "Why this number?",
     contentTo: "content for this class currently ends at level {{n}}",
     recommended: "Recommended", swapHint: "Tap two abilities to swap their scores.",
@@ -76,7 +81,7 @@ export const en = {
     cue: { roll: "Dice roll", land: "Dice land", crit: "Critical", fumble: "Fumble", heal: "Healing", hurt: "Taking damage" },
   },
   media: {
-    studio: "Image studio", tab: { generate: "AI generate", upload: "Upload", recent: "Recent" },
+    studio: "Image studio", zoom: "Zoom", tab: { generate: "AI generate", upload: "Upload", recent: "Recent" },
     prompt: "Describe the picture", promptPlaceholder: "e.g. red-haired half-elf rogue, dark hood, twin daggers, watchful", promptRequired: "Write a short description first",
     fromCharacter: "Fill from character", fromName: "Fill from name and summary", comma: ", ", refs: "References", refsHint: "optional, up to 4; the result keeps their likeness", addRef: "Add",
     size: { portrait: "Portrait", square: "Square", landscape: "Landscape" }, classicStyle: "Classic D&D oil painting",
@@ -94,7 +99,7 @@ export const en = {
   },
   portrait: { title: "Portrait", upload: "Upload picture", reset: "Use default", hint: "Defaults to your species' portrait. Generated or uploaded pictures are compressed and stored in the character (the avatar is cropped from them), so they travel with exports.", failed: "Couldn't read that picture" },
   levelUp: {
-    button: "Level up", title: "Level {{n}}", choose: "Take this", average: "Average", max: "Maximum (house rule)", roll: "Roll", keep: "Keep it",
+    undo: "Undo level-up", button: "Level up", title: "Level {{n}}", choose: "Take this", average: "Average", max: "Maximum (house rule)", roll: "Roll", keep: "Keep it",
     hpHint: "How many Hit Points does this level add? Take the average or roll your Hit Die; your Constitution modifier is added either way (minimum 1).",
     multiclassLater: "Multiclassing isn't supported yet — this adds a level in your current class.",
     gains: "What you gain", choices: "New choices", earlier: "Still open from earlier levels",
@@ -102,7 +107,7 @@ export const en = {
     finish: "Become level {{n}}", done: "You are now level {{n}}!", logged: "Reached level {{n}}",
   },
   sheet: {
-    tabs: { actions: "Actions", spells: "Spells", resources: "Resources", features: "Features", inventory: "Gear", log: "Log", skills: "Stats" },
+    pipSpend: "Spend one", pipRestore: "Restore one", tabs: { actions: "Actions", spells: "Spells", resources: "Resources", features: "Features", inventory: "Gear", log: "Log", skills: "Stats" },
     ac: "AC", hp: "HP", temp: "Temp", initiative: "Initiative", speed: "Speed", prof: "Proficiency", passive: "Passive",
     spellDC: "Spell DC", spellAttack: "Spell Atk", darkvision: "Darkvision", saves: "Saving Throws", skills: "Skills", conditions: "Conditions",
     combat: { start: "Start combat", end: "End combat", newTurn: "New turn", round: "Round {{n}}", roundShort: "Rnd", outOfCombat: "Exploring", endHint: "Ends one-minute effects and resets the turn economy." },
@@ -111,7 +116,7 @@ export const en = {
     groups: { action: "Actions", bonus: "Bonus Actions", reaction: "Reactions", special: "Other", free: "Other", minute: "Longer", hour: "Longer" },
     hpDialog: { title: "Hit Points", damage: "Damage", heal: "Heal", temp: "Temp HP", amount: "Amount", deathSaves: "Death Saves", success: "Success", failure: "Failure" },
     use: "Use", cast: "Cast", castAt: "Cast at level {{n}}", slot: "Level {{n}} slot", attack: "Attack", damage: "Damage", healing: "Healing",
-    save: "{{ability}} save DC {{dc}}", halfOnSave: "half on save", confirmUse: "Confirm", alreadyUsed: "Already used this turn",
+    save: "{{ability}} save DC {{dc}}", halfOnSave: "half on save", confirmUse: "Confirm", alreadyUsed: "Already used this turn", goPrepare: "Prepare",
     concentration: "Concentration", concentrating: "Concentrating on {{name}}", endConcentration: "End", conCheck: "Concentration check DC {{dc}}",
     rest: { short: "Short Rest", long: "Long Rest", title: "Rest", shortHint: "1 hour. Spend Hit Dice to heal; some features recover.", longHint: "8 hours. Recover HP, slots, Hit Dice and most features; effects end and Exhaustion drops by one.", spendHitDie: "Spend Hit Die", restored: "Will recover", ends: "ends", nothing: "Nothing to recover.", done: { short: "Short rest taken", long: "Long rest taken" } },
     slots: "Spell Slots", pact: "Pact Slots", hitDice: "Hit Dice", noActions: "Nothing usable right now", trigger: "Trigger",
@@ -163,6 +168,7 @@ export const en = {
   alignment: { LG: "Lawful Good", NG: "Neutral Good", CG: "Chaotic Good", LN: "Lawful Neutral", N: "Neutral", CN: "Chaotic Neutral", LE: "Lawful Evil", NE: "Neutral Evil", CE: "Chaotic Evil" },
   plugins: { pageMissing: "This page comes from a plugin that isn't enabled. You can turn it back on in Settings." },
   workshop: {
+    fixJsonFirst: "The advanced JSON has errors. Fix them to save.", discardInvalid: "The advanced JSON still has errors. Closing loses those edits. Close anyway?", jsonDraftKept: "The advanced JSON has edits that don't apply yet (invalid). Changing the form here discards them.", backToJson: "Back to JSON", discard: "Discard", restore: "Restore original",
     title: "Creation Workshop", intro: "Create or remix rules content here: classes, subclasses, spells, feats, species, backgrounds, items and glossary terms. Your work is stored in packs on this device, is available in the builder right away, and can be exported for your group.",
     settingsHint: "Make your own classes, spells, gear and more · {{n}} so far", create: "Create", mine: "My content", all: "All", empty: "Nothing yet. Pick a type above, or use \"+ Custom\" while building a character.", noMatch: "No matches",
     remix: "Remix existing content", remixHint: "Search built-in content. \"Copy as new\" makes an independent copy; \"House-rule\" replaces the original with your version (delete it to restore).", remixSearch: "Search classes, spells, feats, items…",
@@ -217,7 +223,7 @@ export const en = {
     whileEquipped: "While equipped", whileEquippedHint: "e.g. AC +1, resistances, extra spells",
   },
   homebrew: {
-    valid: "Valid", entities: "{{n}} entries", patches: "{{n}} patches", overrides: "overrides {{n}}", systemChanged: "changes rule numbers",
+    valid: "Valid", packDeleted: "Deleted pack \"{{name}}\"", enabledFor: "Enable \"{{name}}\"", entities: "{{n}} entries", patches: "{{n}} patches", overrides: "overrides {{n}}", systemChanged: "changes rule numbers",
     missing: "{{n}} patches have no target", orderHint: "Packs lower in the list win and override same-id content above. \"My Homebrew\" always loads last.",
     newHouse: "New house-rule pack", rulesTab: "Rule numbers", packName: "Pack name", rulesHint: "Leave blank to keep the default. Changes apply to every character using this pack.",
     maxLevel: "Level cap", abilityCap: "Ability cap", pointBudget: "Point-buy budget", pointMin: "Point-buy minimum", pointMax: "Point-buy maximum",
@@ -235,7 +241,7 @@ export const en = {
   inventory: {
     title: "Starting Equipment", hint: "What you set out with: add items, equip them, adjust coins. Loot, purchases and potions used on the road are tracked on the character sheet's Gear tab.", search: "Search the item catalog…", newItem: "New item", empty: "Nothing carried yet",
     granted: "Preset", equip: "Equip", equipped: "Equipped", gold: "Gold", grantedGold: "{{n}} from presets", adjust: "Adjust", total: "Total",
-    unequip: "Take off", equippedGroup: "Equipped", backpack: "Backpack", nothingEquipped: "Nothing equipped", find: "Found or bought something? Search…",
+    unequip: "Take off", wield: "Equip", wielded: "Equipped", unwield: "Unequip", equippedGroup: "Equipped", equipAnyway: "Equip it anyway?", backpack: "Backpack", nothingEquipped: "Nothing equipped", find: "Found or bought something? Search…",
     weight: "Load", attuned: "Attuned {{n}}/{{max}}", usable: "Usable", actionsGained: "+{{n}} actions", actionsLost: "−{{n}} actions",
     dropped: "Dropped {{name}}", drop: "Drop", customise: "Customise this item", noText: "No description.", needsAttunement: "Requires attunement", consumable: "Consumable",
     grantsOn: "{{n}} magic effects active while equipped", grantsOff: "{{n}} magic effects: equip it to activate", purse: "Purse", spend: "Spend", gain: "Gain",

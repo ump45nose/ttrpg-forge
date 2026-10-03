@@ -1,5 +1,5 @@
 import { effectiveEvents, movementLeft, type PlayEvent } from "@forge/core";
-import { Footprints, Swords, TimerReset } from "lucide-react";
+import { ChevronDown, Footprints, Swords, TimerReset } from "lucide-react";
 import { motion } from "motion/react";
 import { Popover } from "radix-ui";
 import { useT } from "../../app/i18n";
@@ -34,9 +34,13 @@ export function CombatBar() {
     <div className="flex items-center gap-1.5">
       <Popover.Root>
         <Popover.Trigger asChild>
-          <button type="button" className="flex h-10 shrink-0 flex-col items-center justify-center rounded-xl border border-class/40 bg-class/10 px-2 leading-none transition-colors hover:border-class/70">
-            <span className="text-[9px] tracking-wider text-class uppercase">{t("sheet.combat.roundShort")}</span>
-            <span className="tnum font-display text-lg text-class">{state.round}</span>
+          <button type="button" aria-label={t("sheet.combat.round", { n: state.round })} className="flex h-10 shrink-0 items-center gap-0.5 rounded-xl border border-class/40 bg-class/10 pr-1 pl-2 leading-none transition-colors hover:border-class/70">
+            <span className="flex flex-col items-center">
+              <span className="text-[10px] tracking-wider text-class uppercase">{t("sheet.combat.roundShort")}</span>
+              <span className="tnum font-display text-lg text-class">{state.round}</span>
+            </span>
+            {/* says "there's more here": ending combat lives in this menu */}
+            <ChevronDown size={13} className="text-class/70" />
           </button>
         </Popover.Trigger>
         <Popover.Portal>
@@ -62,7 +66,8 @@ export function CombatBar() {
             state.economy[s] ? "border-line bg-surface/40 text-ink-3 line-through opacity-60" : s === "action" ? "border-accent/50 bg-accent/12 text-accent" : s === "bonus" ? "border-good/50 bg-good/12 text-good" : "border-info/50 bg-info/12 text-info",
           )}
         >
-          <span className={cn("h-2 w-2 shrink-0 rounded-full", state.economy[s] ? "bg-ink-3" : "bg-current")} />
+          {/* the dot gives way on narrow phones so the label itself fits */}
+          <span className={cn("hidden h-2 w-2 shrink-0 rounded-full min-[400px]:block", state.economy[s] ? "bg-ink-3" : "bg-current")} />
           <span className="truncate">{t(`sheet.economy.${s}`)}</span>
         </motion.button>
       ))}

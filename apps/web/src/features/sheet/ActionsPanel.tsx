@@ -1,11 +1,13 @@
 import { canUse, resourceRemaining, type Activation, type ResolvedAction } from "@forge/core";
-import { Backpack, Brain, Crosshair, Sparkles, Star, Swords } from "lucide-react";
+import { ArrowRight, Backpack, Brain, Crosshair, Sparkles, Star, Swords } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 import { motion } from "motion/react";
 import { useState } from "react";
 import { useT } from "../../app/i18n";
 import { signed } from "../../ui/AnimatedNumber";
 import { cn } from "../../ui/cn";
 import { Tabs } from "../../ui/Tabs";
+import { preparedAnchor, unprepared } from "../builder/state";
 import { useNames } from "../common/names";
 import { ActionSheet } from "./ActionSheet";
 import { usePlay } from "./play";
@@ -23,8 +25,10 @@ export function ActionsPanel() {
   const [all, setAll] = useState(false);
   const [open, setOpen] = useState<ResolvedAction | null>(null);
 
-  // unequipped weapons stay in the inventory
-  const pool = sheet.actions.filter((a) => !a.weapon || a.weapon.equipped);
+  // unequipped weapons stay in the inventory; the plain Unarmed Strike steps aside for a better one (Martial Arts...)
+  const plainUnarmed = (a: ResolvedAction) => a.id.endsWith("#unarmed-strike");
+  const betterUnarmed = sheet.actions.some((a) => !plainUnarmed(a) && a.tags?.includes("unarmed"));
+  const pool = sheet.actions.filter((a) => (!a.weapon || a.weapon.equipped) && !(betterUnarmed && plainUnarmed(a)));
   const usable = (a: ResolvedAction) => canUse(a, state, sheet).ok;
   const inGroup = (g: Group) => pool.filter((a) => GROUP_OF(a.activation) === g);
   const list = inGroup(group).filter((a) => all || usable(a));
@@ -36,6 +40,7 @@ export function ActionsPanel() {
 
   return (
     <div className="space-y-3">
+      <PrepareReminder />
       <Tabs
         size="sm"
         items={(["action", "bonus", "reaction", "other"] as const).map((g) => ({
@@ -47,12 +52,12 @@ export function ActionsPanel() {
         onChange={setGroup}
       />
       <div className="flex justify-end">
-        <button type="button" onClick={() => setAll(!all)} className="text-xs text-ink-3 transition-colors hover:text-ink">
+        <button type="button" onClick={() => setAll(!all)} aria-pressed={all} className="h-8 rounded-lg border border-line px-2.5 text-xs text-ink-2 transition-colors hover:border-line-strong hover:text-ink">
           {all ? t("sheet.filter.all") : t("sheet.filter.available")} ⇄
         </button>
       </div>
       {spent(group) && <div className="rounded-xl border border-warn/30 bg-warn/8 px-3 py-2 text-xs text-warn">{t("sheet.alreadyUsed")}</div>}
-      <div className="grid gap-2 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         {main.map((a) => (
           <ActionCard key={a.id} action={a} onOpen={() => setOpen(a)} />
         ))}
@@ -60,7 +65,7 @@ export function ActionsPanel() {
       {!!spells.length && (
         <div>
           <div className="mb-1.5 text-[11px] font-semibold tracking-wider text-magic uppercase">{t("sheet.tabs.spells")}</div>
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {spells.map((a) => (
               <ActionCard key={a.id} action={a} onOpen={() => setOpen(a)} />
             ))}
@@ -86,7 +91,7 @@ export function ActionsPanel() {
 function BasicChip({ action, onOpen }: { action: ResolvedAction; onOpen: () => void }) {
   const n = useNames();
   return (
-    <button type="button" onClick={onOpen} className="rounded-lg border border-line bg-surface/60 px-2.5 py-1 text-xs text-ink-2 transition-colors hover:border-line-strong hover:text-ink">
+    <button type="button" onClick={onOpen} className="h-8 rounded-lg border border-line bg-surface/60 px-3 text-xs text-ink-2 transition-colors hover:border-line-strong hover:text-ink">
       {n.l(action.name, { mono: true })}
     </button>
   );
@@ -125,7 +130,7 @@ export function ActionCard({ action, onOpen }: { action: ResolvedAction; onOpen:
           <span className="truncate text-[15px] font-medium text-ink">{n.l(action.name, { mono: true })}</span>
           {action.concentration && <Brain size={12} className="shrink-0 text-magic" />}
         </span>
-        {!!stats.length && <span className="tnum block truncate text-xs text-ink-2">{stats.join(" · ")}</span>}
+        {!!stats.length && <span className="tnum block text-xs break-words text-ink-2">{stats.join(" · ")}</span>}
         {action.trigger && <span className="block truncate text-[11px] text-info">{n.l(action.trigger, { mono: true })}</span>}
         <Costs action={action} />
       </span>
@@ -158,4 +163,26 @@ export function Costs({ action }: { action: ResolvedAction }) {
       })}
     </span>
   );
+}
+
+/** Prepared casters who haven't filled their list yet: their spells simply don't show up here. */
+function PrepareReminder() {
+  const t = useT();
+  const n = useNames();
+  const navigate = useNavigate();
+  const { sheet, build, character } = usePlay();
+  return unprepared(sheet, build).map((p) => (
+    <button
+      key={p.classId}
+      type="button"
+      onClick={() => void navigate({ to: "/c/$id/build", params: { id: character.id }, search: { step: "choices", focus: preparedAnchor(p.classId) } })}
+      className="flex w-full items-center gap-2 rounded-xl border border-magic/30 bg-magic/8 px-3 py-2.5 text-left text-sm text-ink transition-colors hover:bg-magic/12"
+    >
+      <Sparkles size={16} className="shrink-0 text-magic" />
+      <span className="min-w-0 flex-1">{t("builder.review.unprepared", { cls: n.entity(p.classId, true), n: p.count, max: p.max })}</span>
+      <span className="flex shrink-0 items-center gap-0.5 text-xs text-magic">
+        {t("sheet.goPrepare")} <ArrowRight size={13} />
+      </span>
+    </button>
+  ));
 }

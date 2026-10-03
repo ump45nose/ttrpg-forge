@@ -179,7 +179,7 @@ export function ItemFormView({ e, locale, onChange }: { e: ItemEntity; locale: "
       <UseEditor f={f} set={set} />
       <div className="space-y-3 rounded-2xl border border-magic/25 bg-magic/5 p-3">
         <div className="text-xs font-semibold tracking-wide text-magic uppercase">{t("workshop.magicItem")}</div>
-        <div className="grid grid-cols-[1fr_auto] items-end gap-3">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3">
           <Field label={t("workshop.rarity")}>
             <Select value={f.rarity} onChange={(rarity) => set({ rarity })} options={[{ id: "", label: t("workshop.mundane") }, ...RARITIES.map((r) => ({ id: r, label: t(`workshop.rar.${r}`) }))]} />
           </Field>

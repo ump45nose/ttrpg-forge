@@ -1,12 +1,17 @@
 import type { Messages } from "./en";
 
 export const zh: Messages = {
-  app: { name: "Forge", tagline: "冒险者工坊" },
+  app: {
+    name: "Forge", tagline: "冒险者工坊", saveFailed: "保存失败：这次修改没有写入本机。", storageFull: "存储空间已满，可以删掉不用的图片或角色。",
+    notFound: "这里什么都没有", notFoundHint: "链接可能已失效，或者内容已被删除。", crashed: "页面出错了", crashedHint: "你的数据都还在本机。可以重新加载，或者回到角色库。",
+    reload: "重新加载", home: "回到角色库", noCharacter: "找不到这个角色，可能已被删除。", bootFailed: "无法打开本机数据", bootFailedHint: "浏览器可能处于隐私模式，或禁止了站点存储。", retry: "重试",
+    updateReady: "有新版本", updateNow: "刷新",
+  },
   common: {
     back: "返回", next: "下一步", done: "完成", cancel: "取消", save: "保存", delete: "删除", confirm: "确认", close: "关闭",
     undo: "撤销", redo: "重做", search: "搜索", level: "等级", levelN: "{{n}} 级", edit: "编辑", settings: "设置", none: "无",
     add: "添加", remove: "移除", export: "导出", import: "导入", reset: "重置", apply: "应用", optional: "可选", all: "全部",
-    choose: "选择", chosen: "已选", selected: "已选择", left: "剩 {{n}}", ft: "{{n}} 尺", undone: "已撤销", details: "详情",
+    choose: "选择", chosen: "已选", selected: "已选择", left: "剩 {{n}}", ft: "{{n}} 尺", undone: "已撤销", listSep: "、", decrease: "减少", increase: "增加", moveUp: "上移", moveDown: "下移", details: "详情",
     roll: "掷骰", source: "来源", unavailable: "不可用", more: "更多", less: "收起", yes: "是", no: "否",
   },
   onboard: {
@@ -35,11 +40,11 @@ export const zh: Messages = {
     export: "导出试玩反馈（{{n}} 条）", none: "还没有试玩反馈。",
   },
   library: {
-    startLevel: "起始等级", startLevelHint: "线下团常从 3–6 级开始",
+    randomName: "随机名字", startLevel: "起始等级", startLevelHint: "线下团常从 3–6 级开始",
     title: "你的队伍", subtitle: "角色保存在本设备上，可离线使用。", empty: "还没有冒险者",
     emptyHint: "铸造你的第一位英雄——选择职业与出身，踏入战场。", newCharacter: "新建角色",
     newTitle: "为你的英雄命名", namePlaceholder: "例如：莉拉·烬落", create: "开始", pending: "还有 {{n}} 项待选",
-    continue: "继续车卡", play: "打开角色卡", deleteConfirm: "删除 {{name}}？此操作无法撤销。", updated: "{{when}}更新",
+    continue: "继续车卡", play: "打开角色卡", deleted: "已删除 {{name}}", updated: "{{when}}更新",
     unnamed: "无名英雄", importChar: "导入角色",
   },
   builder: {
@@ -55,13 +60,13 @@ export const zh: Messages = {
     preview: "预览", changes: "选择后的变化", noChanges: "没有机制上的变化", compare: "对比", pin: "加入对比",
     unpin: "取消对比", comparing: "正在对比 {{n}} 项", gains: "获得", loses: "失去", newChoices: "新的待选项", resolved: "已完成",
     hitDie: "生命骰", primary: "主属性", saves: "豁免熟练", subclassAt: "{{n}} 级选择子职业", features: "逐级特性",
-    startingLevel: "起始等级", level: "角色等级", background: "背景", species: "种族", pickFirst: "请先选择职业",
+    startingLevel: "起始等级", level: "角色等级", background: "背景", species: "种族", pickFirst: "请先选择职业", showAll: "查看全部 {{n}} 项", foldPicked: "只看已选",
     methods: { standard: "标准数组", pointbuy: "购点", roll: "掷骰 4d6", manual: "手动" },
     pointsLeft: "剩余 {{n}} 点", rollAll: "掷属性", assign: "分配", final: "最终", base: "基础", bonus: "加值",
     pending: "{{n}} 项待选", allDone: "已全部选择", optionsFor: "选项", invalid: "不可选", chooseN: "选择 {{n}} 项",
-    abilityPattern: "+2 / +1 或 +1 / +1 / +1", spellsPrepared: "已准备法术", prepare: "准备",
+    abilityPattern: "+2 / +1 或 +1 / +1 / +1", openList: "待选", spellsPrepared: "已准备法术", prepare: "准备",
     details: { name: "名字", pronouns: "代词", alignment: "阵营", appearance: "外貌", backstory: "背景故事", player: "玩家" },
-    review: { issues: "需要处理", ready: "准备就绪", enter: "进入跑团", warnings: "提示" },
+    review: { issues: "需要处理", ready: "准备就绪", enter: "进入跑团", warnings: "提示", unprepared: "{{cls}}：尚未准备完法术（{{n}}/{{max}}）", preparedNone: "还没有准备任何法术。准备好的法术才能在跑团时施放，之后在角色卡里也能调整。" },
     levelUp: "升级", levelDown: "移除一级", customize: "自定义", why: "这个数值怎么来的？",
     contentTo: "该职业内容目前到 {{n}} 级",
     recommended: "推荐分配", swapHint: "点击两项属性即可交换数值。",
@@ -78,7 +83,7 @@ export const zh: Messages = {
     cue: { roll: "掷骰", land: "骰子落定", crit: "大成功", fumble: "大失败", heal: "回复生命", hurt: "受到伤害" },
   },
   media: {
-    studio: "图片工作室", tab: { generate: "AI 生成", upload: "上传", recent: "最近" },
+    studio: "图片工作室", zoom: "缩放", tab: { generate: "AI 生成", upload: "上传", recent: "最近" },
     prompt: "描述画面", promptPlaceholder: "例如：红发半精灵游荡者，戴深色兜帽，手持双匕首，神情警觉", promptRequired: "先写几句描述",
     fromCharacter: "从角色填充", fromName: "用名称和简介填充", comma: "，", refs: "参考图", refsHint: "可选，最多 4 张；会尽量保留其中人物的长相", addRef: "添加",
     size: { portrait: "竖幅", square: "方形", landscape: "横幅" }, classicStyle: "经典 D&D 油画风",
@@ -96,7 +101,7 @@ export const zh: Messages = {
   },
   portrait: { title: "头像", upload: "上传图片", reset: "恢复默认", hint: "默认使用所选种族的头像。生成或上传的立绘会压缩后保存在角色里，头像从立绘中裁出，导出时一起带走。", failed: "无法读取这张图片" },
   levelUp: {
-    button: "升级", title: "升到 {{n}} 级", choose: "选这个", average: "取平均值", max: "取最大值（村规）", roll: "掷骰", keep: "就用它",
+    undo: "撤销升级", button: "升级", title: "升到 {{n}} 级", choose: "选这个", average: "取平均值", max: "取最大值（村规）", roll: "掷骰", keep: "就用它",
     hpHint: "这一级增加多少生命值？取平均值或掷一次生命骰，两种都会加上体质调整值（至少 +1）。",
     multiclassLater: "暂不支持兼职：本次升级在当前职业上加一级。",
     gains: "本级获得", choices: "本级新选择", earlier: "之前等级还没选完的",
@@ -104,7 +109,7 @@ export const zh: Messages = {
     finish: "成为 {{n}} 级", done: "升到 {{n}} 级了！", logged: "升到 {{n}} 级",
   },
   sheet: {
-    tabs: { actions: "动作", spells: "法术", resources: "资源", features: "特性", inventory: "装备", log: "日志", skills: "属性" },
+    pipSpend: "消耗一次", pipRestore: "恢复一次", tabs: { actions: "动作", spells: "法术", resources: "资源", features: "特性", inventory: "装备", log: "日志", skills: "属性" },
     ac: "护甲", hp: "生命", temp: "临时", initiative: "先攻", speed: "速度", prof: "熟练", passive: "被动",
     spellDC: "法术 DC", spellAttack: "法术攻击", darkvision: "黑暗视觉", saves: "豁免", skills: "技能", conditions: "状态",
     combat: { start: "开始战斗", end: "结束战斗", newTurn: "新回合", round: "第 {{n}} 轮", roundShort: "轮", outOfCombat: "探索中", endHint: "结束 1 分钟内的效果，并重置回合经济。" },
@@ -113,7 +118,7 @@ export const zh: Messages = {
     groups: { action: "动作", bonus: "附赠动作", reaction: "反应", special: "其他", free: "其他", minute: "长时间", hour: "长时间" },
     hpDialog: { title: "生命值", damage: "伤害", heal: "治疗", temp: "临时生命", amount: "数值", deathSaves: "死亡豁免", success: "成功", failure: "失败" },
     use: "使用", cast: "施放", castAt: "以 {{n}} 环施放", slot: "{{n}} 环法术位", attack: "攻击", damage: "伤害", healing: "治疗",
-    save: "{{ability}}豁免 DC {{dc}}", halfOnSave: "成功减半", confirmUse: "确认", alreadyUsed: "本回合已使用",
+    save: "{{ability}}豁免 DC {{dc}}", halfOnSave: "成功减半", confirmUse: "确认", alreadyUsed: "本回合已使用", goPrepare: "去准备",
     concentration: "专注", concentrating: "专注于 {{name}}", endConcentration: "结束", conCheck: "专注检定 DC {{dc}}",
     rest: { short: "短休", long: "长休", title: "休息", shortHint: "1 小时。可消耗生命骰回血，部分特性恢复。", longHint: "8 小时。恢复生命值、法术位、生命骰与大部分特性；效果结束，力竭降低一级。", spendHitDie: "消耗生命骰", restored: "将恢复", ends: "结束", nothing: "没有需要恢复的。", done: { short: "已完成短休", long: "已完成长休" } },
     slots: "法术位", pact: "契约法术位", hitDice: "生命骰", noActions: "当前没有可用的行动", trigger: "触发",
@@ -165,6 +170,7 @@ export const zh: Messages = {
   alignment: { LG: "守序善良", NG: "中立善良", CG: "混乱善良", LN: "守序中立", N: "绝对中立", CN: "混乱中立", LE: "守序邪恶", NE: "中立邪恶", CE: "混乱邪恶" },
   plugins: { pageMissing: "这个页面由插件提供，但插件未启用。可以在设置中重新启用。" },
   workshop: {
+    fixJsonFirst: "高级 JSON 有错误，修正后才能保存", discardInvalid: "高级 JSON 里还有未修正的错误，关闭会丢掉这些修改。确定关闭吗？", jsonDraftKept: "高级 JSON 里有未生效的修改（格式有误）。在这里改动表单会放弃它们。", backToJson: "回到 JSON", discard: "放弃修改", restore: "恢复原版",
     title: "创造工坊", intro: "在这里创作或改造规则内容：职业、子职、法术、专长、种族、背景、物品与术语。作品保存在本机的规则包里，车卡时立即可用，也能导出分享给同团的朋友。",
     settingsHint: "创作职业、法术、装备等自定义规则 · 已有 {{n}} 项", create: "新建", mine: "我的作品", all: "全部", empty: "还没有作品。从上面选一种类型开始，或在车卡时点「＋ 自定义」。", noMatch: "没有匹配的作品",
     remix: "改造现有内容", remixHint: "搜索内置内容：「复制为新」得到一份独立的新内容；「村规覆盖」则用你的版本替换原版（删除覆盖即可恢复）。", remixSearch: "搜索职业、法术、专长、物品…",
@@ -225,7 +231,7 @@ export const zh: Messages = {
     whileEquipped: "穿戴时生效", whileEquippedHint: "如 AC +1、抗性、额外法术",
   },
   homebrew: {
-    valid: "格式正确", entities: "{{n}} 个条目", patches: "{{n}} 条补丁", overrides: "覆盖 {{n}} 个", systemChanged: "改动了规则数值",
+    valid: "格式正确", packDeleted: "已删除规则包「{{name}}」", enabledFor: "启用「{{name}}」", entities: "{{n}} 个条目", patches: "{{n}} 条补丁", overrides: "覆盖 {{n}} 个", systemChanged: "改动了规则数值",
     missing: "{{n}} 条补丁找不到目标", orderHint: "越靠下的包优先级越高，会覆盖上面的同名内容。「我的自定义」始终最后加载。",
     newHouse: "新建村规包", rulesTab: "规则数值", packName: "包名称", rulesHint: "留空表示沿用默认规则。修改后立即影响所有使用该包的角色。",
     maxLevel: "等级上限", abilityCap: "属性上限", pointBudget: "购点预算", pointMin: "购点最低值", pointMax: "购点最高值",
@@ -243,7 +249,7 @@ export const zh: Messages = {
   inventory: {
     title: "起始装备", hint: "出发时携带的东西：可添加、穿戴物品或调整金币。冒险途中获得的战利品、购买的物品和消耗的药水，在角色卡的「装备」页管理。", search: "搜索物品目录…", newItem: "新建物品", empty: "背包是空的",
     granted: "预设", equip: "穿戴", equipped: "已穿戴", gold: "金币", grantedGold: "来自预设 {{n}}", adjust: "调整", total: "合计",
-    unequip: "卸下", equippedGroup: "已装备", backpack: "背包", nothingEquipped: "没有穿戴任何装备", find: "捡到或买到东西？搜索物品…",
+    unequip: "卸下", wield: "装备", wielded: "已装备", unwield: "卸下", equippedGroup: "已装备", equipAnyway: "仍要装备吗？", backpack: "背包", nothingEquipped: "没有穿戴任何装备", find: "捡到或买到东西？搜索物品…",
     weight: "负重", attuned: "同调 {{n}}/{{max}}", usable: "可使用", actionsGained: "新增 {{n}} 个动作", actionsLost: "减少 {{n}} 个动作",
     dropped: "已丢弃 {{name}}", drop: "丢弃", customise: "改造这件物品", noText: "暂无描述。", needsAttunement: "需要同调", consumable: "消耗品",
     grantsOn: "穿戴中：{{n}} 项魔法效果生效", grantsOff: "{{n}} 项魔法效果：穿戴后生效", purse: "钱袋", spend: "花费", gain: "获得",
