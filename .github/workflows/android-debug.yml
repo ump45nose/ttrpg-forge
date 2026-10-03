@@ -29,7 +29,8 @@ jobs:
           test -d "$JAVA_HOME_21_X64"
           echo "JAVA_HOME=$JAVA_HOME_21_X64" >> "$GITHUB_ENV"
           echo "$JAVA_HOME_21_X64/bin" >> "$GITHUB_PATH"
-          sdkmanager 'platforms;android-36' 'build-tools;36.0.0' 'platform-tools'
+          test -f "$ANDROID_HOME/platforms/android-36/android.jar"
+          test -x "$ANDROID_HOME/build-tools/36.0.0/apksigner"
       - run: pnpm install --frozen-lockfile
       - name: Generate pinned PHB input
         run: python3 packs/phb-2024/scripts/build_phb.py --commit "$PHB_SOURCE_COMMIT"
