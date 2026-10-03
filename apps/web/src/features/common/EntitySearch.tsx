@@ -26,15 +26,19 @@ export function EntitySearch({ type, filter, onPick, placeholder }: { type: Enti
                 onPick(e.id);
                 setQ("");
               }}
-              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-surface-3"
+              className="flex min-h-10 w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-surface-3"
             >
-              <Plus size={14} className="text-ink-3" />
-              <span className="flex-1 truncate">{l(e.name)}</span>
-              <span className="text-[10px] text-ink-3">{e.id}</span>
+              <Plus size={14} className="shrink-0 text-ink-3" />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate">{l(e.name)}</span>
+                {/* tells two things with the same name apart better than an id would */}
+                {e.summary && <span className="block truncate text-xs text-ink-3">{l(e.summary)}</span>}
+              </span>
             </button>
           ))}
         </div>
       )}
+      {q.trim() && !results.length && <p className="mt-1 px-3 py-2 text-xs text-ink-3">{t("common.noResults")}</p>}
     </div>
   );
 }

@@ -45,7 +45,7 @@ function Builder() {
   /** Switch step; with `anchor`, land on that element of the new step (e.g. a choice still open). */
   const goto = (s: StepId, anchor?: string) => {
     setDir(STEPS.indexOf(s) >= idx ? 1 : -1);
-    void navigate({ to: "/c/$id/build", params: { id: character.id }, search: { step: s }, replace: true });
+    void navigate({ to: "/c/$id/build", params: { id: character.id }, search: { step: s, from: search.from }, replace: true });
     if (!anchor) return window.scrollTo({ top: 0, behavior: "smooth" });
     const until = Date.now() + 1500;
     const find = () => {
@@ -89,7 +89,7 @@ function Builder() {
   // pin the initial step so later build changes don't move the user (and land on `focus` once)
   useEffect(() => {
     if (search.focus) goto(step, search.focus);
-    else if (search.step !== step) void navigate({ to: "/c/$id/build", params: { id: character.id }, search: { step }, replace: true });
+    else if (search.step !== step) void navigate({ to: "/c/$id/build", params: { id: character.id }, search: { step, from: search.from }, replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -112,7 +112,7 @@ function Builder() {
 
       <header ref={head} className="safe-t glass sticky top-0 z-30 border-b border-line">
         <div className="mx-auto flex max-w-[90rem] items-center gap-2 px-3 pt-3 pb-2 sm:px-6">
-          <Button variant="ghost" size="icon" onClick={() => navigate({ to: "/" })} aria-label={t("common.back")}>
+          <Button variant="ghost" size="icon" onClick={() => navigate(search.from === "sheet" ? { to: "/c/$id", params: { id: character.id } } : { to: "/" })} aria-label={t("common.back")}>
             <ArrowLeft size={20} />
           </Button>
           <div className="min-w-0 flex-1">
@@ -215,15 +215,28 @@ function MobileBar({ idx, goto }: { idx: number; goto: (s: StepId) => void }) {
   const [open, setOpen] = useState(false);
   const s = preview?.sheet ?? sheet;
   const next = STEPS[idx + 1];
+  // its height, so things pinned above it (a picker's Choose button) clear it on every phone
+  const bar = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = bar.current;
+    if (!el) return;
+    const root = document.documentElement;
+    const ro = new ResizeObserver(() => root.style.setProperty("--builder-foot", `${el.offsetHeight}px`));
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      root.style.removeProperty("--builder-foot");
+    };
+  }, []);
   return (
     <>
-      <div className="safe-b glass fixed inset-x-0 bottom-0 z-30 border-t border-line">
+      <div ref={bar} className="safe-b glass fixed inset-x-0 bottom-0 z-30 border-t border-line">
         <div className="flex items-center gap-2 px-3 py-2.5">
-          <button onClick={() => setOpen(true)} className="flex min-w-0 flex-1 items-center gap-3 rounded-xl px-2 py-1 text-left active:bg-surface-3/60">
+          <button onClick={() => setOpen(true)} aria-label={t("builder.preview")} className="flex min-w-0 flex-1 items-center gap-2.5 overflow-hidden rounded-xl px-2 py-1 text-left active:bg-surface-3/60">
             <Stat label={t("sheet.hp")} value={s.hpMax} tone="text-hp" />
             <Stat label={t("sheet.ac")} value={s.ac} />
-            <Stat label={t("sheet.initiative")} value={s.initiative} signed />
-            <Stat label={t("sheet.prof")} value={s.prof} signed />
+            <Stat label={t("sheet.initShort")} value={s.initiative} signed />
+            <Stat label={t("sheet.profShort")} value={s.prof} signed />
             <ChevronUp size={16} className="ml-auto text-ink-3" />
           </button>
           {next && (
@@ -242,7 +255,7 @@ function MobileBar({ idx, goto }: { idx: number; goto: (s: StepId) => void }) {
 
 function Stat({ label, value, tone, signed }: { label: string; value: number; tone?: string; signed?: boolean }) {
   return (
-    <div className="text-center">
+    <div className="shrink-0 text-center">
       <div className="text-[10px] tracking-wider text-ink-3 uppercase">{label}</div>
       <div className={cn("tnum font-display text-base leading-tight", tone)}>{signed && value >= 0 ? `+${value}` : value}</div>
     </div>

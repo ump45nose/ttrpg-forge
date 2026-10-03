@@ -125,7 +125,7 @@ function PlaySheet() {
         <Button variant="ghost" size="icon-sm" disabled={!canRedo} onClick={redo} aria-label={t("common.redo")} title={t("common.redo")}>
           <Redo2 size={17} />
         </Button>
-        <Button variant="ghost" size="icon-sm" onClick={() => navigate({ to: "/c/$id/build", params: { id: character.id } })} aria-label={t("sheet.build")} title={t("sheet.build")}>
+        <Button variant="ghost" size="icon-sm" onClick={() => navigate({ to: "/c/$id/build", params: { id: character.id }, search: { from: "sheet" } })} aria-label={t("sheet.build")} title={t("sheet.build")}>
           <Pencil size={16} />
         </Button>
       </div>

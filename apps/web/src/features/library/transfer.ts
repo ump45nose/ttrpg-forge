@@ -1,6 +1,9 @@
-import { EntitySchema, parseCharacter, parseRulePack, type Character, type Engine, type Entity, type ParseResult, type RulePack } from "@forge/core";
+import { EntitySchema, localize, parseCharacter, parseRulePack, type Character, type Engine, type Entity, type Locale, type ParseResult, type RulePack } from "@forge/core";
+import i18n from "i18next";
 import { ulid } from "ulid";
-import { userEntitiesFor } from "../../app/packs";
+import { userEntitiesFor, usePacks } from "../../app/packs";
+import { confirmDialog } from "../../ui/Confirm";
+import { toast } from "../../ui/Toast";
 
 export function downloadJson(data: unknown, filename: string) {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -59,4 +62,15 @@ export async function importPackFile(file: File): Promise<ParseResult<RulePack>>
   } catch (e) {
     return { ok: false, errors: [(e as Error).message] };
   }
+}
+
+/** Import a pack file, asking before it replaces a pack with the same id (which keeps its place and switch). */
+export async function importPackAsking(file: File, locale: Locale) {
+  const r = await importPackFile(file);
+  if (!r.ok) return toast({ content: r.errors.slice(0, 3).join("; "), tone: "bad" }, 7000);
+  const name = localize(r.value.name, locale);
+  const existing = usePacks.getState().packs.find((p) => p.id === r.value.id);
+  if (existing && !(await confirmDialog({ title: i18n.t("homebrew.replacePack", { name: localize(existing.pack.name, locale) }), confirmLabel: i18n.t("homebrew.replace"), tone: "danger" }))) return;
+  await usePacks.getState().save(existing ? { ...existing, pack: r.value, updatedAt: Date.now() } : { id: r.value.id, pack: r.value, enabled: true, origin: "import", updatedAt: Date.now() });
+  toast({ content: `${name} ✓`, tone: "good" });
 }

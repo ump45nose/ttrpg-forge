@@ -125,9 +125,13 @@ function OptionCards({ ch, candidates }: { ch: ChoiceView; candidates: ChoiceCan
   const { apply } = useBuilder();
   const hover = usePreviewHandlers(ch);
   const options = ch.choice.from.kind === "options" ? ch.choice.from.options : [];
+  const [expanded, setExpanded] = useState(false);
+  // once decided (starting kit...), only the pick stays on the page
+  const folded = ch.remaining <= 0 && !expanded && candidates.length > 2;
   return (
+    <>
     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-      {candidates.map((c) => {
+      {(folded ? candidates.filter((c) => c.selected) : candidates).map((c) => {
         const opt = options.find((o) => o.id === c.id);
         return (
           <motion.button
@@ -158,6 +162,19 @@ function OptionCards({ ch, candidates }: { ch: ChoiceView; candidates: ChoiceCan
         );
       })}
     </div>
+    {ch.remaining <= 0 && candidates.length > 2 && <FoldButton folded={folded} total={candidates.length} onToggle={() => setExpanded(!expanded)} />}
+    </>
+  );
+}
+
+/** Folds a finished choice down to what was picked, and opens it again to change it. */
+export function FoldButton({ folded, total, onToggle }: { folded: boolean; total: number; onToggle: () => void }) {
+  const t = useT();
+  return (
+    <button type="button" onClick={onToggle} aria-expanded={!folded} className="mt-2 flex h-10 w-full items-center justify-center gap-1.5 rounded-xl text-sm text-ink-2 hover:bg-surface-3/50 hover:text-ink">
+      {folded ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+      {folded ? t("builder.change", { n: total }) : t("builder.foldPicked")}
+    </button>
   );
 }
 
@@ -176,7 +193,9 @@ function EntityList({ ch, candidates }: { ch: ChoiceView; candidates: ChoiceCand
   const isSubclass = ch.choice.from.kind === "entity" && ch.choice.from.entityType === "subclass";
   const [expanded, setExpanded] = useState(false);
   // a finished long list folds down to what was picked, so the page stays short
-  const folded = ch.remaining <= 0 && !expanded && candidates.length > FOLD_AT;
+  // (subclass cards are tall with art: those fold even when there are only a few)
+  const foldable = candidates.length > (isSubclass ? 1 : FOLD_AT);
+  const folded = ch.remaining <= 0 && !expanded && foldable;
   // an open long list starts with a handful (search still covers everything)
   const q = query.trim().toLowerCase();
   const trimmed = !folded && !expanded && !q && candidates.length > TRIM_AT;
@@ -236,12 +255,7 @@ function EntityList({ ch, candidates }: { ch: ChoiceView; candidates: ChoiceCand
           <ChevronDown size={16} /> {t("builder.showAll", { n: candidates.length })}
         </button>
       )}
-      {candidates.length > FOLD_AT && ch.remaining <= 0 && (
-        <button type="button" onClick={() => setExpanded(!expanded)} className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl py-2 text-sm text-ink-2 hover:bg-surface-3/50 hover:text-ink">
-          {folded ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
-          {folded ? t("builder.showAll", { n: candidates.length }) : t("builder.foldPicked")}
-        </button>
-      )}
+      {foldable && ch.remaining <= 0 && <FoldButton folded={folded} total={candidates.length} onToggle={() => setExpanded(!expanded)} />}
       {!folded && <QuickCreate ch={ch} />}
       <CandidateDetail ch={ch} candidate={detail} onClose={() => setDetail(undefined)} />
     </>

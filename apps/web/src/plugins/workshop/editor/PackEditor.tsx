@@ -38,6 +38,7 @@ export function PackEditor({ stored, onClose }: { stored: StoredPack | undefined
       onOpenChange={async (o) => {
         if (o) return;
         if (guard.invalid && !(await confirmDialog({ title: t("workshop.discardInvalid"), confirmLabel: t("workshop.discard"), tone: "danger" }))) return;
+        if (!guard.invalid && draft !== stored.pack && !(await confirmDialog({ title: t("workshop.discardChanges"), confirmLabel: t("workshop.discard"), tone: "danger" }))) return;
         onClose();
       }}
       title={l(draft.name)}

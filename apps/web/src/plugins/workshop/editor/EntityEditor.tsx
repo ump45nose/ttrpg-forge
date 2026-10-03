@@ -1,6 +1,6 @@
 import type { Entity } from "@forge/core";
 import { TriangleAlert } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { CreateRequest } from "../../../app/creator";
 import { useL, useT } from "../../../app/i18n";
 import { LOCAL_PACK_ID, useEngine, usePacks } from "../../../app/packs";
@@ -52,6 +52,10 @@ export function EntityEditor({ req, onClose }: { req: CreateRequest | null; onCl
   const [media, setMedia] = useState<Pick<Entity, "art" | "sound">>({});
   // invalid JSON must never "save" the last valid version and close: keep the text, refuse to save
   const guard = useJsonGuard();
+  // unsaved work: the entity as it was opened, and whether the user has touched anything since
+  const [baseline, setBaseline] = useState("");
+  // a ref, not state: re-rendering in the middle of an input event would undo the keystroke
+  const touched = useRef(false);
 
   // a picture is a long data URL: keep it out of the JSON text (the placeholder stands for "unchanged")
   const jsonValue = useMemo(
@@ -66,6 +70,8 @@ export function EntityEditor({ req, onClose }: { req: CreateRequest | null; onCl
     const e = req ? initial(req, locale) : null;
     setEntity(e);
     setMedia({ art: e?.art, sound: e?.sound });
+    setBaseline(e ? JSON.stringify({ ...e, art: e.art, sound: e.sound }) : "");
+    touched.current = false;
     const owner = req?.mode === "edit" && req.base ? engine.reg.packOf(req.base.id) : undefined;
     setTarget(owner && writable.some((p) => p.id === owner) ? owner : LOCAL_PACK_ID);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -74,8 +80,12 @@ export function EntityEditor({ req, onClose }: { req: CreateRequest | null; onCl
   if (!req || !entity) return <Sheet open={false} onOpenChange={onClose}>{null}</Sheet>;
 
   const withMedia: Entity = { ...entity, ...media };
+  // (a form may tidy the entity up as it mounts: only a change after the user did something counts)
+  const dirty = () => touched.current && JSON.stringify(withMedia) !== baseline;
+  const touch = () => void (touched.current = true);
   const close = async () => {
     if (guard.invalid && !(await confirmDialog({ title: t("workshop.discardInvalid"), confirmLabel: t("workshop.discard"), tone: "danger" }))) return;
+    if (!guard.invalid && dirty() && !(await confirmDialog({ title: t("workshop.discardChanges"), confirmLabel: t("workshop.discard"), tone: "danger" }))) return;
     onClose();
   };
   const save = async () => {
@@ -137,6 +147,7 @@ export function EntityEditor({ req, onClose }: { req: CreateRequest | null; onCl
       }
     >
       <JsonGuard.Provider value={guard.report}>
+      <div onPointerDownCapture={touch} onKeyDownCapture={touch} onInputCapture={touch}>
       <Tabs
         className="mb-4"
         items={[
@@ -181,6 +192,7 @@ export function EntityEditor({ req, onClose }: { req: CreateRequest | null; onCl
           <div key={formKey}>{form ?? <Field label="">{t("workshop.jsonOnly")}</Field>}</div>
         </div>
       )}
+      </div>
       </JsonGuard.Provider>
     </Sheet>
   );

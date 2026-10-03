@@ -53,3 +53,47 @@ test("an unknown address shows a way back instead of a blank page", async ({ pag
   await page.getByRole("button", { name: "回到角色库" }).click();
   await expect(page).toHaveURL(/\/$/);
 });
+
+test("the workshop asks before throwing away unsaved edits", async ({ page }) => {
+  await page.goto("/p/workshop");
+  await page.getByRole("button", { name: /^法术 / }).click();
+  const editor = page.getByRole("dialog");
+  await editor.getByRole("textbox").first().fill("未存之咒");
+  await page.keyboard.press("Escape");
+  const ask = page.getByRole("alertdialog");
+  await expect(ask).toContainText("未保存的修改");
+  await ask.getByRole("button", { name: "取消" }).click();
+  await expect(editor.getByRole("textbox").first()).toHaveValue("未存之咒");
+  await page.keyboard.press("Escape");
+  await ask.getByRole("button", { name: "放弃修改" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+});
+
+test("a new house pack only exists once it is saved", async ({ page }) => {
+  await page.goto("/p/workshop");
+  const houses = page.getByText("村规", { exact: true });
+  await expect(houses).toHaveCount(0);
+  await page.getByRole("button", { name: "新建村规包" }).click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(houses).toHaveCount(0);
+});
+
+test("a full prepared list folds to what's prepared, and opens again to change it", async ({ page }) => {
+  await startFromSample(page, "达格娜·炉石");
+  await page.getByRole("button", { name: "编辑构筑" }).click();
+  await page.getByRole("button", { name: /^特性/ }).first().click();
+  const panel = page.locator("section[id^=prepared-]");
+  await expect(panel.getByRole("button", { name: /^更改/ })).toBeVisible();
+  // folded: only what's prepared (the domain's always-prepared spells included), all ticked
+  const spells = panel.locator("div.grid > button");
+  const foldedCount = await spells.count();
+  await expect(panel.locator("div.grid > button.border-line")).toHaveCount(0);
+  await panel.getByRole("button", { name: /^更改/ }).click();
+  await expect(panel.getByRole("button", { name: "只看已选" })).toBeVisible();
+  expect(await spells.count()).toBeGreaterThan(foldedCount);
+  // back from the builder goes to the sheet it was opened from
+  await page.getByRole("button", { name: "返回" }).first().click();
+  await expect(page).toHaveURL(/\/c\/[0-9A-Z]+$/);
+});

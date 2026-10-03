@@ -158,7 +158,7 @@ export function EntityPicker({ type, current, opsFor, showcase, lead }: Props) {
 
               {/* pinned to the bottom of the screen while this card is in view (the card clips, it doesn't scroll) */}
               {!desktop && shown.id !== current && (
-                <div className="sticky bottom-20 z-10 mt-5">
+                <div className="sticky bottom-[calc(var(--builder-foot,5rem)+0.75rem)] z-10 mt-5">
                   <Button variant="class" size="lg" className="w-full shadow-float" onClick={() => choose(shown.id)}>
                     {`${t("common.choose")} ${n.l(shown.name, { mono: true })}`}
                   </Button>

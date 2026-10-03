@@ -50,8 +50,10 @@ const settingsRoute = createRoute({ getParentRoute: () => rootRoute, path: "/set
 export const buildRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/c/$id/build",
-  validateSearch: (s: Record<string, unknown>): { step?: string; focus?: string } => ({
+  validateSearch: (s: Record<string, unknown>): { step?: string; focus?: string; from?: "sheet" } => ({
     step: typeof s.step === "string" ? s.step : undefined,
+    // opened from the character sheet: "back" returns there
+    from: s.from === "sheet" ? "sheet" : undefined,
     // an element to land on, e.g. a class's prepared-spells panel
     focus: typeof s.focus === "string" ? s.focus : undefined,
   }),

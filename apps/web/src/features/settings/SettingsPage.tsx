@@ -1,4 +1,3 @@
-import { localize } from "@forge/core";
 import { useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Check, ChevronDown, ChevronUp, Download, FileJson, Package, Puzzle, Trash2, Wand2 } from "lucide-react";
 import { motion } from "motion/react";
@@ -13,9 +12,8 @@ import { Chip } from "../../ui/Chip";
 import { cn } from "../../ui/cn";
 import { Switch } from "../../ui/Field";
 import { Tabs } from "../../ui/Tabs";
-import { toast } from "../../ui/Toast";
 import { Slot } from "../../app/slot";
-import { downloadJson, importPackFile } from "../library/transfer";
+import { downloadJson, importPackAsking } from "../library/transfer";
 import { DataSection } from "./DataSection";
 import { ImageApiSection } from "./ImageApiSection";
 
@@ -186,10 +184,7 @@ export function SettingsPage() {
             const f = e.target.files?.[0];
             e.target.value = "";
             if (!f) return;
-            const r = await importPackFile(f);
-            if (!r.ok) return toast({ content: r.errors.slice(0, 3).join("; "), tone: "bad" }, 7000);
-            await packs.save({ id: r.value.id, pack: r.value, enabled: true, origin: "import", updatedAt: Date.now() });
-            toast({ content: `${localize(r.value.name, s.locale)} ✓`, tone: "good" });
+            await importPackAsking(f, s.locale);
           }}
         />
       </Section>

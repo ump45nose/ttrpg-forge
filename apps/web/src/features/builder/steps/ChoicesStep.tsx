@@ -7,7 +7,7 @@ import { haptic } from "../../../app/settings";
 import { cn } from "../../../ui/cn";
 import { Tabs } from "../../../ui/Tabs";
 import { useNames } from "../../common/names";
-import { ChoiceBlock, SpellBadges } from "../ChoiceBlock";
+import { ChoiceBlock, SpellBadges, FoldButton } from "../ChoiceBlock";
 import { InventoryPanel } from "../InventoryPanel";
 import { choiceAnchor, preparedAnchor, stepOfChoice, unprepared, useBuilder } from "../state";
 
@@ -75,7 +75,17 @@ export function PreparedPanel({ sc }: { sc: SpellcastingView }) {
   const levels = [...new Set(pool.map((s) => s.level))];
   const [lv, setLv] = useState<string>("all");
   const count = prepared.filter((id) => !always.has(id)).length;
-  const shown = lv === "all" ? pool : pool.filter((s) => String(s.level) === lv);
+  const [expanded, setExpanded] = useState(false);
+  // what was prepared when the list was opened again: those come first, so changing one is quick
+  const [pinned, setPinned] = useState<ReadonlySet<string>>(new Set());
+  // a full list folds down to the spells actually prepared (it can run to a hundred entries)
+  const folded = count >= sc.preparedMax && !expanded;
+  const byPin = (list: SpellEntity[]) => (pinned.size ? [...list].sort((a, b) => Number(pinned.has(b.id)) - Number(pinned.has(a.id))) : list);
+  const shown = folded ? pool.filter((s) => always.has(s.id) || prepared.includes(s.id)) : byPin(lv === "all" ? pool : pool.filter((s) => String(s.level) === lv));
+  const toggleFold = () => {
+    if (folded) setPinned(new Set(prepared));
+    setExpanded(folded);
+  };
 
   const toggle = (id: string) => {
     haptic(6);
@@ -93,7 +103,7 @@ export function PreparedPanel({ sc }: { sc: SpellcastingView }) {
         </span>
       </h2>
       {count === 0 && <p className="mb-3 rounded-xl border border-warn/30 bg-warn/8 px-3 py-2 text-xs text-warn">{t("builder.review.preparedNone")}</p>}
-      {levels.length > 1 && (
+      {!folded && levels.length > 1 && (
         <Tabs size="sm" className="mb-3" items={[{ id: "all", label: t("common.all") }, ...levels.map((l) => ({ id: String(l), label: t("spell.level", { n: l }) }))]} value={lv} onChange={setLv} />
       )}
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -123,6 +133,7 @@ export function PreparedPanel({ sc }: { sc: SpellcastingView }) {
           );
         })}
       </div>
+      {count >= sc.preparedMax && <FoldButton folded={folded} total={pool.length} onToggle={toggleFold} />}
     </section>
   );
 }

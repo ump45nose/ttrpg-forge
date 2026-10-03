@@ -33,7 +33,7 @@ export function EffectPicker({ open, onOpenChange }: { open: boolean; onOpenChan
         />
         <div className="flex items-center gap-2 text-xs text-ink-3">
           <span className="shrink-0">{t("sheet.duration")}</span>
-          <Tabs size="sm" className="flex-1" items={DURATIONS.map((d) => ({ id: d.id, label: d.rounds ? t("sheet.rounds", { n: d.rounds }) : t("sheet.untilRemoved") }))} value={dur} onChange={setDur} />
+          <Tabs size="sm" className="flex-1" items={DURATIONS.map((d) => ({ id: d.id, label: d.rounds ? t("sheet.rounds", { count: d.rounds }) : t("sheet.untilRemoved") }))} value={dur} onChange={setDur} />
         </div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {list.map((e) => {

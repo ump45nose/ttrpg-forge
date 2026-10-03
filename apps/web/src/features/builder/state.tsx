@@ -1,7 +1,9 @@
 import { pruneChoices, type Build, type BuildOp, type Character, type CharacterMeta, type Engine, type Issue, type Preview, type Sheet } from "@forge/core";
 import { createContext, useCallback, useContext, useDeferredValue, useMemo, useRef, useState, type ReactNode } from "react";
 import { useCharacters } from "../../app/characters";
+import i18n from "i18next";
 import { useEngine } from "../../app/packs";
+import { toast } from "../../ui/Toast";
 
 /** Ops that change which choices exist; stale selections are pruned after them. */
 const STRUCTURAL = new Set<BuildOp["op"]>(["setClass", "setSpecies", "setBackground"]);
@@ -49,11 +51,16 @@ export function BuilderProvider({ character, children }: { character: Character;
   const apply = useCallback(
     (ops: BuildOp[]) => {
       let next = engine.apply(character.build, ops);
+      let lost = 0;
       if (ops.some((o) => STRUCTURAL.has(o.op))) {
         const live = engine.evaluate(next).sheet.choices.map((c) => c.path);
-        next = pruneChoices(next, new Set(live));
+        const pruned = pruneChoices(next, new Set(live));
+        lost = Object.entries(next.choices).filter(([p, v]) => v.length && !(p in pruned.choices)).length;
+        next = pruned;
       }
       if (next === character.build) return;
+      // switching class (or origin) drops the picks that belonged to the old one: say so, and offer them back
+      if (lost) toast({ content: i18n.t("builder.pruned", { n: lost }), action: { label: i18n.t("common.undo"), run: () => undoRef.current() } }, 6000);
       past.current = [...past.current.slice(-HISTORY + 1), character.build];
       future.current = [];
       setFocusState(null);
@@ -69,6 +76,9 @@ export function BuilderProvider({ character, children }: { character: Character;
     future.current = [character.build, ...future.current];
     commit(prev);
   }, [character.build, commit]);
+
+  const undoRef = useRef(undo);
+  undoRef.current = undo;
 
   const redo = useCallback(() => {
     const next = future.current[0];

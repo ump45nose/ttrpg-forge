@@ -175,7 +175,7 @@ function PrepareReminder() {
     <button
       key={p.classId}
       type="button"
-      onClick={() => void navigate({ to: "/c/$id/build", params: { id: character.id }, search: { step: "choices", focus: preparedAnchor(p.classId) } })}
+      onClick={() => void navigate({ to: "/c/$id/build", params: { id: character.id }, search: { step: "choices", focus: preparedAnchor(p.classId), from: "sheet" } })}
       className="flex w-full items-center gap-2 rounded-xl border border-magic/30 bg-magic/8 px-3 py-2.5 text-left text-sm text-ink transition-colors hover:bg-magic/12"
     >
       <Sparkles size={16} className="shrink-0 text-magic" />

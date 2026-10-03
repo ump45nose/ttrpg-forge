@@ -208,7 +208,7 @@ function EffectRow() {
                         <Icon size={15} /> {l(effectName(engine, sheet, e))}
                         {count > 1 && <span className="tnum text-sm text-ink-3">×{count}</span>}
                       </div>
-                      {e.rounds !== undefined && <div className="mb-1 text-xs text-ink-3">{t("sheet.rounds", { n: e.rounds })}</div>}
+                      {e.rounds !== undefined && <div className="mb-1 text-xs text-ink-3">{t("sheet.rounds", { count: e.rounds })}</div>}
                       {ent?.text && <RichText text={ent.summary ?? ent.text} selfId={ent.id} className="text-sm text-ink-2" />}
                       <div className="mt-3 flex gap-2">
                         <Popover.Close asChild>

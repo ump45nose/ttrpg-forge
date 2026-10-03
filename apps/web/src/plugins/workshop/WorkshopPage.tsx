@@ -7,14 +7,14 @@ import { useMemo, useRef, useState, type ReactNode } from "react";
 import { ulid } from "ulid";
 import { openCreator } from "../../app/creator";
 import { useL, useT } from "../../app/i18n";
-import { BASE_PACKS, isBaseEntity, LOCAL_PACK_ID, orderedPacks, useEngine, usePacks } from "../../app/packs";
+import type { StoredPack } from "../../app/db";
+import { BASE_PACKS, isBaseEntity, LOCAL_PACK_ID, orderedPacks, removePackUndoable, useEngine, usePacks } from "../../app/packs";
 import { useSettings } from "../../app/settings";
-import { downloadJson, importPackFile } from "../../features/library/transfer";
+import { downloadJson, importPackAsking } from "../../features/library/transfer";
 import { Button } from "../../ui/Button";
 import { Chip } from "../../ui/Chip";
 import { cn } from "../../ui/cn";
 import { Input } from "../../ui/Field";
-import { toast } from "../../ui/Toast";
 import { WORKSHOP_TYPES, type WorkshopType } from "./editor/factory";
 import { PackEditor } from "./editor/PackEditor";
 import { CueSounds } from "./CueSounds";
@@ -45,7 +45,8 @@ export function WorkshopPage() {
   const packs = usePacks();
   const [filter, setFilter] = useState<WorkshopType | "all">("all");
   const [q, setQ] = useState("");
-  const [editing, setEditing] = useState<string>();
+  // a pack id, or a new house pack that isn't saved until its first Save
+  const [editing, setEditing] = useState<string | StoredPack>();
 
   const rows: Row[] = useMemo(
     () =>
@@ -70,12 +71,34 @@ export function WorkshopPage() {
         </Button>
         <Hammer size={20} className="text-accent" />
         <h1 className="font-display text-xl">{t("workshop.title")}</h1>
+        {/* a long page: jump between its parts */}
+        <nav aria-label={t("workshop.sections")} className="no-scrollbar absolute inset-x-0 top-full flex gap-1.5 overflow-x-auto border-b border-line px-4 pb-2 glass sm:px-6">
+          {(
+            [
+              ["ws-remix", t("workshop.remixShort")],
+              ["ws-create", t("workshop.create")],
+              ["ws-mine", t("workshop.mine")],
+              ["ws-sounds", t("sound.cues")],
+              ["ws-packs", t("workshop.packs")],
+            ] as const
+          ).map(([id, label]) => (
+            <button key={id} type="button" onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" })} className="h-8 shrink-0 rounded-lg border border-line px-2.5 text-xs text-ink-2 transition-colors hover:border-line-strong hover:text-ink">
+              {label}
+            </button>
+          ))}
+        </nav>
       </header>
-      <ArtImg id="scene:workshop" focus={[0.5, 0.5]} className="mt-2 h-36 rounded-2xl [mask-image:linear-gradient(to_bottom,black_60%,transparent)] sm:h-52" />
+      <ArtImg id="scene:workshop" focus={[0.5, 0.5]} className="mt-12 h-36 rounded-2xl [mask-image:linear-gradient(to_bottom,black_60%,transparent)] sm:h-52" />
       <p className="mt-2 text-sm text-ink-2">{t("workshop.intro")}</p>
 
+      {/* remix official content: the most common start (tweak a spell, a feat...), so it comes first */}
+      <Section id="ws-remix" title={t("workshop.remix")}>
+        <p className="mb-3 text-xs text-ink-3">{t("workshop.remixHint")}</p>
+        <RemixSearch />
+      </Section>
+
       {/* create */}
-      <Section title={t("workshop.create")}>
+      <Section id="ws-create" title={t("workshop.create")}>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {WORKSHOP_TYPES.map((type) => {
             const Icon = TYPE_ICON[type];
@@ -100,7 +123,7 @@ export function WorkshopPage() {
       </Section>
 
       {/* my content */}
-      <Section title={t("workshop.mine")} aside={<span className="text-xs text-ink-3">{rows.length}</span>}>
+      <Section id="ws-mine" title={t("workshop.mine")} aside={<span className="text-xs text-ink-3">{rows.length}</span>}>
         <div className="no-scrollbar -mx-1 mb-3 flex gap-1.5 overflow-x-auto px-1">
           {(["all", ...WORKSHOP_TYPES] as const).map((k) => (
             <button
@@ -129,29 +152,24 @@ export function WorkshopPage() {
         </div>
       </Section>
 
-      {/* remix official content */}
-      <Section title={t("workshop.remix")}>
-        <p className="mb-3 text-xs text-ink-3">{t("workshop.remixHint")}</p>
-        <RemixSearch />
-      </Section>
-
       {/* sounds */}
-      <Section title={t("sound.cues")} icon={<AudioLines size={15} />}>
+      <Section id="ws-sounds" title={t("sound.cues")} icon={<AudioLines size={15} />}>
         <CueSounds />
       </Section>
 
       {/* packs */}
-      <Section title={t("workshop.packs")} icon={<Package size={15} />}>
+      <Section id="ws-packs" title={t("workshop.packs")} icon={<Package size={15} />}>
         <PackList onEdit={setEditing} />
       </Section>
-      <PackEditor stored={packs.packs.find((p) => p.id === editing)} onClose={() => setEditing(undefined)} />
+      <PackEditor stored={typeof editing === "object" ? editing : packs.packs.find((p) => p.id === editing)} onClose={() => setEditing(undefined)} />
     </div>
   );
 }
 
-function Section({ title, icon, aside, children }: { title: ReactNode; icon?: ReactNode; aside?: ReactNode; children: ReactNode }) {
+function Section({ id, title, icon, aside, children }: { id?: string; title: ReactNode; icon?: ReactNode; aside?: ReactNode; children: ReactNode }) {
   return (
-    <section className="mt-7">
+    // clears the sticky header and its section bar when jumped to
+    <section id={id} className="mt-7 scroll-mt-32">
       <h2 className="mb-3 flex items-center gap-2 text-xs font-semibold tracking-[0.12em] text-ink-3 uppercase">
         {icon}
         {title}
@@ -255,7 +273,7 @@ function RemixSearch() {
   );
 }
 
-function PackList({ onEdit }: { onEdit: (id: string) => void }) {
+function PackList({ onEdit }: { onEdit: (p: string | StoredPack) => void }) {
   const t = useT();
   const l = useL();
   const locale = useSettings((s) => s.locale);
@@ -285,16 +303,20 @@ function PackList({ onEdit }: { onEdit: (id: string) => void }) {
             <Button variant="ghost" size="icon-sm" onClick={() => downloadJson(p.pack, `${p.id.replace(/[:]/g, "-")}.json`)} aria-label={t("common.export")}>
               <Download size={15} />
             </Button>
+            {p.id !== LOCAL_PACK_ID && (
+              <Button variant="ghost" size="icon-sm" onClick={() => void removePackUndoable(p, l(p.pack.name, { mono: true }))} aria-label={t("common.delete")}>
+                <Trash2 size={15} />
+              </Button>
+            )}
           </div>
         ))}
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
         <Button
           variant="outline"
-          onClick={async () => {
+          onClick={() => {
             const id = `house:${ulid().toLowerCase()}`;
-            await packs.save({ id, origin: "homebrew", enabled: true, updatedAt: Date.now(), pack: { id, version: "1", system: BASE_PACKS[0]!.system, name: { en: "House Rules", zh: "村规" }, entities: [], systemConfig: {}, patches: [] } });
-            onEdit(id);
+            onEdit({ id, origin: "homebrew", enabled: true, updatedAt: Date.now(), pack: { id, version: "1", system: BASE_PACKS[0]!.system, name: { en: "House Rules", zh: "村规" }, entities: [], systemConfig: {}, patches: [] } });
           }}
         >
           <Plus size={16} /> {t("homebrew.newHouse")}
@@ -312,10 +334,7 @@ function PackList({ onEdit }: { onEdit: (id: string) => void }) {
           const f = e.target.files?.[0];
           e.target.value = "";
           if (!f) return;
-          const r = await importPackFile(f);
-          if (!r.ok) return toast({ content: r.errors.slice(0, 3).join("; "), tone: "bad" }, 7000);
-          await packs.save({ id: r.value.id, pack: r.value, enabled: true, origin: "import", updatedAt: Date.now() });
-          toast({ content: `${localize(r.value.name, locale)} ✓`, tone: "good" });
+          await importPackAsking(f, locale);
         }}
       />
     </>
