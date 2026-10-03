@@ -203,6 +203,22 @@ export const RulePackSchema = z.object({
   entities: z.array(EntitySchema),
   systemConfig: systemConfig.optional(),
   patches: z.array(entityPatch).optional(),
+  samples: z
+    .array(
+      z.object({
+        id: z.string(),
+        name: text,
+        text,
+        level: z.number().int().min(1),
+        classId: z.string(),
+        speciesId: z.string(),
+        backgroundId: z.string(),
+        abilities: z.object({ str: z.number(), dex: z.number(), con: z.number(), int: z.number(), wis: z.number(), cha: z.number() }),
+        choices: z.record(z.string(), z.array(z.string())).optional(),
+        prepared: z.record(z.string(), z.array(z.string())).optional(),
+      }),
+    )
+    .optional(),
 });
 
 const buildSchema = z.object({

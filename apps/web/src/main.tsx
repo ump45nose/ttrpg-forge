@@ -4,7 +4,7 @@ import { createRoot } from "react-dom/client";
 import { useCharacters } from "./app/characters";
 import { host } from "./app/host";
 import "./app/i18n";
-import { usePacks } from "./app/packs";
+import { loadBasePacks, usePacks } from "./app/packs";
 import { router } from "./app/router";
 import { useSettings } from "./app/settings";
 import { BUILTIN_PLUGINS } from "./plugins";
@@ -20,7 +20,7 @@ syncTheme();
 useSettings.subscribe((s, prev) => s.theme !== prev.theme && syncTheme());
 host.on("plugins:changed", syncTheme);
 
-await Promise.all([useCharacters.getState().load(), usePacks.getState().load()]);
+await Promise.all([useCharacters.getState().load(), usePacks.getState().load(), loadBasePacks()]);
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

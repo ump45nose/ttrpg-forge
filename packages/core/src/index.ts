@@ -9,6 +9,7 @@ export * from "./pack/patch";
 export * from "./build/collect";
 export * from "./build/choices";
 export * from "./build/mutations";
+export * from "./build/autofill";
 export * from "./derive/stats";
 export * from "./derive/sheet";
 export * from "./diff";

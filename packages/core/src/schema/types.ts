@@ -423,6 +423,26 @@ export interface RulePack {
   systemConfig?: SystemConfig;
   /** House-rule edits of entities defined by earlier packs. */
   patches?: EntityPatch[];
+  /** Ready-made characters to start from (pregens). */
+  samples?: SampleCharacter[];
+}
+
+/**
+ * A pregen described by its decisions. Choices not listed are filled with the
+ * first valid options, so a sample survives content changes in its pack.
+ */
+export interface SampleCharacter {
+  id: string;
+  name: LocalizedText;
+  /** One-line pitch shown on the card. */
+  text: LocalizedText;
+  level: number;
+  classId: string;
+  speciesId: string;
+  backgroundId: string;
+  abilities: AbilityScores;
+  choices?: Record<string, string[]>;
+  prepared?: Record<string, string[]>;
 }
 
 /** Matches grants for removal: every field given must match. */
@@ -581,7 +601,8 @@ export type PlayEvent =
   | Ev<"rest", { kind: RestKind }>
   | Ev<"deathsave", { result: "success" | "failure" | "reset" }>
   | Ev<"roll", { label?: string; expr: string; total: number; detail?: string }>
-  | Ev<"note", { text: string }>
+  /** Free text in the log; `feedback` marks notes about the app itself (collected from settings). */
+  | Ev<"note", { text: string; feedback?: boolean }>
   | Ev<"revert", { target: string }>;
 
 export type PlayEventType = PlayEvent["type"];

@@ -1,0 +1,23 @@
+{
+  "style": "Classic Dungeons & Dragons sourcebook illustration. Traditional fantasy oil painting, heroic realism, painterly visible brushwork, rich warm earth tones with dramatic chiaroscuro lighting, detailed believable armor, clothing and gear, grounded medieval fantasy, epic but serious mood. No text, no letters, no watermark, no border, no frame.",
+  "sets": {
+    "class": {
+      "size": "1024x1536",
+      "framing": "Full figure, vertical composition, subject centered in the lower two thirds with open sky or atmosphere at the top for UI overlay.",
+      "items": {
+        "class:barbarian": "a half-orc Barbarian woman mid-roar in a snowy mountain pass, furs and scarred leather, greataxe raised, eyes blazing with rage, wind-whipped hair, falling snow",
+        "class:bard": "an elf Bard man playing a lute in a candlelit tavern, embroidered doublet and feathered hat, faint golden magic notes rising from the strings, patrons in warm shadow",
+        "class:cleric": "a dwarf Cleric woman in chain mail and a tabard with a sun symbol, holding a warhammer and a glowing holy symbol aloft, radiant light breaking through a dark crypt",
+        "class:druid": "a human Druid man with a staff of living wood in an ancient misty forest, leather and leaf cloak, a great wolf at his side, motes of green light in the air",
+        "class:fighter": "a human Fighter, a seasoned warrior in battered steel plate-and-mail armor with a worn tabard, longsword and dented heater shield, determined scarred face, on a windswept hill at dusk with a ruined watchtower and storm clouds",
+        "class:monk": "a human Monk woman in simple wrapped robes, mid flying kick on a cliffside monastery terrace, prayer flags and mountain peaks, swirling wind showing her ki",
+        "class:paladin": "a dragonborn Paladin in ornate shining plate armor and a blue cloak, greatsword planted point-down, divine light shining from above onto a battlefield at dawn",
+        "class:ranger": "a half-elf Ranger woman drawing a longbow at the edge of a dark pine forest, green hooded cloak, leather armor, quiver, a hawk overhead, evening mist",
+        "class:rogue": "a halfling Rogue man crouched on a moonlit rooftop of a medieval city, dark leather armor and hood, twin daggers, a coin purse at his belt, lantern-lit streets below",
+        "class:sorcerer": "a tiefling Sorcerer woman with curved horns, raw arcane fire spiralling from her bare hands, flowing crimson robes, standing among floating rubble in a storm",
+        "class:warlock": "a human Warlock man in dark layered robes holding a pact tome, eldritch purple energy crackling, a vast shadowy otherworldly patron looming behind him in a ruined temple",
+        "class:wizard": "an elderly gnome Wizard in deep blue robes reading a glowing spellbook in a cluttered tower library, staff in hand, arcane runes circling, candles and scrolls"
+      }
+    }
+  }
+}

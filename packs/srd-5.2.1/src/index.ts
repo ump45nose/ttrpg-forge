@@ -6,6 +6,7 @@ import { GLOSSARY } from "./glossary.generated";
 import { t } from "./helpers";
 import { items } from "./items";
 import { conditions, globalGrants } from "./rules";
+import { samples } from "./samples";
 import { species } from "./species";
 import { spells } from "./spells";
 
@@ -31,6 +32,7 @@ export const srd52: RulePack = {
   globalGrants,
   // content currently covers levels 1-8; house-rule packs can raise this
   systemConfig: { maxLevel: 8 },
+  samples,
   entities: [...classes, ...species, ...backgrounds, ...feats, ...spells, ...items, ...conditions, ...GLOSSARY],
 };
 

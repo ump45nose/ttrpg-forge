@@ -1,5 +1,10 @@
 import { revertedIds, type PlayEvent } from "@forge/core";
-import { Dices, Heart, RotateCcw, RotateCw, Sparkles, Swords, Moon, TimerReset } from "lucide-react";
+import { Dices, Heart, MessageSquareWarning, Moon, RotateCcw, RotateCw, Sparkles, Swords, TimerReset } from "lucide-react";
+import { useState } from "react";
+import { Button } from "../../ui/Button";
+import { Textarea } from "../../ui/Field";
+import { Sheet } from "../../ui/Sheet";
+import { toast } from "../../ui/Toast";
 import { useT } from "../../app/i18n";
 import { useSettings } from "../../app/settings";
 import { cn } from "../../ui/cn";
@@ -21,6 +26,18 @@ const ICON: Partial<Record<PlayEvent["type"], typeof Dices>> = {
 /** The play log, newest first. Any entry can be undone or brought back on its own. */
 export function LogPanel({ limit }: { limit?: number }) {
   const t = useT();
+  const { character } = usePlay();
+  const events = character.play.filter((e) => e.type !== "revert");
+  return (
+    <div className="space-y-2">
+      <FeedbackButton />
+      {events.length ? <Entries limit={limit} /> : <div className="py-6 text-center text-sm text-ink-3">{t("sheet.logEmpty")}</div>}
+    </div>
+  );
+}
+
+function Entries({ limit }: { limit?: number }) {
+  const t = useT();
   const locale = useSettings((s) => s.locale);
   const { character, sheet, build, toggle } = usePlay();
   const text = useEventText(sheet, character.play, build);
@@ -28,13 +45,11 @@ export function LogPanel({ limit }: { limit?: number }) {
   const events = character.play.filter((e) => e.type !== "revert").reverse();
   const shown = limit ? events.slice(0, limit) : events;
   const time = new Intl.DateTimeFormat(locale === "zh" ? "zh-CN" : "en", { hour: "2-digit", minute: "2-digit" });
-
-  if (!events.length) return <div className="py-6 text-center text-sm text-ink-3">{t("sheet.logEmpty")}</div>;
   return (
     <ol className="space-y-1">
       {shown.map((e) => {
         const off = reverted.has(e.id);
-        const Icon = ICON[e.type];
+        const Icon = e.type === "note" && e.feedback ? MessageSquareWarning : ICON[e.type];
         const roll = e.type === "roll" ? e : null;
         return (
           <li key={e.id} className={cn("group flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-surface-3/40", off && "opacity-45")}>
@@ -53,5 +68,41 @@ export function LogPanel({ limit }: { limit?: number }) {
         );
       })}
     </ol>
+  );
+}
+
+/** Playtest notes: "this was confusing", "this rule is wrong". Kept in the log with the moment it happened. */
+function FeedbackButton() {
+  const t = useT();
+  const { push } = usePlay();
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState("");
+  const save = () => {
+    if (!text.trim()) return;
+    push({ type: "note", text: text.trim(), feedback: true });
+    setText("");
+    setOpen(false);
+    toast({ content: t("feedback.saved"), tone: "good" });
+  };
+  return (
+    <>
+      <Button size="sm" variant="ghost" className="text-ink-3" onClick={() => setOpen(true)}>
+        <MessageSquareWarning size={14} /> {t("feedback.button")}
+      </Button>
+      <Sheet
+        open={open}
+        onOpenChange={setOpen}
+        title={t("feedback.title")}
+        description={t("feedback.hint")}
+        width="sm"
+        footer={
+          <Button variant="primary" size="lg" className="w-full" disabled={!text.trim()} onClick={save}>
+            {t("common.save")}
+          </Button>
+        }
+      >
+        <Textarea autoFocus rows={4} value={text} onChange={(e) => setText(e.target.value)} placeholder={t("feedback.placeholder")} />
+      </Sheet>
+    </>
   );
 }

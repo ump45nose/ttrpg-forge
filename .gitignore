@@ -10,3 +10,6 @@ playwright-report
 **/scripts/.cache/
 # 2024 PHB (DND5eChm fan translation of WotC text): generated locally, never committed
 packs/phb-2024/src/generated/
+
+# raw generated art (converted WebP goes into the app)
+tools/art/raw/

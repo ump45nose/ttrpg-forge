@@ -1,6 +1,6 @@
 import type { Character } from "@forge/core";
 import { useNavigate } from "@tanstack/react-router";
-import { Download, MoreHorizontal, Plus, Settings2, Sparkles, Trash2 } from "lucide-react";
+import { DatabaseBackup, Download, MoreHorizontal, Plus, Settings2, Share, Sparkles, Trash2, Users, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { DropdownMenu } from "radix-ui";
 import { useMemo, useRef, useState } from "react";
@@ -15,6 +15,8 @@ import { Chip } from "../../ui/Chip";
 import { cn } from "../../ui/cn";
 import { Crest } from "../../ui/Crest";
 import { Input } from "../../ui/Field";
+import { backupDue, downloadBackup, snoozeBackup } from "../../app/backup";
+import { Hint, isIosBrowser } from "../../ui/Hint";
 import { Sheet } from "../../ui/Sheet";
 import { toast } from "../../ui/Toast";
 import { exportCharacter, importCharacterFile } from "./transfer";
@@ -67,8 +69,15 @@ export function Library() {
         <p className="mt-2 text-sm text-ink-2">{t("library.subtitle")}</p>
       </section>
 
+      <Hint id="ios-install" when={isIosBrowser()} icon={<Share size={16} />} className="mb-5">
+        <div className="font-medium text-ink">{t("onboard.iosTitle")}</div>
+        <div>{t("onboard.iosBody")}</div>
+      </Hint>
+
+      <BackupNudge />
+
       {list.length === 0 ? (
-        <EmptyState onCreate={() => setCreating(true)} />
+        <EmptyState onCreate={() => setCreating(true)} onImport={() => fileRef.current?.click()} />
       ) : (
         <motion.div layout className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <NewCard onClick={() => setCreating(true)} />
@@ -81,6 +90,27 @@ export function Library() {
       )}
 
       <CreateSheet open={creating} onOpenChange={setCreating} />
+    </div>
+  );
+}
+
+/** Weekly reminder: everything lives on this device only. */
+function BackupNudge() {
+  const t = useT();
+  // re-render when characters or backup settings change
+  useCharacters((s) => s.byId);
+  useSettings((s) => [s.lastBackup, s.backupSnoozed].join());
+  if (!backupDue()) return null;
+  return (
+    <div className="mb-5 flex items-center gap-3 rounded-2xl border border-warn/30 bg-warn/[0.07] p-3 text-sm text-ink-2">
+      <DatabaseBackup size={18} className="shrink-0 text-warn" />
+      <div className="min-w-0 flex-1">{t("backup.nudge")}</div>
+      <Button size="sm" variant="secondary" onClick={downloadBackup}>
+        {t("backup.now")}
+      </Button>
+      <button type="button" onClick={snoozeBackup} aria-label={t("common.close")} className="rounded-lg p-1 text-ink-3 hover:bg-surface-3 hover:text-ink">
+        <X size={16} />
+      </button>
     </div>
   );
 }
@@ -98,7 +128,7 @@ function Wordmark() {
   );
 }
 
-function EmptyState({ onCreate }: { onCreate: () => void }) {
+function EmptyState({ onCreate, onImport }: { onCreate: () => void; onImport: () => void }) {
   const t = useT();
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="card relative overflow-hidden px-6 py-14 text-center sm:py-20">
@@ -112,10 +142,23 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
       </div>
       <h2 className="relative font-display text-2xl text-ink">{t("library.empty")}</h2>
       <p className="relative mx-auto mt-2 max-w-sm text-sm leading-relaxed text-ink-2">{t("library.emptyHint")}</p>
-      <Button variant="primary" size="lg" className="relative mt-8" onClick={onCreate}>
-        <Sparkles size={18} />
-        {t("library.newCharacter")}
-      </Button>
+      <div className="relative mt-8 flex flex-wrap justify-center gap-2">
+        <Button variant="primary" size="lg" onClick={onCreate}>
+          <Sparkles size={18} />
+          {t("library.newCharacter")}
+        </Button>
+        <Button variant="secondary" size="lg" onClick={onImport}>
+          <Download size={17} />
+          {t("onboard.importFriend")}
+        </Button>
+      </div>
+      <div className="relative mx-auto mt-10 max-w-3xl text-left">
+        <div className="mb-3 flex items-center gap-3 text-xs font-semibold tracking-[0.14em] text-ink-3 uppercase">
+          <Users size={14} /> {t("onboard.samples")}
+          <span className="h-px flex-1 bg-line" />
+        </div>
+        <SamplePicker />
+      </div>
     </motion.div>
   );
 }
@@ -291,7 +334,60 @@ function CreateSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (o: 
           ))}
         </div>
       </div>
+      <div className="mt-7">
+        <div className="mb-3 flex items-center gap-3 text-xs text-ink-3">
+          <span className="h-px flex-1 bg-line" />
+          {t("onboard.orSample")}
+          <span className="h-px flex-1 bg-line" />
+        </div>
+        <SamplePicker compact onPicked={() => onOpenChange(false)} />
+      </div>
     </Sheet>
+  );
+}
+
+/** Ready-made characters from the loaded packs: one tap and you are on the sheet. */
+function SamplePicker({ compact = false, onPicked }: { compact?: boolean; onPicked?: () => void }) {
+  const t = useT();
+  const l = useL();
+  const engine = useEngine();
+  const put = useCharacters((s) => s.put);
+  const navigate = useNavigate();
+  const locale = useSettings((s) => s.locale);
+  const samples = engine.samples();
+  if (!samples.length) return null;
+  const pick = (id: string) => {
+    const s = samples.find((x) => x.id === id)!;
+    const c = engine.fromSample(s, locale);
+    put(c);
+    onPicked?.();
+    toast({ content: t("onboard.sampleAdded", { name: c.name }), tone: "good" });
+    void navigate({ to: "/c/$id", params: { id: c.id } });
+  };
+  return (
+    <div className={cn("grid gap-2", !compact && "sm:grid-cols-2")}>
+      {samples.map((s) => {
+        const accent = engine.reg.get(s.classId)?.accent;
+        return (
+          <button
+            key={s.id}
+            type="button"
+            onClick={() => pick(s.id)}
+            style={{ ["--class" as string]: accent }}
+            className="flex items-center gap-3 rounded-2xl border border-line bg-surface/70 p-3 text-left transition-colors hover:border-class/50 hover:bg-class/5"
+          >
+            <Crest id={s.classId} accent={accent} size={compact ? 40 : 48} />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-baseline gap-2">
+                <span className="truncate font-display text-base text-ink">{l(s.name)}</span>
+                <span className="shrink-0 text-xs text-ink-3">{t("common.levelN", { n: s.level })} · {l(engine.reg.get(s.classId)?.name ?? s.classId)}</span>
+              </div>
+              <div className={cn("text-xs leading-relaxed text-ink-2", compact && "line-clamp-2")}>{l(s.text)}</div>
+            </div>
+          </button>
+        );
+      })}
+    </div>
   );
 }
 

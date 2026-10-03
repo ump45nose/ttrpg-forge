@@ -35,6 +35,7 @@ export function Vitals() {
         <button
           type="button"
           onClick={() => setHpOpen(true)}
+          aria-label={`${t("sheet.hp")} ${hp}/${sheet.hpMax}`}
           className={cn("relative min-w-0 flex-[1.6] overflow-hidden rounded-2xl border bg-surface/70 px-3 py-2 text-left transition-colors", dying ? "border-bad/60" : "border-line hover:border-line-strong")}
         >
           <div className="flex items-center justify-between text-[10px] font-semibold tracking-wider text-ink-3 uppercase">

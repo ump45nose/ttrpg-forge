@@ -55,7 +55,7 @@ export function ChoicesStep() {
 }
 
 /** Daily prepared spells: from the whole class list (cleric) or from the spellbook (wizard). */
-function PreparedPanel({ sc }: { sc: SpellcastingView }) {
+export function PreparedPanel({ sc }: { sc: SpellcastingView }) {
   const t = useT();
   const n = useNames();
   const { sheet, build, apply, engine } = useBuilder();

@@ -1,11 +1,9 @@
-import { createRootRoute, createRoute, createRouter, Outlet, useRouterState } from "@tanstack/react-router";
-import { AnimatePresence, motion, MotionConfig } from "motion/react";
+import { createRootRoute, createRoute, createRouter, lazyRouteComponent, Outlet, useRouterState } from "@tanstack/react-router";
+import { motion, MotionConfig } from "motion/react";
 import { useEffect } from "react";
-import { BuilderPage } from "../features/builder/BuilderPage";
 import { DiceDock } from "../features/dice/DiceDock";
 import { TermLayer } from "../features/terms/TermLayer";
 import { Library } from "../features/library/Library";
-import { SettingsPage } from "../features/settings/SettingsPage";
 import { SheetPage } from "../features/sheet/SheetPage";
 import { ToastViewport } from "../ui/Toast";
 import { useSettings } from "./settings";
@@ -22,11 +20,14 @@ function Root() {
   }, [motionPref]);
   return (
     <MotionConfig reducedMotion={motionPref === "system" ? "user" : motionPref === "reduced" ? "always" : "never"}>
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.main key={pageKey} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}>
-          <Outlet />
-        </motion.main>
-      </AnimatePresence>
+      {/*
+        Enter-only page transition. An exit animation would keep the old page mounted while its
+        <Outlet/> already renders the new route, then swap in a fresh copy on the next render:
+        the first tap on a new page (opening a dialog...) was lost to that remount.
+      */}
+      <motion.main key={pageKey} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}>
+        <Outlet />
+      </motion.main>
       <DiceDock />
       <TermLayer />
       <Slot name="app.overlay" />
@@ -38,12 +39,13 @@ function Root() {
 const rootRoute = createRootRoute({ component: Root });
 
 const indexRoute = createRoute({ getParentRoute: () => rootRoute, path: "/", component: Library });
-const settingsRoute = createRoute({ getParentRoute: () => rootRoute, path: "/settings", component: SettingsPage });
+const settingsRoute = createRoute({ getParentRoute: () => rootRoute, path: "/settings", component: lazyRouteComponent(() => import("../features/settings/SettingsPage"), "SettingsPage") });
 export const buildRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/c/$id/build",
   validateSearch: (s: Record<string, unknown>): { step?: string } => ({ step: typeof s.step === "string" ? s.step : undefined }),
-  component: BuilderPage,
+  // the builder is only needed between sessions: keep it out of the table-side bundle
+  component: lazyRouteComponent(() => import("../features/builder/BuilderPage"), "BuilderPage"),
 });
 export const pluginRoute = createRoute({ getParentRoute: () => rootRoute, path: "/p/$page", component: PluginPage });
 export const sheetRoute = createRoute({ getParentRoute: () => rootRoute, path: "/c/$id", component: SheetPage });

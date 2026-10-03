@@ -67,7 +67,7 @@ export function CombatBar() {
         </motion.button>
       ))}
       <Movement />
-      <Button variant="class" size="sm" className="h-10 shrink-0 px-3" onClick={() => push({ type: "turn.start" })} title={t("sheet.combat.newTurn")}>
+      <Button variant="class" size="sm" className="h-10 shrink-0 px-3" onClick={() => push({ type: "turn.start" })} title={t("sheet.combat.newTurn")} aria-label={t("sheet.combat.newTurn")}>
         <TimerReset size={16} />
         <span className="hidden sm:inline">{t("sheet.combat.newTurn")}</span>
       </Button>

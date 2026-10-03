@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { ArrowLeft, Pencil, Redo2, Undo2 } from "lucide-react";
+import { ArrowLeft, Pencil, Redo2, Undo2, ChevronsUp, Lightbulb } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { useCharacter } from "../../app/characters";
@@ -13,6 +13,8 @@ import { useNames } from "../common/names";
 import { ActionsPanel } from "./ActionsPanel";
 import { CombatBar } from "./CombatBar";
 import { InventoryPanel } from "./InventoryPanel";
+import { Hint } from "../../ui/Hint";
+import { LevelUpSheet } from "./LevelUpSheet";
 import { LogPanel } from "./LogPanel";
 import { PlayProvider, usePlay } from "./play";
 import { ResourcesPanel } from "./ResourcesPanel";
@@ -42,8 +44,10 @@ function PlaySheet() {
   const n = useNames();
   const navigate = useNavigate();
   const desktop = useIsDesktop();
-  const { character, sheet, undo, redo, canUndo, canRedo } = usePlay();
+  const { character, sheet, engine, undo, redo, canUndo, canRedo } = usePlay();
   const [tab, setTab] = useState<Tab>("actions");
+  const [levelUp, setLevelUp] = useState(false);
+  const canLevel = sheet.level > 0 && sheet.level < engine.levelCap(character.build);
   const cls = sheet.classes[0];
   const accent = cls ? n.engine.reg.get(cls.id)?.accent : undefined;
 
@@ -84,6 +88,11 @@ function PlaySheet() {
           <div className="truncate font-display text-lg leading-tight">{character.name}</div>
           <div className="truncate text-xs text-ink-3">{subtitle}</div>
         </div>
+        {canLevel && (
+          <Button variant="class" size="sm" onClick={() => setLevelUp(true)} className="gap-1 px-2.5" aria-label={t("levelUp.button")} title={t("levelUp.button")}>
+            <ChevronsUp size={15} /> <span className="hidden sm:inline">{t("levelUp.button")}</span>
+          </Button>
+        )}
         <Button variant="ghost" size="icon-sm" disabled={!canUndo} onClick={undo} aria-label={t("common.undo")} title={t("common.undo")}>
           <Undo2 size={17} />
         </Button>
@@ -95,6 +104,7 @@ function PlaySheet() {
         </Button>
       </div>
 
+      <LevelUpSheet open={levelUp} onClose={() => setLevelUp(false)} />
       <div className="glass sticky top-0 z-20 mt-2 border-b border-line">
         <div className="mx-auto max-w-6xl space-y-2 px-3 py-2 sm:px-6">
           <Vitals />
@@ -104,6 +114,14 @@ function PlaySheet() {
 
       <div className="relative mx-auto max-w-6xl px-3 pt-4 pb-28 sm:px-6 lg:grid lg:grid-cols-[1fr_24rem] lg:gap-6">
         <main className="min-w-0 space-y-4">
+          <Hint id="sheet-basics" icon={<Lightbulb size={16} />}>
+            <div className="font-medium text-ink">{t("onboard.sheetTitle")}</div>
+            <ul className="list-disc space-y-0.5 pl-4">
+              <li>{t("onboard.sheetHp")}</li>
+              <li>{t("onboard.sheetEconomy")}</li>
+              <li>{t("onboard.sheetDice")}</li>
+            </ul>
+          </Hint>
           <Tabs items={tabs.map((x) => ({ id: x, label: t(`sheet.tabs.${x}`) }))} value={current} onChange={setTab} />
           <AnimatePresence mode="wait" initial={false}>
             <motion.div key={current} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.16 }}>

@@ -1,4 +1,4 @@
-import { phb2024 } from "@forge/pack-phb2024";
+import { loadPhb2024 } from "@forge/pack-phb2024";
 import { srd52 } from "@forge/pack-srd52";
 import { Engine, type Entity, type RulePack } from "@forge/core";
 import { useMemo } from "react";
@@ -89,7 +89,13 @@ export const usePacks = create<PackStore>()((set, get) => ({
 }));
 
 /** SRD always; the 2024 PHB only when its data was generated locally (see packs/phb-2024). */
-export const BASE_PACKS: RulePack[] = [srd52, ...(phb2024 ? [phb2024] : [])];
+export const BASE_PACKS: RulePack[] = [srd52];
+
+/** Adds the PHB (a separate chunk) before the first render, so no character ever sees it missing. */
+export async function loadBasePacks() {
+  const phb = await loadPhb2024();
+  if (phb && !BASE_PACKS.some((p) => p.id === phb.id)) BASE_PACKS.push(phb);
+}
 
 /** One engine over: base SRD → plugin packs → user packs in order → local homebrew. */
 export function useEngine(): Engine {

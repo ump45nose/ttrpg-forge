@@ -16,6 +16,7 @@ import { Tabs } from "../../ui/Tabs";
 import { toast } from "../../ui/Toast";
 import { Slot } from "../../app/slot";
 import { downloadJson, importPackFile } from "../library/transfer";
+import { DataSection } from "./DataSection";
 
 export function SettingsPage() {
   const t = useT();
@@ -216,10 +217,7 @@ export function SettingsPage() {
       </Section>
 
       <Section title={t("settings.data")}>
-        <p className="mb-3 text-sm text-ink-2">{t("settings.storageHint")}</p>
-        <Button variant="outline" onClick={() => downloadJson({ characters: Object.values(characters), packs: packs.packs }, `forge-backup-${new Date().toISOString().slice(0, 10)}.json`)}>
-          {t("settings.exportAll")}
-        </Button>
+        <DataSection count={Object.keys(characters).length} packCount={packs.packs.length} />
       </Section>
 
       <Section title={t("settings.attribution")}>

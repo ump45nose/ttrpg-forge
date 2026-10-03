@@ -14,6 +14,12 @@ export interface Settings {
   /** Recognise rules terms in prose and make them hoverable. */
   autoTerms: boolean;
   disabledPlugins: string[];
+  /** One-off tips the user has dismissed. */
+  seenHints: string[];
+  /** Last full backup (ms), for the "back up your data" nudge. */
+  lastBackup?: number;
+  /** Backup nudge hidden until this time. */
+  backupSnoozed?: number;
   set(patch: Partial<Omit<Settings, "set">>): void;
 }
 
@@ -30,9 +36,10 @@ export const useSettings = create<Settings>()(
       haptics: true,
       autoTerms: true,
       disabledPlugins: [],
+      seenHints: [],
       set: (patch) => set(patch),
     }),
-    { name: "forge.settings", version: 1 },
+    { name: "forge.settings", version: 2, migrate: (s) => ({ seenHints: [], ...(s as object) }) as unknown as Settings },
   ),
 );
 

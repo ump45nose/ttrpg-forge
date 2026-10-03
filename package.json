@@ -9,7 +9,8 @@
     "preview": "pnpm --filter @forge/web preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc -b",
+    "e2e": "pnpm --filter @forge/web e2e"
   },
   "devDependencies": {
     "typescript": "^7.0.2",
