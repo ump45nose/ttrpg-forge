@@ -33,6 +33,12 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         runtimeCaching: [
           {
+            // the art pack is large: cache each picture the first time it is shown, never precache
+            urlPattern: ({ url }) => url.pathname.startsWith("/art/"),
+            handler: "CacheFirst",
+            options: { cacheName: "art", expiration: { maxEntries: 400 }, cacheableResponse: { statuses: [200] } },
+          },
+          {
             urlPattern: ({ url }) => url.pathname.includes("noto-serif-sc-"),
             handler: "CacheFirst",
             options: { cacheName: "cjk-font", expiration: { maxEntries: 200 } },

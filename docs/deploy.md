@@ -30,6 +30,7 @@ pnpm build            # 产物在 apps/web/dist/
 |---|---|
 | `/index.html`、`/sw.js`、`/registerSW.js`、`/manifest.webmanifest`、`/workbox-*.js` | `no-cache` |
 | `/assets/*`（文件名带哈希） | `public, max-age=31536000, immutable` |
+| `/art/*`（美术包 WebP，约 13 MB；请求带 `?v=` 内容哈希） | `public, max-age=2592000` |
 | 其余静态文件（图标等） | `public, max-age=86400` |
 
 ## 3. nginx 示例
@@ -51,6 +52,13 @@ server {
 
     location /assets/ {
         add_header Cache-Control "public, max-age=31536000, immutable";
+        try_files $uri =404;
+    }
+
+    # 美术包：不进预缓存，客户端首次显示时缓存。缺图必须 404，不能回退到 index.html，
+    # 否则 service worker 会把 HTML 当图片缓存下来
+    location /art/ {
+        add_header Cache-Control "public, max-age=2592000";
         try_files $uri =404;
     }
 
@@ -91,3 +99,10 @@ types { application/manifest+json webmanifest; }
 2. iPhone：Safari → 分享 → 添加到主屏幕；安卓：Chrome 菜单 → 安装应用。
 3. 从主屏打开一次，然后开飞行模式再打开：应能正常使用。
 4. 打开 `https://<域名>/c/随便什么` 并刷新：应进入应用（找不到角色时回到角色库），而不是 nginx 404。
+
+## 美术包
+
+- 图片在 `dist/art/`，WebP 格式。较老的 nginx 若 `mime.types` 里没有 `image/webp`，请补上 `image/webp webp;`。
+- 不进安装包的预缓存，所以首次安装很快。每张图在第一次显示时下载并缓存（最多 400 张），之后离线可用。
+- 设置 → 主题里可以关掉「显示插画」，关掉后不再下载任何图片。
+

@@ -6,6 +6,7 @@ import { useT } from "../../app/i18n";
 import { haptic } from "../../app/settings";
 import { Button } from "../../ui/Button";
 import { cn } from "../../ui/cn";
+import { ArtImg, useArt } from "../../ui/Art";
 import { Crest } from "../../ui/Crest";
 import { entityGlyph } from "../../ui/glyphs";
 import { useIsDesktop } from "../../ui/hooks";
@@ -38,6 +39,7 @@ export function EntityPicker({ type, current, opsFor, showcase }: Props) {
   const [hoverId, setHoverId] = useState<string>();
   const shownId = hoverId ?? focusId;
   const shown = entities.find((e) => e.id === shownId);
+  const shownArt = useArt(shown?.id);
   const userPacks = usePacks((s) => s.packs);
   const removeIn = usePacks((s) => s.removeIn);
   // entry points exist only while a content-editor plugin (the Workshop) is enabled
@@ -101,12 +103,15 @@ export function EntityPicker({ type, current, opsFor, showcase }: Props) {
               style={accentStyle(shown)}
             >
               <div className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-class/20 blur-3xl" />
-              <header className="relative flex items-start gap-4">
-                {type === "class" ? (
-                  <Crest id={shown.id} accent={shown.accent} size={72} />
-                ) : (
-                  <Emblem e={shown} />
-                )}
+              {shownArt && (
+                <ArtImg
+                  img={shownArt}
+                  focus={type === "class" ? [0.5, 0.3] : [0.5, 0.45]}
+                  className="-mx-5 -mt-5 mb-1 h-52 bg-transparent [mask-image:linear-gradient(to_bottom,black_55%,transparent)] sm:-mx-6 sm:-mt-6 sm:h-72"
+                />
+              )}
+              <header className={cn("relative flex items-start gap-4", shownArt && "-mt-14")}>
+                {shownArt ? null : type === "class" ? <Crest id={shown.id} accent={shown.accent} size={72} /> : <Emblem e={shown} />}
                 <div className="min-w-0 flex-1">
                   <div className="text-[11px] font-semibold tracking-[0.14em] text-class uppercase">{t(`entity.${type}`)}</div>
                   <h2 className="font-display text-2xl leading-tight sm:text-3xl">{n.l(shown.name, { mono: true })}</h2>
@@ -222,9 +227,16 @@ function ListItem({ e, local, selected, focused, onHover, onClick, style }: { e:
       )}
     >
       {selected && <motion.span layoutId="picker-selected" className="absolute inset-y-2 left-0 w-1 rounded-full bg-class" />}
-      <span className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors", selected || focused ? "border-class/50 text-class" : "border-line text-ink-3")}>
-        <Icon size={18} />
-      </span>
+      <ArtImg
+        id={e.id}
+        size="sm"
+        className={cn("h-10 w-10 shrink-0 rounded-lg border transition-colors", selected || focused ? "border-class/60" : "border-line")}
+        fallback={
+          <span className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors", selected || focused ? "border-class/50 text-class" : "border-line text-ink-3")}>
+            <Icon size={18} />
+          </span>
+        }
+      />
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5">
           <span className="truncate text-sm font-medium text-ink">{n.l(e.name, { mono: true })}</span>
@@ -280,9 +292,16 @@ function Carousel({
               isFocused ? "border-class/70 bg-class/12 shadow-[0_10px_30px_-14px_var(--class)]" : "border-line bg-surface/60",
             )}
           >
-            <span className={cn("flex h-11 w-11 items-center justify-center rounded-xl transition-colors", isFocused ? "text-class" : "text-ink-3")}>
-              <Icon size={24} strokeWidth={1.6} />
-            </span>
+            <ArtImg
+              id={e.id}
+              size="sm"
+              className={cn("h-20 w-full rounded-xl transition-opacity", isFocused ? "opacity-100" : "opacity-70")}
+              fallback={
+                <span className={cn("flex h-11 w-11 items-center justify-center rounded-xl transition-colors", isFocused ? "text-class" : "text-ink-3")}>
+                  <Icon size={24} strokeWidth={1.6} />
+                </span>
+              }
+            />
             <span className="w-full truncate text-sm font-medium">{n.l(e.name, { mono: true })}</span>
             {selected && (
               <span className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-class text-white">

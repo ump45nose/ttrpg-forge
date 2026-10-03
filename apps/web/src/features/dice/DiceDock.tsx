@@ -8,7 +8,8 @@ import { Button } from "../../ui/Button";
 import { cn } from "../../ui/cn";
 import { Input } from "../../ui/Field";
 import { Sheet } from "../../ui/Sheet";
-import { rollDetail, rollDice, submitPhysical, useDice, type RollRecord } from "./store";
+import { landNow, rollDetail, rollDice, submitPhysical, useDice, type RollRecord } from "./store";
+import { Tumble } from "./Tumble";
 
 const QUICK = ["1d4", "1d6", "1d8", "1d10", "1d12", "1d20", "1d100"];
 
@@ -44,12 +45,15 @@ export function DiceDock() {
   );
 }
 
-export function RollFace({ rec, size = "lg" }: { rec: RollRecord; size?: "sm" | "lg" }) {
+export function RollFace({ rec, size = "lg", pop }: { rec: RollRecord; size?: "sm" | "lg"; pop?: boolean }) {
   const t = useT();
   const r = rec.result;
   return (
     <div className="flex items-center gap-3">
-      <div
+      <motion.div
+        initial={pop ? { scale: 1.45, rotate: -6 } : false}
+        animate={{ scale: 1, rotate: 0 }}
+        transition={{ type: "spring", stiffness: 520, damping: 17 }}
         className={cn(
           "tnum flex shrink-0 items-center justify-center rounded-xl border font-display",
           size === "lg" ? "h-14 min-w-14 px-2 text-3xl" : "h-10 min-w-10 px-1.5 text-xl",
@@ -57,7 +61,7 @@ export function RollFace({ rec, size = "lg" }: { rec: RollRecord; size?: "sm" | 
         )}
       >
         {r.total}
-      </div>
+      </motion.div>
       <div className="min-w-0 flex-1">
         <div className="truncate text-sm font-medium text-ink">{rec.label ?? r.expr}</div>
         <div className="truncate text-xs text-ink-3">
@@ -70,18 +74,33 @@ export function RollFace({ rec, size = "lg" }: { rec: RollRecord; size?: "sm" | 
   );
 }
 
+/** True while a roll's dice are still tumbling; re-renders when they settle. */
+function useRolling(rec: RollRecord | null | undefined): boolean {
+  const [, tick] = useState(0);
+  const rolling = !!rec && rec.landsAt > Date.now();
+  useEffect(() => {
+    if (!rec || !rolling) return;
+    const id = setTimeout(() => tick((x) => x + 1), rec.landsAt - Date.now());
+    return () => clearTimeout(id);
+  }, [rec, rolling]);
+  return rolling;
+}
+
 function ResultTray() {
+  const t = useT();
   const last = useDice((s) => s.last);
   const dismiss = useDice((s) => s.dismiss);
   const [hold, setHold] = useState(false);
+  const rolling = useRolling(last);
   useEffect(() => {
     setHold(false);
-  }, [last]);
+  }, [last?.id]);
   useEffect(() => {
-    if (!last || hold) return;
+    if (!last || hold || rolling) return;
     const id = setTimeout(dismiss, last.result.crit || last.result.fumble ? 6000 : 4200);
     return () => clearTimeout(id);
-  }, [last, hold, dismiss]);
+  }, [last, hold, rolling, dismiss]);
+  const r = last?.result;
   return (
     <div className="pointer-events-none fixed inset-x-0 top-[calc(env(safe-area-inset-top)+0.75rem)] z-[55] flex justify-center px-4">
       <AnimatePresence>
@@ -89,13 +108,37 @@ function ResultTray() {
           <motion.div
             key={last.id}
             initial={{ opacity: 0, y: -24, scale: 0.9, rotate: -2 }}
-            animate={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
+            animate={!rolling && r?.fumble ? { opacity: 1, y: 0, scale: 1, rotate: 0, x: [0, -8, 7, -5, 3, 0] } : { opacity: 1, y: 0, scale: 1, rotate: 0 }}
             exit={{ opacity: 0, y: -12, scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 420, damping: 28 }}
-            onClick={() => (hold ? dismiss() : setHold(true))}
-            className="glass pointer-events-auto w-full max-w-sm cursor-pointer rounded-2xl border border-line-strong p-3 shadow-float"
+            transition={{ type: "spring", stiffness: 420, damping: 28, x: { duration: 0.4 } }}
+            onClick={() => (rolling ? landNow() : hold ? dismiss() : setHold(true))}
+            className={cn(
+              "glass pointer-events-auto relative w-full max-w-sm cursor-pointer overflow-hidden rounded-2xl border p-3 shadow-float transition-colors duration-300",
+              rolling ? "border-line-strong" : r?.crit ? "border-good/70 shadow-[0_0_40px_-8px_var(--good)]" : r?.fumble ? "border-bad/70" : "border-line-strong",
+            )}
           >
-            <RollFace rec={last} />
+            {!rolling && r?.crit && (
+              <motion.span
+                aria-hidden
+                initial={{ opacity: 0.9, scale: 0.4, rotate: 0 }}
+                animate={{ opacity: 0, scale: 2.4, rotate: 40 }}
+                transition={{ duration: 1.1, ease: "easeOut" }}
+                className="pointer-events-none absolute top-1/2 left-10 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[repeating-conic-gradient(from_0deg,color-mix(in_oklab,var(--good)_55%,transparent)_0deg_8deg,transparent_8deg_30deg)]"
+              />
+            )}
+            {rolling ? (
+              <div className="flex items-center gap-3">
+                <Tumble result={last.result} landsAt={last.landsAt} />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium text-ink">{last.label ?? last.result.expr}</div>
+                  <div className="text-xs text-ink-3">{t("dice.tapToSkip")}</div>
+                </div>
+              </div>
+            ) : (
+              <div className="relative">
+                <RollFace rec={last} pop={last.landsAt > last.at} />
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -107,6 +150,9 @@ function DockSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (o: bo
   const t = useT();
   const history = useDice((s) => s.history);
   const clear = useDice((s) => s.clear);
+  // don't spoil the roll that is still tumbling in the tray
+  const rolling = useRolling(history[0]);
+  const shown = rolling ? history.slice(1) : history;
   const [expr, setExpr] = useState("1d20");
   const [mode, setMode] = useState<"normal" | "adv" | "dis">("normal");
   let valid = true;
@@ -156,12 +202,12 @@ function DockSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (o: bo
             )}
           </div>
           <div className="space-y-2">
-            {history.slice(0, 30).map((h) => (
+            {shown.slice(0, 30).map((h) => (
               <div key={h.id} className="rounded-xl border border-line bg-surface/60 p-2">
                 <RollFace rec={h} size="sm" />
               </div>
             ))}
-            {!history.length && <div className="text-sm text-ink-3">—</div>}
+            {!shown.length && <div className="text-sm text-ink-3">—</div>}
           </div>
         </div>
       </div>

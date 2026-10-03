@@ -1,3 +1,4 @@
+import { afterLanding } from "../dice/store";
 import { adjustDamage, hpCurrent } from "@forge/core";
 import { useEffect, useState } from "react";
 import { useT } from "../../app/i18n";
@@ -53,6 +54,7 @@ export function HpSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (
   const deathSave = async () => {
     const r = await roll({ expr: "1d20", label: t("sheet.hpDialog.deathSaves"), kind: "death" });
     if (!r) return;
+    await afterLanding(r);
     const v = r.result.total;
     if (v === 20) push({ type: "hp.heal", amount: 1 });
     else if (v >= 10) push({ type: "deathsave", result: "success" });

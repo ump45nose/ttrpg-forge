@@ -1,9 +1,11 @@
+import { afterLanding } from "../dice/store";
 import { pactRemaining, resourceRemaining, restPreview, slotsRemaining, type RestKind } from "@forge/core";
 import { Moon, Sunset } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { useT } from "../../app/i18n";
 import { Button } from "../../ui/Button";
 import { Pips } from "../../ui/Pips";
+import { ArtImg } from "../../ui/Art";
 import { Sheet } from "../../ui/Sheet";
 import { Tabs } from "../../ui/Tabs";
 import { useOnce } from "../../ui/hooks";
@@ -88,6 +90,7 @@ function HitDieRow({ id }: { id: string }) {
   const left = resourceRemaining(state, sheet, id);
   const spend = async () => {
     const res = await roll({ expr: `1d${die}`, label: `${t("sheet.rest.spendHitDie")} d${die}`, kind: "hitdie" });
+    if (res) await afterLanding(res);
     if (res) push({ type: "hitdie.spend", die, roll: res.result.total });
   };
   return (
@@ -170,6 +173,7 @@ function RestSheet({ kind, onClose }: { kind: RestKind | null; onClose: () => vo
       }
     >
       <div className="space-y-4">
+        <ArtImg id={k === "short" ? "scene:short-rest" : "scene:campfire"} focus={[0.5, 0.55]} className="h-32 rounded-2xl sm:h-40" />
         <Tabs
           items={[
             { id: "short", label: t("sheet.rest.short") },

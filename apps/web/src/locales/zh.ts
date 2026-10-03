@@ -66,6 +66,8 @@ export const zh: Messages = {
     contentTo: "该职业内容目前到 {{n}} 级",
     recommended: "推荐分配", swapHint: "点击两项属性即可交换数值。",
   },
+  fx: { down: "倒地！", concLost: "专注中断" },
+  portrait: { title: "头像", upload: "上传图片", reset: "恢复默认", hint: "默认使用所选种族的头像。上传的图片会被裁成方形并压缩，保存在角色里，导出时一起带走。", failed: "无法读取这张图片" },
   levelUp: {
     button: "升级", title: "升到 {{n}} 级", choose: "选这个", average: "取平均值", max: "取最大值（村规）", roll: "掷骰", keep: "就用它",
     hpHint: "这一级增加多少生命值？取平均值或掷一次生命骰，两种都会加上体质调整值（至少 +1）。",
@@ -105,7 +107,7 @@ export const zh: Messages = {
     recovers: { short: "短休", long: "长休" }, hitDieHint: "掷骰 + 体质 {{con}}",
     checkOf: "{{name}}检定", saveOf: "{{name}}豁免", saveShort: "豁免", passivePerception: "被动察觉",
   },
-  dice: {
+  dice: { tapToSkip: "点击跳过",
     title: "骰子", expression: "表达式", advantage: "优势", disadvantage: "劣势", history: "历史", physical: "输入实体骰结果", total: "总计", clear: "清空",
     roll: "掷骰", normal: "普通", enterD20: "掷 {{dice}}，点选你掷出的点数", enterTotal: "掷 {{dice}}，输入骰面总和（调整值会自动加上）",
   },
@@ -120,7 +122,7 @@ export const zh: Messages = {
   settings: {
     title: "设置", language: "语言", bilingual: "双语名称", bilingualHint: "规则内容同时显示中文与英文名称。",
     theme: "主题", motion: "动效", motionOpts: { system: "跟随系统", full: "完整", reduced: "减弱" }, physicalDice: "实体骰模式",
-    physicalDiceHint: "输入你在桌上掷出的点数，而非数字掷骰。", haptics: "触感反馈", plugins: "插件",
+    physicalDiceHint: "输入你在桌上掷出的点数，而非数字掷骰。", haptics: "触感反馈", art: "显示插画", artHint: "职业、种族、背景的插画和默认头像。首次查看时下载，之后离线可用；流量紧张时可关闭。", diceAnim: "骰子滚动动画", diceAnimHint: "结果落定前骰子翻滚约半秒，点击可跳过。", sound: "音效", soundHint: "掷骰、暴击、回血的提示音（本机合成，无需下载）。", plugins: "插件",
     packs: "规则包", importPack: "导入规则包（JSON）", data: "数据", exportAll: "导出全部数据", about: "关于", attribution: "版权声明",
     autoTerms: "自动识别规则词条", autoTermsHint: "在说明文字中标出可悬停查看的规则术语。",
     builtin: "内置", storageHint: "将应用添加到主屏幕，浏览器会更可靠地保留你的数据。",

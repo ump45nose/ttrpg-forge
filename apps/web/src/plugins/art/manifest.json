@@ -1,0 +1,626 @@
+{
+ "background:acolyte": {
+  "h": 1024,
+  "src": "art/background/acolyte",
+  "v": "ae074431",
+  "w": 1536
+ },
+ "background:artisan": {
+  "h": 1024,
+  "src": "art/background/artisan",
+  "v": "dd26b3fb",
+  "w": 1536
+ },
+ "background:charlatan": {
+  "h": 1024,
+  "src": "art/background/charlatan",
+  "v": "f979cc1a",
+  "w": 1536
+ },
+ "background:criminal": {
+  "h": 1024,
+  "src": "art/background/criminal",
+  "v": "a23675f2",
+  "w": 1536
+ },
+ "background:entertainer": {
+  "h": 1024,
+  "src": "art/background/entertainer",
+  "v": "47ff4eed",
+  "w": 1536
+ },
+ "background:farmer": {
+  "h": 1024,
+  "src": "art/background/farmer",
+  "v": "3b38de24",
+  "w": 1536
+ },
+ "background:guard": {
+  "h": 1024,
+  "src": "art/background/guard",
+  "v": "b1330694",
+  "w": 1536
+ },
+ "background:guide": {
+  "h": 1024,
+  "src": "art/background/guide",
+  "v": "2550900b",
+  "w": 1536
+ },
+ "background:hermit": {
+  "h": 1024,
+  "src": "art/background/hermit",
+  "v": "e1b5dbbd",
+  "w": 1536
+ },
+ "background:merchant": {
+  "h": 1024,
+  "src": "art/background/merchant",
+  "v": "4f595b95",
+  "w": 1536
+ },
+ "background:noble": {
+  "h": 1024,
+  "src": "art/background/noble",
+  "v": "4b6b7408",
+  "w": 1536
+ },
+ "background:sage": {
+  "h": 1024,
+  "src": "art/background/sage",
+  "v": "d7145ddd",
+  "w": 1536
+ },
+ "background:sailor": {
+  "h": 1024,
+  "src": "art/background/sailor",
+  "v": "063a4fc3",
+  "w": 1536
+ },
+ "background:scribe": {
+  "h": 1024,
+  "src": "art/background/scribe",
+  "v": "c418ac27",
+  "w": 1536
+ },
+ "background:soldier": {
+  "h": 1024,
+  "src": "art/background/soldier",
+  "v": "f4ba42cb",
+  "w": 1536
+ },
+ "background:wayfarer": {
+  "h": 1024,
+  "src": "art/background/wayfarer",
+  "v": "f862b30c",
+  "w": 1536
+ },
+ "class:barbarian": {
+  "h": 1536,
+  "src": "art/class/barbarian",
+  "v": "d2fb34bc",
+  "w": 1024
+ },
+ "class:bard": {
+  "h": 1536,
+  "src": "art/class/bard",
+  "v": "9b13c2dd",
+  "w": 1024
+ },
+ "class:cleric": {
+  "h": 1536,
+  "src": "art/class/cleric",
+  "v": "79226335",
+  "w": 1024
+ },
+ "class:druid": {
+  "h": 1536,
+  "src": "art/class/druid",
+  "v": "cb1b2c39",
+  "w": 1024
+ },
+ "class:fighter": {
+  "h": 1536,
+  "src": "art/class/fighter",
+  "v": "829c688f",
+  "w": 1024
+ },
+ "class:monk": {
+  "h": 1536,
+  "src": "art/class/monk",
+  "v": "c157cb65",
+  "w": 1024
+ },
+ "class:paladin": {
+  "h": 1536,
+  "src": "art/class/paladin",
+  "v": "e3881e36",
+  "w": 1024
+ },
+ "class:ranger": {
+  "h": 1536,
+  "src": "art/class/ranger",
+  "v": "92f60b11",
+  "w": 1024
+ },
+ "class:rogue": {
+  "h": 1536,
+  "src": "art/class/rogue",
+  "v": "4140671a",
+  "w": 1024
+ },
+ "class:sorcerer": {
+  "h": 1536,
+  "src": "art/class/sorcerer",
+  "v": "d587c531",
+  "w": 1024
+ },
+ "class:warlock": {
+  "h": 1536,
+  "src": "art/class/warlock",
+  "v": "beece9f3",
+  "w": 1024
+ },
+ "class:wizard": {
+  "h": 1536,
+  "src": "art/class/wizard",
+  "v": "04713f02",
+  "w": 1024
+ },
+ "portrait:aasimar": {
+  "h": 1024,
+  "src": "art/portrait/aasimar",
+  "v": "c390aeac",
+  "w": 1024
+ },
+ "portrait:dragonborn": {
+  "h": 1024,
+  "src": "art/portrait/dragonborn",
+  "v": "98c4d95f",
+  "w": 1024
+ },
+ "portrait:dwarf": {
+  "h": 1024,
+  "src": "art/portrait/dwarf",
+  "v": "166cfacf",
+  "w": 1024
+ },
+ "portrait:elf": {
+  "h": 1024,
+  "src": "art/portrait/elf",
+  "v": "bb44318e",
+  "w": 1024
+ },
+ "portrait:elf-2": {
+  "h": 1024,
+  "src": "art/portrait/elf-2",
+  "v": "d9f88426",
+  "w": 1024
+ },
+ "portrait:gnome": {
+  "h": 1024,
+  "src": "art/portrait/gnome",
+  "v": "9dd40f6b",
+  "w": 1024
+ },
+ "portrait:goliath": {
+  "h": 1024,
+  "src": "art/portrait/goliath",
+  "v": "128eb35c",
+  "w": 1024
+ },
+ "portrait:halfling": {
+  "h": 1024,
+  "src": "art/portrait/halfling",
+  "v": "1aac0352",
+  "w": 1024
+ },
+ "portrait:human": {
+  "h": 1024,
+  "src": "art/portrait/human",
+  "v": "e58e3f7a",
+  "w": 1024
+ },
+ "portrait:human-2": {
+  "h": 1024,
+  "src": "art/portrait/human-2",
+  "v": "27bb12f0",
+  "w": 1024
+ },
+ "portrait:orc": {
+  "h": 1024,
+  "src": "art/portrait/orc",
+  "v": "b4b33952",
+  "w": 1024
+ },
+ "portrait:tiefling": {
+  "h": 1024,
+  "src": "art/portrait/tiefling",
+  "v": "687be970",
+  "w": 1024
+ },
+ "scene:campfire": {
+  "h": 1024,
+  "src": "art/scene/campfire",
+  "v": "957b0fa1",
+  "w": 1536
+ },
+ "scene:levelup": {
+  "h": 1024,
+  "src": "art/scene/levelup",
+  "v": "eba15b64",
+  "w": 1536
+ },
+ "scene:short-rest": {
+  "h": 1024,
+  "src": "art/scene/short-rest",
+  "v": "602871be",
+  "w": 1536
+ },
+ "scene:tavern": {
+  "h": 1024,
+  "src": "art/scene/tavern",
+  "v": "425e3576",
+  "w": 1536
+ },
+ "scene:welcome": {
+  "h": 1024,
+  "src": "art/scene/welcome",
+  "v": "f99d594c",
+  "w": 1536
+ },
+ "scene:workshop": {
+  "h": 1024,
+  "src": "art/scene/workshop",
+  "v": "0c15dbb3",
+  "w": 1536
+ },
+ "species:aasimar": {
+  "h": 1024,
+  "src": "art/species/aasimar",
+  "v": "e190e9eb",
+  "w": 1536
+ },
+ "species:dragonborn": {
+  "h": 1024,
+  "src": "art/species/dragonborn",
+  "v": "f241ddab",
+  "w": 1536
+ },
+ "species:dwarf": {
+  "h": 1024,
+  "src": "art/species/dwarf",
+  "v": "b5feac78",
+  "w": 1536
+ },
+ "species:elf": {
+  "h": 1024,
+  "src": "art/species/elf",
+  "v": "d7f04df0",
+  "w": 1536
+ },
+ "species:gnome": {
+  "h": 1024,
+  "src": "art/species/gnome",
+  "v": "f03e3e24",
+  "w": 1536
+ },
+ "species:goliath": {
+  "h": 1024,
+  "src": "art/species/goliath",
+  "v": "babc358e",
+  "w": 1536
+ },
+ "species:halfling": {
+  "h": 1024,
+  "src": "art/species/halfling",
+  "v": "6da41091",
+  "w": 1536
+ },
+ "species:human": {
+  "h": 1024,
+  "src": "art/species/human",
+  "v": "9422affb",
+  "w": 1536
+ },
+ "species:orc": {
+  "h": 1024,
+  "src": "art/species/orc",
+  "v": "e86b621c",
+  "w": 1536
+ },
+ "species:tiefling": {
+  "h": 1024,
+  "src": "art/species/tiefling",
+  "v": "39e8d754",
+  "w": 1536
+ },
+ "subclass:aberrant-sorcery": {
+  "h": 1536,
+  "src": "art/subclass/aberrant-sorcery",
+  "v": "de98155b",
+  "w": 1024
+ },
+ "subclass:abjurer": {
+  "h": 1536,
+  "src": "art/subclass/abjurer",
+  "v": "a336cd15",
+  "w": 1024
+ },
+ "subclass:arcane-trickster": {
+  "h": 1536,
+  "src": "art/subclass/arcane-trickster",
+  "v": "a354403b",
+  "w": 1024
+ },
+ "subclass:archfey-patron": {
+  "h": 1536,
+  "src": "art/subclass/archfey-patron",
+  "v": "8b65bf98",
+  "w": 1024
+ },
+ "subclass:assassin": {
+  "h": 1536,
+  "src": "art/subclass/assassin",
+  "v": "cf6d3b06",
+  "w": 1024
+ },
+ "subclass:battle-master": {
+  "h": 1536,
+  "src": "art/subclass/battle-master",
+  "v": "e36525e4",
+  "w": 1024
+ },
+ "subclass:beast-master": {
+  "h": 1536,
+  "src": "art/subclass/beast-master",
+  "v": "d64ef970",
+  "w": 1024
+ },
+ "subclass:celestial-patron": {
+  "h": 1536,
+  "src": "art/subclass/celestial-patron",
+  "v": "940741f6",
+  "w": 1024
+ },
+ "subclass:champion": {
+  "h": 1536,
+  "src": "art/subclass/champion",
+  "v": "5461f217",
+  "w": 1024
+ },
+ "subclass:circle-of-the-land": {
+  "h": 1536,
+  "src": "art/subclass/circle-of-the-land",
+  "v": "0d252d13",
+  "w": 1024
+ },
+ "subclass:circle-of-the-moon": {
+  "h": 1536,
+  "src": "art/subclass/circle-of-the-moon",
+  "v": "cee8a724",
+  "w": 1024
+ },
+ "subclass:circle-of-the-sea": {
+  "h": 1536,
+  "src": "art/subclass/circle-of-the-sea",
+  "v": "322234ef",
+  "w": 1024
+ },
+ "subclass:circle-of-the-stars": {
+  "h": 1536,
+  "src": "art/subclass/circle-of-the-stars",
+  "v": "e63ea0ea",
+  "w": 1024
+ },
+ "subclass:clockwork-sorcery": {
+  "h": 1536,
+  "src": "art/subclass/clockwork-sorcery",
+  "v": "8217bcd3",
+  "w": 1024
+ },
+ "subclass:college-of-dance": {
+  "h": 1536,
+  "src": "art/subclass/college-of-dance",
+  "v": "65f1879f",
+  "w": 1024
+ },
+ "subclass:college-of-glamour": {
+  "h": 1536,
+  "src": "art/subclass/college-of-glamour",
+  "v": "bc251db2",
+  "w": 1024
+ },
+ "subclass:college-of-lore": {
+  "h": 1536,
+  "src": "art/subclass/college-of-lore",
+  "v": "2af46d76",
+  "w": 1024
+ },
+ "subclass:college-of-valor": {
+  "h": 1536,
+  "src": "art/subclass/college-of-valor",
+  "v": "94e38345",
+  "w": 1024
+ },
+ "subclass:diviner": {
+  "h": 1536,
+  "src": "art/subclass/diviner",
+  "v": "a1160314",
+  "w": 1024
+ },
+ "subclass:draconic-sorcery": {
+  "h": 1536,
+  "src": "art/subclass/draconic-sorcery",
+  "v": "b4ddf72b",
+  "w": 1024
+ },
+ "subclass:eldritch-knight": {
+  "h": 1536,
+  "src": "art/subclass/eldritch-knight",
+  "v": "e6348b3f",
+  "w": 1024
+ },
+ "subclass:evoker": {
+  "h": 1536,
+  "src": "art/subclass/evoker",
+  "v": "02518e49",
+  "w": 1024
+ },
+ "subclass:fey-wanderer": {
+  "h": 1536,
+  "src": "art/subclass/fey-wanderer",
+  "v": "9c294a3f",
+  "w": 1024
+ },
+ "subclass:fiend-patron": {
+  "h": 1536,
+  "src": "art/subclass/fiend-patron",
+  "v": "075920a8",
+  "w": 1024
+ },
+ "subclass:gloom-stalker": {
+  "h": 1536,
+  "src": "art/subclass/gloom-stalker",
+  "v": "5faded44",
+  "w": 1024
+ },
+ "subclass:great-old-one-patron": {
+  "h": 1536,
+  "src": "art/subclass/great-old-one-patron",
+  "v": "fef1e2d6",
+  "w": 1024
+ },
+ "subclass:hunter": {
+  "h": 1536,
+  "src": "art/subclass/hunter",
+  "v": "65d503d7",
+  "w": 1024
+ },
+ "subclass:illusionist": {
+  "h": 1536,
+  "src": "art/subclass/illusionist",
+  "v": "2bfc366c",
+  "w": 1024
+ },
+ "subclass:life-domain": {
+  "h": 1536,
+  "src": "art/subclass/life-domain",
+  "v": "aa52cf24",
+  "w": 1024
+ },
+ "subclass:light-domain": {
+  "h": 1536,
+  "src": "art/subclass/light-domain",
+  "v": "8b260752",
+  "w": 1024
+ },
+ "subclass:oath-of-devotion": {
+  "h": 1536,
+  "src": "art/subclass/oath-of-devotion",
+  "v": "452f3e2b",
+  "w": 1024
+ },
+ "subclass:oath-of-glory": {
+  "h": 1536,
+  "src": "art/subclass/oath-of-glory",
+  "v": "780ee967",
+  "w": 1024
+ },
+ "subclass:oath-of-the-ancients": {
+  "h": 1536,
+  "src": "art/subclass/oath-of-the-ancients",
+  "v": "bb7168a6",
+  "w": 1024
+ },
+ "subclass:oath-of-vengeance": {
+  "h": 1536,
+  "src": "art/subclass/oath-of-vengeance",
+  "v": "b16b6264",
+  "w": 1024
+ },
+ "subclass:path-of-the-berserker": {
+  "h": 1536,
+  "src": "art/subclass/path-of-the-berserker",
+  "v": "97a644d7",
+  "w": 1024
+ },
+ "subclass:path-of-the-world-tree": {
+  "h": 1536,
+  "src": "art/subclass/path-of-the-world-tree",
+  "v": "5460bfbe",
+  "w": 1024
+ },
+ "subclass:path-of-the-zealot": {
+  "h": 1536,
+  "src": "art/subclass/path-of-the-zealot",
+  "v": "c2620132",
+  "w": 1024
+ },
+ "subclass:path-of-wild-heart": {
+  "h": 1536,
+  "src": "art/subclass/path-of-wild-heart",
+  "v": "3cb7e1a7",
+  "w": 1024
+ },
+ "subclass:psi-warrior": {
+  "h": 1536,
+  "src": "art/subclass/psi-warrior",
+  "v": "129ad190",
+  "w": 1024
+ },
+ "subclass:soulknife": {
+  "h": 1536,
+  "src": "art/subclass/soulknife",
+  "v": "bfa47765",
+  "w": 1024
+ },
+ "subclass:thief": {
+  "h": 1536,
+  "src": "art/subclass/thief",
+  "v": "a9b2507b",
+  "w": 1024
+ },
+ "subclass:trickery-domain": {
+  "h": 1536,
+  "src": "art/subclass/trickery-domain",
+  "v": "08805af1",
+  "w": 1024
+ },
+ "subclass:war-domain": {
+  "h": 1536,
+  "src": "art/subclass/war-domain",
+  "v": "707d5e19",
+  "w": 1024
+ },
+ "subclass:warrior-of-mercy": {
+  "h": 1536,
+  "src": "art/subclass/warrior-of-mercy",
+  "v": "12077add",
+  "w": 1024
+ },
+ "subclass:warrior-of-shadow": {
+  "h": 1536,
+  "src": "art/subclass/warrior-of-shadow",
+  "v": "292e0702",
+  "w": 1024
+ },
+ "subclass:warrior-of-the-elements": {
+  "h": 1536,
+  "src": "art/subclass/warrior-of-the-elements",
+  "v": "3d0a89c7",
+  "w": 1024
+ },
+ "subclass:warrior-of-the-open-hand": {
+  "h": 1536,
+  "src": "art/subclass/warrior-of-the-open-hand",
+  "v": "618b2517",
+  "w": 1024
+ },
+ "subclass:wild-magic-sorcery": {
+  "h": 1536,
+  "src": "art/subclass/wild-magic-sorcery",
+  "v": "354d8653",
+  "w": 1024
+ }
+}

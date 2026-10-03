@@ -13,7 +13,9 @@ import { useBuildView } from "../../app/views";
 import { Button } from "../../ui/Button";
 import { Chip } from "../../ui/Chip";
 import { cn } from "../../ui/cn";
+import { ArtImg } from "../../ui/Art";
 import { Crest } from "../../ui/Crest";
+import { Portrait } from "../../ui/Portrait";
 import { Input } from "../../ui/Field";
 import { backupDue, downloadBackup, snoozeBackup } from "../../app/backup";
 import { Hint, isIosBrowser } from "../../ui/Hint";
@@ -31,8 +33,13 @@ export function Library() {
   const put = useCharacters((s) => s.put);
 
   return (
-    <div className="mx-auto min-h-dvh max-w-6xl px-4 pb-24 sm:px-6">
-      <header className="safe-t flex items-center gap-3 pt-5 pb-2">
+    <div className="relative mx-auto min-h-dvh max-w-6xl px-4 pb-24 sm:px-6">
+      <ArtImg
+        id="scene:welcome"
+        focus={[0.5, 0.6]}
+        className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-transparent opacity-30 [mask-image:linear-gradient(to_bottom,black_20%,transparent)] sm:h-80"
+      />
+      <header className="safe-t relative flex items-center gap-3 pt-5 pb-2">
         <Wordmark />
         <div className="flex-1" />
         <Slot name="library.action" />
@@ -64,7 +71,7 @@ export function Library() {
         />
       </header>
 
-      <section className="mt-6 mb-6 sm:mt-10">
+      <section className="relative mt-6 mb-6 sm:mt-10">
         <h1 className="font-display text-3xl text-ink sm:text-4xl">{t("library.title")}</h1>
         <p className="mt-2 text-sm text-ink-2">{t("library.subtitle")}</p>
       </section>
@@ -133,10 +140,16 @@ function EmptyState({ onCreate, onImport }: { onCreate: () => void; onImport: ()
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="card relative overflow-hidden px-6 py-14 text-center sm:py-20">
       <div className="pointer-events-none absolute -top-24 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-accent/20 blur-3xl" />
+      <ArtImg
+        id="scene:tavern"
+        focus={[0.5, 0.55]}
+        className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-transparent opacity-45 [mask-image:linear-gradient(to_bottom,black_30%,transparent)] sm:h-96"
+        fallback={null}
+      />
       <div className="relative mx-auto mb-6 flex justify-center gap-[-8px]">
         {["class:fighter", "class:wizard", "class:cleric", "class:rogue"].map((id, i) => (
           <motion.div key={id} initial={{ opacity: 0, y: 16, rotate: (i - 1.5) * 8 }} animate={{ opacity: 1, y: 0, rotate: (i - 1.5) * 8 }} transition={{ delay: 0.08 * i, type: "spring", stiffness: 260, damping: 20 }} className="-mx-1.5">
-            <Crest id={id} accent={["#b45309", "#4338ca", "#ca8a04", "#334155"][i]} size={64} />
+            <ArtImg id={id} size="sm" focus={[0.5, 0.45]} className="h-24 w-16 rounded-xl border border-white/15 shadow-lg" fallback={<Crest id={id} accent={["#b45309", "#4338ca", "#ca8a04", "#334155"][i]} size={64} />} />
           </motion.div>
         ))}
       </div>
@@ -211,8 +224,14 @@ function CharacterCard({ c, index }: { c: Character; index: number }) {
       onClick={open}
     >
       <div className="pointer-events-none absolute inset-0 opacity-60 transition-opacity group-hover:opacity-100" style={{ background: `radial-gradient(120% 90% at 0% 0%, color-mix(in oklab, ${accent} 26%, transparent), transparent 60%)` }} />
+      <ArtImg
+        id={[sub?.id, cls?.id]}
+        size="sm"
+        focus={[0.5, 0.3]}
+        className="pointer-events-none absolute inset-y-0 right-0 w-1/2 bg-transparent opacity-35 transition-opacity [mask-image:linear-gradient(to_left,black,transparent)] group-hover:opacity-55"
+      />
       <div className="relative flex gap-4 p-4">
-        <Crest id={cls?.id} accent={accent} size={64} />
+        {c.meta.portrait || sheet.speciesId ? <Portrait character={c} speciesId={sheet.speciesId} accent={accent} size={64} /> : <Crest id={cls?.id} accent={accent} size={64} />}
         <div className="min-w-0 flex-1">
           <div className="truncate font-display text-lg text-ink">{c.name || t("library.unnamed")}</div>
           <div className="mt-0.5 truncate text-sm text-ink-2">
@@ -376,7 +395,13 @@ function SamplePicker({ compact = false, onPicked }: { compact?: boolean; onPick
             style={{ ["--class" as string]: accent }}
             className="flex items-center gap-3 rounded-2xl border border-line bg-surface/70 p-3 text-left transition-colors hover:border-class/50 hover:bg-class/5"
           >
-            <Crest id={s.classId} accent={accent} size={compact ? 40 : 48} />
+            <ArtImg
+              id={s.classId}
+              size="sm"
+              focus={[0.5, 0.4]}
+              className={cn("shrink-0 rounded-xl border border-class/40", compact ? "h-14 w-10" : "h-[4.5rem] w-12")}
+              fallback={<Crest id={s.classId} accent={accent} size={compact ? 40 : 48} />}
+            />
             <div className="min-w-0 flex-1">
               <div className="flex items-baseline gap-2">
                 <span className="truncate font-display text-base text-ink">{l(s.name)}</span>

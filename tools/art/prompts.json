@@ -18,6 +18,128 @@
         "class:warlock": "a human Warlock man in dark layered robes holding a pact tome, eldritch purple energy crackling, a vast shadowy otherworldly patron looming behind him in a ruined temple",
         "class:wizard": "an elderly gnome Wizard in deep blue robes reading a glowing spellbook in a cluttered tower library, staff in hand, arcane runes circling, candles and scrolls"
       }
+    },
+    "species": {
+      "size": "1536x1024",
+      "framing": "Horizontal composition, a single character three-quarter figure on one side, their homeland landscape filling the rest, calm heroic portrait mood.",
+      "items": {
+        "species:aasimar": "an aasimar woman with faintly luminous eyes and a soft halo of light, spectral wings barely visible, simple traveller's clothes, on a sunlit marble ruin above the clouds",
+        "species:dragonborn": "a bronze-scaled dragonborn man with a proud draconic head and no tail, wearing a leather coat and a scale breastplate, standing on a volcanic ridge with distant dragons in the sky",
+        "species:dwarf": "a stout bearded dwarf woman blacksmith with braided hair, leather apron and rune-etched hammer, inside a vast mountain hall lit by forge fires",
+        "species:elf": "a slender elf man with long pointed ears and silver hair, elegant green and silver attire, in an ancient forest city of white trees and soft lantern light",
+        "species:gnome": "a small cheerful gnome tinkerer woman, about half human height, with goggles and a satchel of tools, in a cosy burrow workshop full of clockwork gadgets",
+        "species:goliath": "a towering goliath man, eight feet tall with grey stony skin and dark lithoderm markings, fur-lined climbing gear, on a windswept high mountain peak",
+        "species:halfling": "a small barefoot halfling man, about three feet tall with curly hair, waistcoat and pipe, sitting on a fence beside rolling green hills and round doors set into hillsides",
+        "species:human": "a human woman adventurer in a practical travelling cloak and leather armor, sword at her hip, at a crossroads beside a bustling medieval market town",
+        "species:orc": "a muscular orc woman with green-grey skin and prominent lower tusks, wearing worn hide and steel armor, resolute and noble, before a fortified steppe camp at sunset",
+        "species:tiefling": "a tiefling man with curling horns, red skin, a long tail and solid gold eyes, dressed as a stylish scholar, in a crowded lamplit city street at night"
+      }
+    },
+    "background": {
+      "size": "1536x1024",
+      "framing": "Horizontal scene, environment-focused vignette, figure small to medium in frame, storytelling details.",
+      "items": {
+        "background:acolyte": "a young acolyte tending candles and incense in the quiet nave of a stone temple, holy texts open on a lectern",
+        "background:artisan": "an artisan woodcarver at a workbench full of tools and half-finished carvings in a sunlit guild workshop",
+        "background:charlatan": "a charming charlatan selling dubious potions from a painted wagon to a crowd at a village fair",
+        "background:criminal": "a hooded criminal picking a lock in a narrow rain-slick alley at night, a lookout watching from the shadows",
+        "background:entertainer": "an entertainer juggling flaming torches on a festival stage before a cheering crowd, colourful banners",
+        "background:farmer": "a farmer with a scythe at golden harvest time, wheat fields, a farmhouse and an ox cart at sunset",
+        "background:guard": "a city guard with halberd and lantern on a high wall watchtower at night, the sleeping town below",
+        "background:guide": "a wilderness guide with a walking staff leading travellers along a narrow mountain trail above a misty valley",
+        "background:hermit": "a hermit in a simple robe meditating outside a remote mountain cave beside a small herb garden",
+        "background:merchant": "a merchant weighing coins beside a heavily laden caravan of camels and wagons at a desert trading post",
+        "background:noble": "a young noble in fine velvet and a signet ring at a lavish banquet in a castle great hall",
+        "background:sage": "a sage surrounded by towering bookshelves, astrolabes and scrolls, studying an old map by candlelight",
+        "background:sailor": "a weathered sailor hauling rigging on the deck of a sailing ship in heavy seas, gulls and spray",
+        "background:scribe": "a scribe illuminating a manuscript with quill and gold leaf at a scriptorium desk by a tall window",
+        "background:soldier": "a soldier in a regiment's livery standing in formation with spear and shield, banners and a field camp behind",
+        "background:wayfarer": "a ragged but resourceful wayfarer walking a muddy road at dawn with a bedroll and walking stick, a city skyline far behind"
+      }
+    },
+    "subclass": {
+      "size": "1024x1536",
+      "framing": "Vertical composition, figure in the lower two thirds, atmosphere at the top for UI overlay.",
+      "items": {
+        "subclass:path-of-the-berserker": "a berserker barbarian in a frenzy charging through a shield wall, axe swinging, battle smoke",
+        "subclass:path-of-wild-heart": "a barbarian with spirit animals of bear, eagle and wolf manifesting around her in ghostly light, deep forest",
+        "subclass:path-of-the-world-tree": "a barbarian channeling a vast glowing cosmic tree whose roots and branches stretch into the stars behind him",
+        "subclass:path-of-the-zealot": "a zealot barbarian wreathed in divine radiant fury, war-painted, roaring before a burning temple of a war god",
+        "subclass:college-of-dance": "a bard dancing barefoot with flowing scarves in a moonlit glade, swirling movement and sparks of magic",
+        "subclass:college-of-glamour": "a radiant fey-touched bard performing on a stage of flowers, enchanted audience, shimmering otherworldly beauty",
+        "subclass:college-of-lore": "a lore bard reciting an epic tale to scholars in a grand library, holding a book and a harp",
+        "subclass:college-of-valor": "a valor bard in mail armor blowing a war horn on a battlefield, rallying soldiers, sword in other hand",
+        "subclass:life-domain": "a life cleric healing a wounded soldier with warm golden light from her hands in a field hospital tent",
+        "subclass:light-domain": "a light cleric unleashing a blinding burst of sunlight that scatters shadowy undead in a dark catacomb",
+        "subclass:trickery-domain": "a trickster cleric with a mischievous smile, duplicate illusory copies of himself, in a masquerade hall",
+        "subclass:war-domain": "a war cleric in heavy armor and crested helm leading a charge, warhammer glowing with divine power",
+        "subclass:circle-of-the-land": "a druid of the land drawing magic from the earth among ancient standing stones, moss and runes glowing",
+        "subclass:circle-of-the-moon": "a druid mid-transformation into a great bear under a full moon, cloak becoming fur",
+        "subclass:circle-of-the-sea": "a sea druid standing on a rocky shore commanding a crashing wave, wrapped in swirling water and storm wind",
+        "subclass:circle-of-the-stars": "a star druid beneath a brilliant night sky, glowing constellations of an archer, a chalice and a dragon above her",
+        "subclass:battle-master": "a battle master fighter disarming an opponent with precise technique, tactical stance, castle courtyard training ground",
+        "subclass:champion": "a champion fighter standing victorious in an arena, raising a greatsword to a roaring crowd",
+        "subclass:eldritch-knight": "an eldritch knight in plate armor with a longsword wreathed in arcane runes, a magical shield of force, ruined tower",
+        "subclass:psi-warrior": "a psi warrior fighter with a shimmering psionic aura, throwing back enemies with telekinetic force, eyes glowing",
+        "subclass:warrior-of-mercy": "a monk of mercy in a long-beaked healer's mask, one hand glowing to heal, the other to harm, misty monastery",
+        "subclass:warrior-of-shadow": "a shadow monk stepping out of darkness between moonlit pagoda rooftops, silent and deadly",
+        "subclass:warrior-of-the-elements": "an elemental monk striking with fists wreathed in fire, water and lightning, mountaintop in a storm",
+        "subclass:warrior-of-the-open-hand": "an open hand monk sending an enemy flying with a palm strike, calm expression, temple courtyard",
+        "subclass:oath-of-devotion": "a paladin of devotion in gleaming white and gold plate, holy symbol shining, kneeling in prayer before battle in a cathedral",
+        "subclass:oath-of-glory": "a paladin of glory, a legendary athletic hero in bronze armor and a red cloak, javelin raised before a heroic statue",
+        "subclass:oath-of-the-ancients": "a paladin of the ancients in armor grown with leaves and flowers, green light, ancient sacred grove",
+        "subclass:oath-of-vengeance": "a grim paladin of vengeance in dark armor hunting through a burning village, eyes cold, sword drawn",
+        "subclass:beast-master": "a beast master ranger crouched beside a loyal primal beast companion, a great spirit-marked panther, forest edge",
+        "subclass:fey-wanderer": "a fey wanderer ranger with flowers in her hair and fey-touched glamour, in a twilight enchanted forest of mushrooms and lights",
+        "subclass:gloom-stalker": "a gloom stalker ranger hidden in the deep darkness of an underground cavern, bow drawn, faint eye glint",
+        "subclass:hunter": "a hunter ranger tracking a huge troll through a misty swamp, bow and long knife ready",
+        "subclass:arcane-trickster": "an arcane trickster rogue using a spectral floating hand to lift a key from a sleeping guard, faint magic glow",
+        "subclass:assassin": "an assassin rogue poised on a balcony above a masquerade ball, poisoned dagger concealed",
+        "subclass:soulknife": "a soulknife rogue manifesting twin blades of pure psychic energy from her hands, dark alley",
+        "subclass:thief": "a thief rogue climbing a castle wall at night with a sack of treasure, rope and grappling hook",
+        "subclass:aberrant-sorcery": "an aberrant sorcerer with tentacle-like shadows and a glowing third eye, psychic energy, alien starscape",
+        "subclass:clockwork-sorcery": "a clockwork sorcerer surrounded by spinning golden gears and orderly geometric magic, brass and light",
+        "subclass:draconic-sorcery": "a draconic sorcerer with patches of red dragon scales on her skin, fire magic, the spectral shape of a dragon behind",
+        "subclass:wild-magic-sorcery": "a wild magic sorcerer as chaotic magic erupts around him, flowers, butterflies and lightning at once, surprised expression",
+        "subclass:archfey-patron": "a warlock with a beautiful and dangerous fey queen patron whispering behind her, twilight thorned court",
+        "subclass:celestial-patron": "a warlock of a celestial patron bathed in starlight, an angelic radiant figure above, healing light",
+        "subclass:fiend-patron": "a warlock signing a burning contract, a horned infernal silhouette in hellfire behind him",
+        "subclass:great-old-one-patron": "a warlock standing before an impossible cosmic tentacled entity in a starry void, eyes glowing",
+        "subclass:abjurer": "an abjurer wizard holding up a shimmering hexagonal ward that blocks a torrent of fire",
+        "subclass:diviner": "a diviner wizard gazing into a crystal ball, visions and portents swirling, observatory",
+        "subclass:evoker": "an evoker wizard hurling a massive fireball across a battlefield, robes whipping",
+        "subclass:illusionist": "an illusionist wizard surrounded by convincing illusions of dragons and doors, reality bending, hall of mirrors"
+      }
+    },
+    "portrait": {
+      "size": "1024x1024",
+      "framing": "Square head-and-shoulders portrait, face centered, plain dark painterly background, suitable as a round avatar.",
+      "items": {
+        "portrait:aasimar": "an aasimar woman with faintly glowing silver eyes",
+        "portrait:dragonborn": "a blue-scaled dragonborn man",
+        "portrait:dwarf": "a dwarf woman with thick braided copper hair, braided sideburns and a battle-scarred brow",
+        "portrait:elf": "an elf woman with dark hair and green eyes",
+        "portrait:gnome": "a gnome man with a big nose, spectacles and wild white hair",
+        "portrait:goliath": "a goliath man with grey stony skin, dark lithoderm markings and a shaved head",
+        "portrait:halfling": "a halfling woman with curly auburn hair and freckles",
+        "portrait:human": "a middle-aged human man with a short beard and a weathered face",
+        "portrait:human-2": "a young human woman with dark skin and close-cropped hair",
+        "portrait:orc": "an orc man with tusks and a calm wise expression",
+        "portrait:tiefling": "a tiefling woman with purple skin and ram-like horns",
+        "portrait:elf-2": "a wood elf man with copper skin and leaf-braided hair"
+      }
+    },
+    "scene": {
+      "size": "1536x1024",
+      "framing": "Wide establishing illustration, no prominent single figure in the centre, calm space in the middle for UI.",
+      "items": {
+        "scene:welcome": "a small party of adventurers silhouetted on a hill road at sunrise, looking toward a distant valley with castles and mountains",
+        "scene:tavern": "a warm empty tavern table with scattered character sheets, dice, a candle and tankards, waiting for players",
+        "scene:campfire": "adventurers asleep around a campfire under a starry sky beside their gear, one keeping watch",
+        "scene:short-rest": "adventurers catching their breath on dungeon steps, bandaging wounds, a torch flickering",
+        "scene:levelup": "a lone hero reaching a mountain summit at dawn, golden light breaking over endless peaks",
+        "scene:workshop": "a wizard's crafting desk covered with blank tomes, quills, alchemical bottles and half-drawn maps"
+      }
     }
   }
 }

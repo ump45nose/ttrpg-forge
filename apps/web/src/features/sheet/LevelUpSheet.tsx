@@ -3,6 +3,7 @@ import { Dices, HeartPulse, Sparkles } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useCharacters } from "../../app/characters";
 import { useT } from "../../app/i18n";
+import { ArtImg } from "../../ui/Art";
 import { Button } from "../../ui/Button";
 import { Chip } from "../../ui/Chip";
 import { cn } from "../../ui/cn";
@@ -14,7 +15,7 @@ import { PreparedPanel } from "../builder/steps/ChoicesStep";
 import { BuilderProvider, useBuilder } from "../builder/state";
 import { DiffView } from "../common/DiffView";
 import { useNames } from "../common/names";
-import { rollDice } from "../dice/store";
+import { afterLanding, rollDice } from "../dice/store";
 import { usePlay } from "./play";
 
 type Phase = { step: "hp" } | { step: "gains"; before: Build; diff: SheetDiff };
@@ -76,11 +77,13 @@ function HpStep({ onSettle }: { onSettle: (roll?: number) => void }) {
 
   const doRoll = async () => {
     const r = await rollDice({ expr: `1d${die}`, label: `${t("levelUp.title", { n: sheet.level + 1 })} · ${t("builder.hitDie")}`, kind: "hitdie", characterId: character.id });
+    if (r) await afterLanding(r);
     if (r) setRoll(r.result.total);
   };
 
   return (
     <div className="space-y-4">
+      <ArtImg id="scene:levelup" focus={[0.5, 0.45]} className="h-32 rounded-2xl sm:h-44" />
       <div className="flex flex-wrap gap-1.5">
         <Chip tone="class">{classId ? n.entity(classId, true) : "—"}</Chip>
         <Chip>

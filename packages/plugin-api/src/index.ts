@@ -87,10 +87,32 @@ export interface Exporter {
   filename(character: Character): string;
 }
 
+export interface ArtImage {
+  /** Path without extension, relative to the app root; `.webp` is large, `.sm.webp` the thumbnail. */
+  src: string;
+  /** Pixel size of the original, for aspect ratio. */
+  w: number;
+  h: number;
+  /** Content version, appended as `?v=` so caches pick up re-painted images. */
+  v?: string;
+  /** Focal point (0–1) used when the image is cropped; defaults to the upper middle. */
+  focus?: [number, number];
+}
+
+/** Illustrations keyed by entity id ("class:wizard") or a named slot ("scene:campfire"). */
+export interface ArtPack {
+  id: string;
+  name: LocalizedText;
+  images: Record<string, ArtImage>;
+  credit?: LocalizedText;
+}
+
 export interface Contributions<C> {
   rulePacks?: RulePack[];
   locales?: Record<string, Record<string, unknown>>;
   themes?: ThemeDef[];
+  /** Later packs override earlier ones per id; missing ids fall back to generated emblems. */
+  art?: ArtPack[];
   slots?: SlotContribution<C>[];
   actionFx?: ActionFx[];
   diceRenderers?: DiceRenderer<C>[];

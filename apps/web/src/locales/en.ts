@@ -64,6 +64,8 @@ export const en = {
     contentTo: "content for this class currently ends at level {{n}}",
     recommended: "Recommended", swapHint: "Tap two abilities to swap their scores.",
   },
+  fx: { down: "Down!", concLost: "Concentration lost" },
+  portrait: { title: "Portrait", upload: "Upload picture", reset: "Use default", hint: "Defaults to your species' portrait. Uploaded pictures are cropped square, compressed and stored in the character, so they travel with exports.", failed: "Couldn't read that picture" },
   levelUp: {
     button: "Level up", title: "Level {{n}}", choose: "Take this", average: "Average", max: "Maximum (house rule)", roll: "Roll", keep: "Keep it",
     hpHint: "How many Hit Points does this level add? Take the average or roll your Hit Die; your Constitution modifier is added either way (minimum 1).",
@@ -103,7 +105,7 @@ export const en = {
     recovers: { short: "short rest", long: "long rest" }, hitDieHint: "roll + Con {{con}}",
     checkOf: "{{name}} check", saveOf: "{{name}} save", saveShort: "Save", passivePerception: "Passive Perception",
   },
-  dice: {
+  dice: { tapToSkip: "Tap to skip",
     title: "Dice", expression: "Expression", advantage: "Advantage", disadvantage: "Disadvantage", history: "History", physical: "Enter physical roll", total: "Total", clear: "Clear",
     roll: "Roll", normal: "Normal", enterD20: "Roll {{dice}} and tap the number you rolled", enterTotal: "Roll {{dice}} and enter the dice total (modifiers are added for you)",
   },
@@ -118,7 +120,7 @@ export const en = {
   settings: {
     title: "Settings", language: "Language", bilingual: "Bilingual names", bilingualHint: "Show both Chinese and English names for rules content.",
     theme: "Theme", motion: "Motion", motionOpts: { system: "System", full: "Full", reduced: "Reduced" }, physicalDice: "Physical dice",
-    physicalDiceHint: "Enter the numbers you roll at the table instead of rolling digitally.", haptics: "Haptics", plugins: "Plugins",
+    physicalDiceHint: "Enter the numbers you roll at the table instead of rolling digitally.", haptics: "Haptics", art: "Show illustrations", artHint: "Class, species and background paintings and default portraits. Downloaded the first time they are shown, then available offline; turn off to save data.", diceAnim: "Dice roll animation", diceAnimHint: "Dice tumble for about half a second before the result lands; tap to skip.", sound: "Sounds", soundHint: "Cues for rolls, crits and healing (synthesised on the device, nothing to download).", plugins: "Plugins",
     packs: "Rule packs", importPack: "Import pack (JSON)", data: "Data", exportAll: "Export everything", about: "About", attribution: "Attribution",
     autoTerms: "Detect rules terms", autoTermsHint: "Highlight rules terms in descriptions so you can hover them.",
     builtin: "Built-in", storageHint: "Install the app to your home screen so your browser keeps the data safe.",

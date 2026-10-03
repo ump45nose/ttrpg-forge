@@ -90,10 +90,13 @@ export function SettingsPage() {
             onChange={(v) => s.set({ motion: v })}
           />
         </div>
+        <Switch checked={s.art} onChange={(v) => s.set({ art: v })} label={t("settings.art")} hint={t("settings.artHint")} />
       </Section>
 
       <Section title={t("dice.title")}>
         <Switch checked={s.physicalDice} onChange={(v) => s.set({ physicalDice: v })} label={t("settings.physicalDice")} hint={t("settings.physicalDiceHint")} />
+        <Switch checked={s.diceAnim} onChange={(v) => s.set({ diceAnim: v })} label={t("settings.diceAnim")} hint={t("settings.diceAnimHint")} />
+        <Switch checked={s.sound} onChange={(v) => s.set({ sound: v })} label={t("settings.sound")} hint={t("settings.soundHint")} />
         <Switch checked={s.haptics} onChange={(v) => s.set({ haptics: v })} label={t("settings.haptics")} />
       </Section>
 

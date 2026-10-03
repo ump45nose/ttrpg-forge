@@ -1,12 +1,14 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { ArrowLeft, Pencil, Redo2, Undo2, ChevronsUp, Lightbulb } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type TouchEvent } from "react";
+import { haptic, reducedMotion } from "../../app/settings";
 import { useCharacter } from "../../app/characters";
 import { useT } from "../../app/i18n";
 import { Slot } from "../../app/slot";
 import { Button } from "../../ui/Button";
-import { Crest } from "../../ui/Crest";
+import { ArtImg } from "../../ui/Art";
+import { Portrait } from "../../ui/Portrait";
 import { useIsDesktop } from "../../ui/hooks";
 import { Tabs } from "../../ui/Tabs";
 import { useNames } from "../common/names";
@@ -45,7 +47,8 @@ function PlaySheet() {
   const navigate = useNavigate();
   const desktop = useIsDesktop();
   const { character, sheet, engine, undo, redo, canUndo, canRedo } = usePlay();
-  const [tab, setTab] = useState<Tab>("actions");
+  const [tab, setTabState] = useState<Tab>("actions");
+  const [dir, setDir] = useState(0);
   const [levelUp, setLevelUp] = useState(false);
   const canLevel = sheet.level > 0 && sheet.level < engine.levelCap(character.build);
   const cls = sheet.classes[0];
@@ -74,16 +77,33 @@ function PlaySheet() {
   const subtitle = [sheet.speciesId && n.entity(sheet.speciesId, true), ...sheet.classes.map((c) => `${n.entity(c.subclass ?? c.id, true)} ${c.level}`)].filter(Boolean).join(" · ");
   const tabs = desktop ? (["actions", "inventory", "skills"] as const) : (["actions", "inventory", "resources", "skills", "log"] as const);
   const current: Tab = (tabs as readonly Tab[]).includes(tab) ? tab : "actions";
+  const setTab = (next: Tab) => {
+    setDir(Math.sign(tabs.indexOf(next as never) - tabs.indexOf(current as never)));
+    setTabState(next);
+  };
+  const swipe = useTabSwipe((step) => {
+    const next = tabs[tabs.indexOf(current as never) + step];
+    if (!next) return;
+    haptic(5);
+    setTab(next);
+  });
+  const slide = reducedMotion() ? 0 : 28;
 
   return (
-    <div className="min-h-dvh">
+    <div className="relative min-h-dvh">
       <div className="pointer-events-none fixed inset-0 -z-0 bg-[radial-gradient(900px_500px_at_80%_-10%,color-mix(in_oklab,var(--class)_18%,transparent),transparent_70%)]" />
+      {/* the subclass (or class) painting, faded in behind the header */}
+      <ArtImg
+        id={[sheet.classes[0]?.subclass, sheet.classes[0]?.id]}
+        focus={[0.5, 0.2]}
+        className="pointer-events-none absolute inset-x-0 top-0 -z-0 h-56 bg-transparent opacity-30 [mask-image:linear-gradient(to_bottom,black_10%,transparent)] sm:h-72"
+      />
 
       <div className="safe-t relative mx-auto flex max-w-6xl items-center gap-2 px-3 pt-3 sm:px-6">
         <Button variant="ghost" size="icon" onClick={() => navigate({ to: "/" })} aria-label={t("common.back")}>
           <ArrowLeft size={20} />
         </Button>
-        <Crest id={character.id} accent={accent} size={36} initials={character.name.slice(0, 1)} />
+        <Portrait character={character} speciesId={sheet.speciesId} accent={accent} size={40} />
         <div className="min-w-0 flex-1">
           <div className="truncate font-display text-lg leading-tight">{character.name}</div>
           <div className="truncate text-xs text-ink-3">{subtitle}</div>
@@ -123,8 +143,22 @@ function PlaySheet() {
             </ul>
           </Hint>
           <Tabs items={tabs.map((x) => ({ id: x, label: t(`sheet.tabs.${x}`) }))} value={current} onChange={setTab} />
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div key={current} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.16 }}>
+          <AnimatePresence mode="wait" initial={false} custom={dir}>
+            <motion.div
+              key={current}
+              custom={dir}
+              variants={{
+                enter: (d: number) => ({ opacity: 0, x: d * slide, y: d ? 0 : 6 }),
+                show: { opacity: 1, x: 0, y: 0 },
+                leave: (d: number) => ({ opacity: 0, x: -d * slide, y: d ? 0 : -4 }),
+              }}
+              initial="enter"
+              animate="show"
+              exit="leave"
+              transition={{ duration: 0.16 }}
+              {...(desktop ? {} : swipe)}
+              className="min-h-[50dvh] touch-pan-y"
+            >
               {current === "actions" && <ActionsPanel />}
               {current === "inventory" && <InventoryPanel />}
               {current === "resources" && <Side />}
@@ -145,6 +179,36 @@ function PlaySheet() {
       </div>
     </div>
   );
+}
+
+/**
+ * Horizontal swipe on the tab content switches tabs (phones). Swipes that start
+ * near the screen edges are left to the OS back gesture, and anything inside a
+ * horizontally scrolling strip or a text field is ignored.
+ */
+function useTabSwipe(go: (step: 1 | -1) => void) {
+  const start = useRef<{ x: number; y: number; t: number } | null>(null);
+  return {
+    onTouchStart(e: TouchEvent) {
+      const p = e.touches[0];
+      const el = e.target as HTMLElement;
+      const edge = 28;
+      if (!p || e.touches.length > 1 || p.clientX < edge || p.clientX > window.innerWidth - edge || el.closest("input,textarea,[data-no-swipe],.overflow-x-auto")) {
+        start.current = null;
+        return;
+      }
+      start.current = { x: p.clientX, y: p.clientY, t: Date.now() };
+    },
+    onTouchEnd(e: TouchEvent) {
+      const s = start.current;
+      const p = e.changedTouches[0];
+      start.current = null;
+      if (!s || !p) return;
+      const dx = p.clientX - s.x;
+      const dy = p.clientY - s.y;
+      if (Math.abs(dx) > 64 && Math.abs(dx) > Math.abs(dy) * 1.8 && Date.now() - s.t < 700) go(dx < 0 ? 1 : -1);
+    },
+  };
 }
 
 function Side() {

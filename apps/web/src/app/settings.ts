@@ -14,6 +14,12 @@ export interface Settings {
   /** Recognise rules terms in prose and make them hoverable. */
   autoTerms: boolean;
   disabledPlugins: string[];
+  /** Show illustrations (art packs). Off saves data on slow connections. */
+  art: boolean;
+  /** Dice and feedback sounds. */
+  sound: boolean;
+  /** Tumbling dice before the result lands. */
+  diceAnim: boolean;
   /** One-off tips the user has dismissed. */
   seenHints: string[];
   /** Last full backup (ms), for the "back up your data" nudge. */
@@ -36,6 +42,9 @@ export const useSettings = create<Settings>()(
       haptics: true,
       autoTerms: true,
       disabledPlugins: [],
+      art: true,
+      sound: false,
+      diceAnim: true,
       seenHints: [],
       set: (patch) => set(patch),
     }),

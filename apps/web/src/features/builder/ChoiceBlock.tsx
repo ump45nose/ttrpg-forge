@@ -6,6 +6,7 @@ import { openCreator, useCanCreate } from "../../app/creator";
 import { useT } from "../../app/i18n";
 import { useUserEntity } from "../../app/packs";
 import { haptic } from "../../app/settings";
+import { ArtImg } from "../../ui/Art";
 import { Button } from "../../ui/Button";
 import { Chip } from "../../ui/Chip";
 import { cn } from "../../ui/cn";
@@ -168,6 +169,7 @@ function EntityList({ ch, candidates }: { ch: ChoiceView; candidates: ChoiceCand
   const [query, setQuery] = useState("");
   const [detail, setDetail] = useState<ChoiceCandidate>();
   const isSpell = ch.choice.from.kind === "entity" && ch.choice.from.entityType === "spell";
+  const isSubclass = ch.choice.from.kind === "entity" && ch.choice.from.entityType === "subclass";
   const q = query.trim().toLowerCase();
   const shown = q ? candidates.filter((c) => [n.l(c.name), ...(c.entity?.aliases ?? [])].join(" ").toLowerCase().includes(q) || c.id.includes(q)) : candidates;
   const toggle = (c: ChoiceCandidate) => {
@@ -183,6 +185,9 @@ function EntityList({ ch, candidates }: { ch: ChoiceView; candidates: ChoiceCand
           <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("common.search")} className="pl-9" />
         </div>
       )}
+      {isSubclass ? (
+        <SubclassCards candidates={shown} onOpen={setDetail} />
+      ) : (
       <div className={cn("grid gap-2", isSpell ? "sm:grid-cols-2" : "")}>
         {shown.map((c) => (
           <div
@@ -216,9 +221,45 @@ function EntityList({ ch, candidates }: { ch: ChoiceView; candidates: ChoiceCand
           </div>
         ))}
       </div>
+      )}
       <QuickCreate ch={ch} />
       <CandidateDetail ch={ch} candidate={detail} onClose={() => setDetail(undefined)} />
     </>
+  );
+}
+
+/** Subclasses as painted cards; tapping one opens its details with the choose button. */
+function SubclassCards({ candidates, onOpen }: { candidates: ChoiceCandidate[]; onOpen: (c: ChoiceCandidate) => void }) {
+  const n = useNames();
+  return (
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+      {candidates.map((c) => (
+        <motion.button
+          key={c.id}
+          type="button"
+          whileTap={{ scale: 0.97 }}
+          disabled={!c.valid && !c.selected}
+          onClick={() => onOpen(c)}
+          className={cn(
+            "group relative flex aspect-[3/4] flex-col justify-end overflow-hidden rounded-2xl border text-left transition-colors",
+            c.selected ? "border-class ring-2 ring-class/60" : "border-line hover:border-line-strong",
+            !c.valid && !c.selected && "opacity-50",
+          )}
+        >
+          <ArtImg id={c.id} size="sm" focus={[0.5, 0.35]} className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,color-mix(in_oklab,var(--class)_30%,transparent),var(--surface-2))] transition-transform duration-500 group-hover:scale-105" />
+          <span className="absolute inset-0 bg-[linear-gradient(to_top,rgb(0_0_0/0.85),rgb(0_0_0/0.15)_55%,transparent)]" />
+          {c.selected && (
+            <span className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-class text-white shadow">
+              <Check size={14} strokeWidth={3} />
+            </span>
+          )}
+          <span className="relative p-3">
+            <span className="block font-display text-base leading-tight text-white">{n.l(c.name, { mono: true })}</span>
+            {(c.summary || c.reason) && <span className={cn("mt-0.5 line-clamp-2 block text-[11px] leading-snug", c.reason ? "text-bad" : "text-white/70")}>{n.l(c.reason ?? c.summary)}</span>}
+          </span>
+        </motion.button>
+      ))}
+    </div>
   );
 }
 
@@ -314,6 +355,7 @@ function CandidateDetail({ ch, candidate, onClose }: { ch: ChoiceView; candidate
     >
       {candidate && (
         <div className="space-y-4">
+          {e && (e.type === "subclass" || e.type === "class") && <ArtImg id={e.id} focus={[0.5, 0.3]} className="h-56 rounded-2xl sm:h-72" />}
           {e && <EditOwn e={e} />}
           {candidate.reason && <Chip tone="bad">{n.l(candidate.reason)}</Chip>}
           {candidate.text && <RichText text={candidate.text} selfId={candidate.entity?.id} className="text-sm leading-relaxed text-ink-2" />}

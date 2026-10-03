@@ -11,7 +11,7 @@ import { Sheet } from "../../ui/Sheet";
 import { useOnce } from "../../ui/hooks";
 import { toast } from "../../ui/Toast";
 import { useNames } from "../common/names";
-import type { RollRecord } from "../dice/store";
+import { afterLanding, type RollRecord } from "../dice/store";
 import { RichText } from "../terms/RichText";
 import { useEventText } from "./logText";
 import { usePlay } from "./play";
@@ -86,14 +86,17 @@ function Body({ action }: { action: ResolvedAction }) {
 
   const rollAttack = async () => {
     const r = await roll({ expr: d20(action.attack!.bonus), label: `${name} · ${t("sheet.attackRoll")}`, kind: "attack", advantage: mode === "adv", disadvantage: mode === "dis" });
+    if (r) await afterLanding(r);
     if (r) setLastAttack(r);
   };
   const rollDamage = async (expr: string, crit: boolean) => {
     const r = await roll({ expr, label: `${name} · ${t("sheet.damageRoll")}${dmgTypes ? ` (${dmgTypes})` : ""}`, kind: "damage", crit });
+    if (r) await afterLanding(r);
     if (r) setLastDamage(r);
   };
   const rollHeal = async () => {
     const r = await roll({ expr: heal!, label: `${name} · ${t("sheet.healing")}`, kind: "heal" });
+    if (r) await afterLanding(r);
     if (r) setLastHeal(r);
   };
 
@@ -292,6 +295,7 @@ function Footer({ action, onClose, closing }: { action: ResolvedAction; onClose:
     onClose();
     const name = n.l(action.name, { mono: true });
     const r = await roll({ expr: action.heal!.dice, label: `${name} · ${t("sheet.healing")}`, kind: "heal" });
+    if (r) await afterLanding(r);
     const h = r ? push({ type: "hp.heal", amount: r.result.total }) : undefined;
     const ids = [e.id, ...(h ? [h.id] : [])];
     toast({ content: h ? `${name} · ${t("log.heal", { n: r!.result.total })}` : describe(e), tone: "accent", action: { label: t("common.undo"), run: () => ids.reverse().forEach((id) => push({ type: "revert", target: id })) } }, 5000);

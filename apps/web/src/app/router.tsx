@@ -3,6 +3,7 @@ import { motion, MotionConfig } from "motion/react";
 import { useEffect } from "react";
 import { DiceDock } from "../features/dice/DiceDock";
 import { TermLayer } from "../features/terms/TermLayer";
+import { FxLayer } from "../ui/Fx";
 import { Library } from "../features/library/Library";
 import { SheetPage } from "../features/sheet/SheetPage";
 import { ToastViewport } from "../ui/Toast";
@@ -30,6 +31,7 @@ function Root() {
       </motion.main>
       <DiceDock />
       <TermLayer />
+      <FxLayer />
       <Slot name="app.overlay" />
       <ToastViewport />
     </MotionConfig>

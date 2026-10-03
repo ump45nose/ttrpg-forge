@@ -30,15 +30,18 @@ def call(model: str, prompt: str, size: str) -> bytes:
 def one(set_name: str, size: str, ent_id: str, prompt: str):
     out = os.path.join(HERE, "raw", set_name, ent_id.split(":", 1)[1] + ".png")
     os.makedirs(os.path.dirname(out), exist_ok=True)
-    for attempt in range(4):
+    for attempt in range(6):
         model = MODELS[attempt % len(MODELS)]
         t = time.time()
         try:
-            open(out, "wb").write(call(model, prompt, size))
+            data = call(model, prompt, size)
+            open(out + ".part", "wb").write(data)
+            os.replace(out + ".part", out)
             print(f"ok   {ent_id} ({model}, {time.time() - t:.0f}s)", flush=True)
             return
-        except Exception as e:  # 524s from the gateway happen; retry with the next model
+        except Exception as e:  # 503/524s from the gateway happen; back off, retry with the next model
             print(f"fail {ent_id} ({model}): {e}", flush=True)
+            time.sleep(15 * (attempt + 1))
     print(f"GAVE UP {ent_id}", flush=True)
 
 
@@ -51,10 +54,10 @@ def main():
         out = os.path.join(HERE, "raw", set_name, ent_id.split(":", 1)[1] + ".png")
         if only and ent_id not in only:
             continue
-        if not only and os.path.exists(out):
+        if not only and os.path.exists(out) and os.path.getsize(out) > 0:
             continue
         jobs.append((ent_id, f"{cfg['style']}\nSubject: {subject}. {s['framing']}"))
-    with ThreadPoolExecutor(3) as ex:
+    with ThreadPoolExecutor(int(os.environ.get("FORGE_IMAGE_THREADS", "2"))) as ex:
         for ent_id, prompt in jobs:
             ex.submit(one, set_name, s["size"], ent_id, prompt)
 

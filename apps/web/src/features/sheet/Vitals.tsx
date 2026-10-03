@@ -1,14 +1,18 @@
 import { hpCurrent, movementLeft } from "@forge/core";
 import { Brain, Heart, Plus, Skull, X } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useAnimate } from "motion/react";
 import { Popover } from "radix-ui";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { reducedMotion } from "../../app/settings";
+import { playCue } from "../../app/sound";
 import { useL, useT } from "../../app/i18n";
 import { AnimatedNumber, signed } from "../../ui/AnimatedNumber";
 import { Button } from "../../ui/Button";
 import { cn } from "../../ui/cn";
 import { namedGlyph } from "../../ui/glyphs";
+import { flash } from "../../ui/Fx";
 import { toast } from "../../ui/Toast";
+import { afterLanding } from "../dice/store";
 import { Explain } from "../common/Explain";
 import { RichText } from "../terms/RichText";
 import { EffectPicker } from "./EffectPicker";
@@ -21,9 +25,10 @@ const isEffect = (type: string | undefined) => type === "condition" || type === 
 /** The pinned vitals block: HP, AC, initiative, speed, concentration and conditions. */
 export function Vitals() {
   const t = useT();
-  const { sheet, state, roll } = usePlay();
+  const { sheet, state, roll, character } = usePlay();
   const [hpOpen, setHpOpen] = useState(false);
   const hp = hpCurrent(state, sheet);
+  const pulse = useHpFeedback(character.id, hp, character.play.at(-1)?.type === "revert");
   const pct = sheet.hpMax ? hp / sheet.hpMax : 0;
   const tempPct = sheet.hpMax ? Math.min(1, state.temp / sheet.hpMax) : 0;
   const dying = hp === 0;
@@ -33,6 +38,7 @@ export function Vitals() {
     <div className="space-y-2">
       <div className="flex gap-2">
         <button
+          ref={pulse.scope}
           type="button"
           onClick={() => setHpOpen(true)}
           aria-label={`${t("sheet.hp")} ${hp}/${sheet.hpMax}`}
@@ -52,7 +58,21 @@ export function Vitals() {
               <span className="tnum text-sm text-ink-3">/ {sheet.hpMax}</span>
             </div>
           )}
+          <AnimatePresence>
+            {pulse.kind && (
+              <motion.span
+                key={pulse.n}
+                aria-hidden
+                initial={{ opacity: 0.7 }}
+                animate={{ opacity: 0 }}
+                transition={{ duration: 0.8 }}
+                className={cn("pointer-events-none absolute inset-0", pulse.kind === "hurt" ? "bg-hp/35" : "bg-good/25")}
+              />
+            )}
+          </AnimatePresence>
           <div className="relative mt-1 h-1.5 overflow-hidden rounded-full bg-surface-3">
+            {/* the lost chunk lingers a moment before the bar catches up */}
+            <motion.div className="absolute inset-y-0 left-0 rounded-full bg-warn/60" animate={{ width: `${pct * 100}%` }} transition={{ delay: 0.45, duration: 0.5, ease: "easeOut" }} />
             <motion.div className="absolute inset-y-0 left-0 rounded-full bg-hp" animate={{ width: `${pct * 100}%` }} transition={{ type: "spring", stiffness: 200, damping: 30 }} />
             <motion.div className="absolute inset-y-0 left-0 rounded-full bg-temp/80" animate={{ width: `${tempPct * 100}%` }} />
           </div>
@@ -78,6 +98,28 @@ export function Vitals() {
       <HpSheet open={hpOpen} onOpenChange={setHpOpen} />
     </div>
   );
+}
+
+/** Flash, shake and sound when current HP changes; a banner when dropping to 0. Undo stays quiet. */
+function useHpFeedback(characterId: string, hp: number, undoing: boolean) {
+  const t = useT();
+  const [scope, animate] = useAnimate<HTMLButtonElement>();
+  const prev = useRef({ characterId, hp });
+  const [pulse, setPulse] = useState<{ kind?: "hurt" | "heal"; n: number }>({ n: 0 });
+  useEffect(() => {
+    const p = prev.current;
+    prev.current = { characterId, hp };
+    if (p.characterId !== characterId || p.hp === hp) return;
+    const hurt = hp < p.hp;
+    setPulse({ kind: hurt ? "hurt" : "heal", n: Date.now() });
+    if (undoing) return;
+    playCue(hurt ? "hurt" : "heal");
+    if (!hurt) return;
+    if (hp === 0) flash("down", t("fx.down"));
+    else flash("hurt");
+    if (!reducedMotion() && scope.current) void animate(scope.current, { x: [0, -6, 6, -4, 3, 0] }, { duration: 0.35 });
+  }, [characterId, hp, undoing, t, animate, scope]);
+  return { scope, ...pulse };
 }
 
 function Stat({ stat, label, value, signed: sgn }: { stat: string; label: string; value: number; signed?: boolean }) {
@@ -205,10 +247,12 @@ function ConcentrationCheck() {
   const lose = () => {
     push({ type: "concentration.end" });
     setConCheck(null);
+    flash("conc", t("fx.concLost"));
   };
   const doRoll = async () => {
     const r = await roll({ expr: d20(sheet.abilities.con.save), label: t("sheet.conCheck", { dc: conCheck }), kind: "save", ...edge(sheet, "save.con", "save.concentration") });
     if (!r) return;
+    await afterLanding(r);
     if (r.result.total >= conCheck) {
       setConCheck(null);
       toast({ content: t("sheet.conKept"), tone: "good" });

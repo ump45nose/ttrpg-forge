@@ -1,7 +1,8 @@
 import { parseDice, roll, type RollOptions, type RollResult, type TermResult } from "@forge/core";
 import { create } from "zustand";
 import { useCharacters } from "../../app/characters";
-import { haptic, useSettings } from "../../app/settings";
+import { playCue } from "../../app/sound";
+import { haptic, reducedMotion, useSettings } from "../../app/settings";
 
 export type RollKind = "attack" | "damage" | "heal" | "save" | "check" | "initiative" | "death" | "hitdie" | "free";
 
@@ -22,7 +23,12 @@ export interface RollRecord extends RollRequest {
   at: number;
   result: RollResult;
   physical: boolean;
+  /** When the tray's tumbling dice settle (= `at` when there is no animation). */
+  landsAt: number;
 }
+
+/** Tumble length of the result tray. */
+export const TUMBLE_MS = 650;
 
 interface PhysicalAsk {
   req: RollRequest;
@@ -67,13 +73,30 @@ export function rollDetail(r: RollResult): string {
 }
 
 function record(req: RollRequest, result: RollResult, physical: boolean): RollRecord {
-  const rec: RollRecord = { ...req, id: ++seq, at: Date.now(), result, physical };
+  const animate = !physical && useSettings.getState().diceAnim && !reducedMotion();
+  const at = Date.now();
+  const rec: RollRecord = { ...req, id: ++seq, at, result, physical, landsAt: at + (animate ? TUMBLE_MS : 0) };
   useDice.setState((s) => ({ history: [rec, ...s.history].slice(0, 100), last: rec }));
   if (req.characterId) {
     useCharacters.getState().push(req.characterId, { type: "roll", label: req.label, expr: result.expr, total: result.total, detail: rollDetail(result) });
   }
-  haptic(result.crit ? [12, 40, 12] : 8);
+  if (animate) playCue("roll");
+  setTimeout(() => {
+    haptic(result.crit ? [12, 40, 12] : 8);
+    playCue(result.crit ? "crit" : result.fumble ? "fumble" : "land");
+  }, rec.landsAt - at);
   return rec;
+}
+
+/** Wait for the dice to settle before reacting to a roll (toasts, banners), so the result isn't spoiled. */
+export function afterLanding(rec: RollRecord): Promise<void> {
+  const wait = rec.landsAt - Date.now();
+  return wait > 0 ? new Promise((r) => setTimeout(r, wait)) : Promise.resolve();
+}
+
+/** Skip the tumble of the roll in the tray. */
+export function landNow() {
+  useDice.setState((s) => (s.last && s.last.landsAt > Date.now() ? { last: { ...s.last, landsAt: Date.now() } } : s));
 }
 
 /** Builds the result of a hand-rolled roll: the dice total the player typed, plus the modifiers. */

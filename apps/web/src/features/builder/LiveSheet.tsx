@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { useT } from "../../app/i18n";
 import { AnimatedNumber, signed } from "../../ui/AnimatedNumber";
 import { cn } from "../../ui/cn";
-import { Crest } from "../../ui/Crest";
+import { Portrait } from "../../ui/Portrait";
 import { DiffView } from "../common/DiffView";
 import { Explain } from "../common/Explain";
 import { useNames } from "../common/names";
@@ -22,7 +22,7 @@ export function LiveSheet({ showDiff = true }: { showDiff?: boolean }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
-        <Crest id={character.id} accent={clsEntity?.accent} size={48} initials={character.name.slice(0, 1)} />
+        <Portrait character={character} speciesId={s.speciesId} accent={clsEntity?.accent} size={48} />
         <div className="min-w-0">
           <div className="truncate font-display text-lg leading-tight">{character.name}</div>
           <div className="truncate text-xs text-ink-2">

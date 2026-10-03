@@ -1,4 +1,5 @@
 import { localize, type Entity } from "@forge/core";
+import { ArtImg } from "../../ui/Art";
 import { useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Backpack, BookA, Copy, Download, FileJson, GitBranch, Hammer, Medal, Package, Pencil, Plus, ScrollText, Search, Sparkles, Stamp, Swords, Trash2, Users, type LucideIcon } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
@@ -69,6 +70,7 @@ export function WorkshopPage() {
         <Hammer size={20} className="text-accent" />
         <h1 className="font-display text-xl">{t("workshop.title")}</h1>
       </header>
+      <ArtImg id="scene:workshop" focus={[0.5, 0.5]} className="mt-2 h-36 rounded-2xl [mask-image:linear-gradient(to_bottom,black_60%,transparent)] sm:h-52" />
       <p className="mt-2 text-sm text-ink-2">{t("workshop.intro")}</p>
 
       {/* create */}
