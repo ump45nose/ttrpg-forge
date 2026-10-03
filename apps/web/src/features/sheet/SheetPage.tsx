@@ -8,7 +8,9 @@ import { useT } from "../../app/i18n";
 import { Slot } from "../../app/slot";
 import { Button } from "../../ui/Button";
 import { ArtImg } from "../../ui/Art";
+import { cn } from "../../ui/cn";
 import { Portrait } from "../../ui/Portrait";
+import { LooksSheet } from "../media/PortraitEditor";
 import { useIsDesktop } from "../../ui/hooks";
 import { Tabs } from "../../ui/Tabs";
 import { useNames } from "../common/names";
@@ -50,6 +52,7 @@ function PlaySheet() {
   const [tab, setTabState] = useState<Tab>("actions");
   const [dir, setDir] = useState(0);
   const [levelUp, setLevelUp] = useState(false);
+  const [looks, setLooks] = useState(false);
   const canLevel = sheet.level > 0 && sheet.level < engine.levelCap(character.build);
   const cls = sheet.classes[0];
   const accent = cls ? n.engine.reg.get(cls.id)?.accent : undefined;
@@ -92,18 +95,24 @@ function PlaySheet() {
   return (
     <div className="relative min-h-dvh">
       <div className="pointer-events-none fixed inset-0 -z-0 bg-[radial-gradient(900px_500px_at_80%_-10%,color-mix(in_oklab,var(--class)_18%,transparent),transparent_70%)]" />
-      {/* the subclass (or class) painting, faded in behind the header */}
+      {/* the character's own picture, else the subclass (or class) painting, faded in behind the header */}
       <ArtImg
         id={[sheet.classes[0]?.subclass, sheet.classes[0]?.id]}
+        src={character.meta.picture}
         focus={[0.5, 0.2]}
-        className="pointer-events-none absolute inset-x-0 top-0 -z-0 h-56 bg-transparent opacity-30 [mask-image:linear-gradient(to_bottom,black_10%,transparent)] sm:h-72"
+        className={cn(
+          "pointer-events-none absolute inset-x-0 top-0 -z-0 h-56 bg-transparent [mask-image:linear-gradient(to_bottom,black_10%,transparent)] sm:h-72",
+          character.meta.picture ? "opacity-40" : "opacity-30",
+        )}
       />
 
       <div className="safe-t relative mx-auto flex max-w-6xl items-center gap-2 px-3 pt-3 sm:px-6">
         <Button variant="ghost" size="icon" onClick={() => navigate({ to: "/" })} aria-label={t("common.back")}>
           <ArrowLeft size={20} />
         </Button>
-        <Portrait character={character} speciesId={sheet.speciesId} accent={accent} size={40} />
+        <button type="button" onClick={() => setLooks(true)} className="shrink-0 rounded-full" aria-label={t("media.looks")} title={t("media.looks")}>
+          <Portrait character={character} speciesId={sheet.speciesId} accent={accent} size={40} />
+        </button>
         <div className="min-w-0 flex-1">
           <div className="truncate font-display text-lg leading-tight">{character.name}</div>
           <div className="truncate text-xs text-ink-3">{subtitle}</div>
@@ -125,6 +134,7 @@ function PlaySheet() {
       </div>
 
       <LevelUpSheet open={levelUp} onClose={() => setLevelUp(false)} />
+      <LooksSheet open={looks} onClose={() => setLooks(false)} character={character} speciesId={sheet.speciesId} classId={sheet.classes[0]?.id} />
       <div className="glass sticky top-0 z-20 mt-2 border-b border-line">
         <div className="mx-auto max-w-6xl space-y-2 px-3 py-2 sm:px-6">
           <Vitals />

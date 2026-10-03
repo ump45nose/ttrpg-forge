@@ -249,6 +249,8 @@ export interface ActionDef {
   when?: string;
   category?: "attack" | "spell" | "feature" | "basic" | "item";
   tags?: string[];
+  /** Sound played when the action is used (WAV data URL). */
+  sound?: string;
 }
 
 /* ───────────────────────── entities ───────────────────────── */
@@ -287,7 +289,10 @@ export interface EntityBase {
   grants?: Grant[];
   /** Can be taken more than once (2024 Magic Initiate, ...). */
   repeatable?: boolean;
+  /** Picture: a data URL, or "art:<id>" to reuse pack art. */
   art?: string;
+  /** Sound played when the entity is used at the table (WAV data URL). */
+  sound?: string;
   /** Accent colour used by the builder showcase. */
   accent?: string;
   /** Id of the entity this one was cloned from (homebrew). */
@@ -522,7 +527,10 @@ export interface Build {
 }
 
 export interface CharacterMeta {
+  /** Round avatar: a picture (data URL) or a pack portrait reference ("art:portrait:elf"). */
   portrait?: string;
+  /** Full character picture (data URL), shown behind the sheet header and library card. */
+  picture?: string;
   pronouns?: string;
   alignment?: string;
   appearance?: string;

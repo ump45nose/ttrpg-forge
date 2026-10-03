@@ -1,9 +1,12 @@
-import { actionUseEvent, canUse, lowestAvailableSlot, pactRemaining, slotsRemaining, type ResolvedAction, type Sheet as SheetData } from "@forge/core";
+import { actionUseEvent, canUse, type Entity, lowestAvailableSlot, pactRemaining, slotsRemaining, type ResolvedAction, type Sheet as SheetData } from "@forge/core";
 import { Brain, Crosshair, Dices, HeartPulse, ShieldAlert, Sparkles } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { create } from "zustand";
 import { useT } from "../../app/i18n";
 import { signed } from "../../ui/AnimatedNumber";
+import { ArtImg } from "../../ui/Art";
+import { playClip } from "../../app/sound";
+import { actionEntityIds, actionSound } from "./actionMedia";
 import { Button } from "../../ui/Button";
 import { Chip } from "../../ui/Chip";
 import { cn } from "../../ui/cn";
@@ -42,6 +45,12 @@ export function ActionSheet({ action, onClose }: { action: ResolvedAction | null
   );
 }
 
+/** The action's own (or its spell's / item's / feat's) sound, when there is one. */
+function playActionSound(action: ResolvedAction, engine: { reg: { get(id: string): Entity | undefined } }) {
+  const src = actionSound(action, (id) => engine.reg.get(id));
+  if (src) void playClip(src);
+}
+
 function Title({ action }: { action: ResolvedAction }) {
   const n = useNames();
   return <span>{n.l(action.name)}</span>;
@@ -57,7 +66,7 @@ const useCast = create<{ slot?: number; ritual: boolean; set(p: { slot?: number;
 function Body({ action }: { action: ResolvedAction }) {
   const t = useT();
   const n = useNames();
-  const { sheet, state, roll, push } = usePlay();
+  const { sheet, state, roll, push, engine } = usePlay();
   const cast = useCast();
   const [mode, setMode] = useState<Edge>("normal");
   const [lastAttack, setLastAttack] = useState<RollRecord | null>(null);
@@ -85,6 +94,7 @@ function Body({ action }: { action: ResolvedAction }) {
   const name = n.l(action.name, { mono: true });
 
   const rollAttack = async () => {
+    playActionSound(action, engine);
     const r = await roll({ expr: d20(action.attack!.bonus), label: `${name} · ${t("sheet.attackRoll")}`, kind: "attack", advantage: mode === "adv", disadvantage: mode === "dis" });
     if (r) await afterLanding(r);
     if (r) setLastAttack(r);
@@ -108,6 +118,7 @@ function Body({ action }: { action: ResolvedAction }) {
 
   return (
     <div className="space-y-4">
+      <ArtImg id={actionEntityIds(action)} focus={[0.5, 0.35]} className="h-32 rounded-2xl [mask-image:linear-gradient(to_bottom,black_65%,transparent)] sm:h-40" />
       <div className="flex flex-wrap gap-1.5">
         <Chip tone="class">{n.activation(action.activation)}</Chip>
         {spell && <Chip tone="magic">{spell.level ? t("spell.level", { n: spell.level }) : t("spell.cantrip")}</Chip>}
@@ -284,6 +295,7 @@ function Footer({ action, onClose, closing }: { action: ResolvedAction; onClose:
   const confirm = useOnce(action, () => {
     const e = push(ev);
     if (!e) return;
+    playActionSound(action, engine);
     toast({ content: describe(e), tone: "accent", action: { label: t("common.undo"), run: () => push({ type: "revert", target: e.id }) } }, 5000);
     onClose();
   });
@@ -292,6 +304,7 @@ function Footer({ action, onClose, closing }: { action: ResolvedAction; onClose:
   const drink = useOnce(action, async () => {
     const e = push(ev);
     if (!e) return;
+    playActionSound(action, engine);
     onClose();
     const name = n.l(action.name, { mono: true });
     const r = await roll({ expr: action.heal!.dice, label: `${name} · ${t("sheet.healing")}`, kind: "heal" });

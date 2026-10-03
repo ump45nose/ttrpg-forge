@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { DiceDock } from "../features/dice/DiceDock";
 import { TermLayer } from "../features/terms/TermLayer";
 import { FxLayer } from "../ui/Fx";
+import { StudioHost } from "../features/media/StudioHost";
 import { Library } from "../features/library/Library";
 import { SheetPage } from "../features/sheet/SheetPage";
 import { ToastViewport } from "../ui/Toast";
@@ -33,6 +34,7 @@ function Root() {
       <TermLayer />
       <FxLayer />
       <Slot name="app.overlay" />
+      <StudioHost />
       <ToastViewport />
     </MotionConfig>
   );

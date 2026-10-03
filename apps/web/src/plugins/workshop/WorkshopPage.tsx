@@ -1,7 +1,7 @@
 import { localize, type Entity } from "@forge/core";
-import { ArtImg } from "../../ui/Art";
+import { ART_REF, ArtImg } from "../../ui/Art";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Backpack, BookA, Copy, Download, FileJson, GitBranch, Hammer, Medal, Package, Pencil, Plus, ScrollText, Search, Sparkles, Stamp, Swords, Trash2, Users, type LucideIcon } from "lucide-react";
+import { ArrowLeft, AudioLines, Backpack, BookA, Copy, Download, FileJson, GitBranch, Hammer, Medal, Package, Pencil, Plus, ScrollText, Search, Sparkles, Stamp, Swords, Trash2, Users, type LucideIcon } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { ulid } from "ulid";
@@ -17,6 +17,7 @@ import { Input } from "../../ui/Field";
 import { toast } from "../../ui/Toast";
 import { WORKSHOP_TYPES, type WorkshopType } from "./editor/factory";
 import { PackEditor } from "./editor/PackEditor";
+import { CueSounds } from "./CueSounds";
 
 export const TYPE_ICON: Record<WorkshopType, LucideIcon> = {
   class: Swords,
@@ -134,6 +135,11 @@ export function WorkshopPage() {
         <RemixSearch />
       </Section>
 
+      {/* sounds */}
+      <Section title={t("sound.cues")} icon={<AudioLines size={15} />}>
+        <CueSounds />
+      </Section>
+
       {/* packs */}
       <Section title={t("workshop.packs")} icon={<Package size={15} />}>
         <PackList onEdit={setEditing} />
@@ -167,9 +173,18 @@ function ContentRow({ r }: { r: Row }) {
   const parent = r.e.type === "subclass" ? engine.reg.get(r.e.classId) : undefined;
   return (
     <motion.div layout initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0 }} className="flex items-center gap-3 rounded-xl border border-line bg-surface/60 py-2 pr-1.5 pl-3">
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-line text-ink-2" style={r.e.accent ? { color: r.e.accent, borderColor: `${r.e.accent}66` } : undefined}>
-        <Icon size={17} />
-      </span>
+      <ArtImg
+        id={r.e.art?.startsWith(ART_REF) ? r.e.art.slice(ART_REF.length) : undefined}
+        src={r.e.art && !r.e.art.startsWith(ART_REF) ? r.e.art : undefined}
+        size="sm"
+        focus={[0.5, 0.3]}
+        className="h-9 w-9 shrink-0 rounded-lg border border-line"
+        fallback={
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-line text-ink-2" style={r.e.accent ? { color: r.e.accent, borderColor: `${r.e.accent}66` } : undefined}>
+            <Icon size={17} />
+          </span>
+        }
+      />
       <button className="min-w-0 flex-1 text-left" onClick={() => openCreator({ type: r.e.type, mode: "edit", base: r.e })}>
         <span className="flex items-center gap-1.5">
           <span className="truncate text-sm font-medium text-ink">{l(r.e.name, { mono: true })}</span>

@@ -1,5 +1,5 @@
 import type { Entity } from "@forge/core";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { CreateRequest } from "../../../app/creator";
 import { useL, useT } from "../../../app/i18n";
 import { LOCAL_PACK_ID, useEngine, usePacks } from "../../../app/packs";
@@ -10,6 +10,7 @@ import { toast } from "../../../ui/Toast";
 import { blankEntity, cloneEntity, isWorkshopType, overrideEntity } from "./factory";
 import { Field, Select, useLocale } from "./fields";
 import { JsonEditor } from "./JsonEditor";
+import { MediaFields } from "./MediaFields";
 import { BackgroundFormView, ItemFormView, SpeciesFormView } from "./originForms";
 import { ClassFormView, FeatFormView, RuleFormView, SpellFormView, SubclassFormView } from "./ruleForms";
 import { parseEntity } from "./shared";
@@ -20,6 +21,9 @@ export function useWritablePacks() {
   const local = packs.find((p) => p.id === LOCAL_PACK_ID);
   return [...(local ? [local] : []), ...packs.filter((p) => p.id !== LOCAL_PACK_ID && p.origin === "homebrew")];
 }
+
+const PICTURE_PLACEHOLDER = "[picture]";
+const SOUND_PLACEHOLDER = "[sound]";
 
 function initial(req: CreateRequest, locale: "en" | "zh"): Entity | null {
   if (!isWorkshopType(req.type)) return null;
@@ -42,11 +46,21 @@ export function EntityEditor({ req, onClose }: { req: CreateRequest | null; onCl
   const [formKey, setFormKey] = useState(0);
   const [entity, setEntity] = useState<Entity | null>(null);
   const [target, setTarget] = useState(LOCAL_PACK_ID);
+  // the typed forms rebuild the entity from their own fields, so media lives beside them
+  const [media, setMedia] = useState<Pick<Entity, "art" | "sound">>({});
+
+  // a picture is a long data URL: keep it out of the JSON text (the placeholder stands for "unchanged")
+  const jsonValue = useMemo(
+    () => (entity ? { ...entity, art: media.art && !media.art.startsWith("art:") ? PICTURE_PLACEHOLDER : media.art, sound: media.sound ? SOUND_PLACEHOLDER : undefined } : null),
+    [entity, media],
+  ) as Entity;
 
   useEffect(() => {
     setTab("form");
     setFormKey((k) => k + 1);
-    setEntity(req ? initial(req, locale) : null);
+    const e = req ? initial(req, locale) : null;
+    setEntity(e);
+    setMedia({ art: e?.art, sound: e?.sound });
     const owner = req?.mode === "edit" && req.base ? engine.reg.packOf(req.base.id) : undefined;
     setTarget(owner && writable.some((p) => p.id === owner) ? owner : LOCAL_PACK_ID);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -54,9 +68,10 @@ export function EntityEditor({ req, onClose }: { req: CreateRequest | null; onCl
 
   if (!req || !entity) return <Sheet open={false} onOpenChange={onClose}>{null}</Sheet>;
 
+  const withMedia: Entity = { ...entity, ...media };
   const save = async () => {
     if (l(entity.name, { mono: true }).trim() === "?") return toast({ content: t("homebrew.nameRequired"), tone: "bad" });
-    const r = parseEntity(entity);
+    const r = parseEntity(withMedia);
     if (!r.ok) return toast({ content: r.errors[0], tone: "bad" }, 6000);
     await upsertIn(target, r.value);
     toast({ content: `${l(r.value.name, { mono: true })} ✓`, tone: "good" });
@@ -118,9 +133,25 @@ export function EntityEditor({ req, onClose }: { req: CreateRequest | null; onCl
         }}
       />
       {tab === "json" ? (
-        <JsonEditor value={entity} validate={parseEntity} onValid={(e) => setEntity({ ...e, id: entity.id })} rows={22} />
+        <JsonEditor
+          value={jsonValue}
+          validate={parseEntity}
+          onValid={(e) => {
+            setEntity({ ...e, id: entity.id });
+            setMedia((m) => ({ art: e.art === PICTURE_PLACEHOLDER ? m.art : e.art, sound: e.sound === SOUND_PLACEHOLDER ? m.sound : e.sound }));
+          }}
+          rows={22}
+        />
       ) : (
-        <div key={formKey}>{form ?? <Field label="">{t("workshop.jsonOnly")}</Field>}</div>
+        <div className="space-y-5">
+          <MediaFields
+            type={entity.type}
+            art={media.art}
+            onArt={(art) => setMedia((m) => ({ ...m, art }))}
+            sound={media.sound}
+            onSound={(sound) => setMedia((m) => ({ ...m, sound }))} describe={[l(entity.name, { mono: true }), entity.summary && l(entity.summary, { mono: true })].filter((x) => x && x !== "?").join(" — ")} />
+          <div key={formKey}>{form ?? <Field label="">{t("workshop.jsonOnly")}</Field>}</div>
+        </div>
       )}
     </Sheet>
   );

@@ -122,6 +122,8 @@ export interface ResolvedAction {
   item?: { key: string; entityId: string; qty: number; consumable: boolean };
   /** Static availability (formula `when`); resource availability is a play-state concern. */
   available: boolean;
+  /** Sound of the action itself (the spell's / item's own sound is looked up by id). */
+  sound?: string;
 }
 
 export interface ItemView {
@@ -505,6 +507,7 @@ export function derive(reg: PackRegistry, build: Build, opts: DeriveOptions = {}
       costs: [...economyCost(a.activation), ...resolveCosts(a.cost)],
       applies: a.applies,
       available: a.when ? !!stats.eval(a.when) : true,
+      sound: a.sound,
     });
   }
 
@@ -617,6 +620,7 @@ export function derive(reg: PackRegistry, build: Build, opts: DeriveOptions = {}
       applies: u.applies,
       item: { key: it.key, entityId: e.id, qty: it.qty, consumable: !!e.consumable },
       available: u.when ? !!stats.eval(u.when) : true,
+      sound: u.sound,
     });
   }
 

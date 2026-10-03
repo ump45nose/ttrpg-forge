@@ -107,12 +107,24 @@ export interface ArtPack {
   credit?: LocalizedText;
 }
 
+/** Built-in feedback sounds an app may replace: dice rolling / landing, crit, fumble, healing, damage. */
+export type SoundCue = "roll" | "land" | "crit" | "fumble" | "heal" | "hurt";
+
+/** Replacements for feedback cues (audio URLs or data URLs). Later packs win; the player's own sounds win over all. */
+export interface SoundPack {
+  id: string;
+  name: LocalizedText;
+  cues: Partial<Record<SoundCue, string>>;
+  credit?: LocalizedText;
+}
+
 export interface Contributions<C> {
   rulePacks?: RulePack[];
   locales?: Record<string, Record<string, unknown>>;
   themes?: ThemeDef[];
   /** Later packs override earlier ones per id; missing ids fall back to generated emblems. */
   art?: ArtPack[];
+  sounds?: SoundPack[];
   slots?: SlotContribution<C>[];
   actionFx?: ActionFx[];
   diceRenderers?: DiceRenderer<C>[];

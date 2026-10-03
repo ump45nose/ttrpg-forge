@@ -1,15 +1,42 @@
+import type { SoundCue } from "@forge/plugin-api";
+import { create } from "zustand";
+import { db } from "./db";
+import { host } from "./host";
 import { useSettings } from "./settings";
 
 /**
- * Small synthesised cues (WebAudio), so there are no sound files to download,
- * cache or license. Off unless the player turns sounds on.
+ * Feedback cues. By default small synthesised sounds (WebAudio), so there is
+ * nothing to download, cache or license; the player can replace any of them with
+ * their own clip (Workshop), and sound-pack plugins can too. Off unless sounds are on.
  */
-export type Cue = "roll" | "land" | "crit" | "fumble" | "heal" | "hurt";
+export type Cue = SoundCue;
+export const CUES: Cue[] = ["roll", "land", "crit", "fumble", "heal", "hurt"];
+
+/** The player's replacements (Dexie `sounds`), mirrored here so playing stays synchronous. */
+export const useCueSounds = create<{ cues: Partial<Record<Cue, { data: string; name?: string }>> }>()(() => ({ cues: {} }));
+
+export async function loadCueSounds() {
+  const rows = await db.sounds.toArray();
+  useCueSounds.setState({ cues: Object.fromEntries(rows.map((r) => [r.cue, { data: r.data, name: r.name }])) });
+}
+
+export async function setCueSound(cue: Cue, clip: { data: string; name?: string } | null) {
+  if (clip) await db.sounds.put({ cue, ...clip, updatedAt: Date.now() });
+  else await db.sounds.delete(cue);
+  await loadCueSounds();
+}
+
+/** What a cue plays: the player's clip, else the last sound pack's, else the synthesised default. */
+export function cueSource(cue: Cue, own = useCueSounds.getState().cues, packs = host.get("sounds")): string | undefined {
+  if (own[cue]) return own[cue]!.data;
+  for (let i = packs.length - 1; i >= 0; i--) if (packs[i]!.cues[cue]) return packs[i]!.cues[cue];
+  return undefined;
+}
 
 let ctx: AudioContext | undefined;
 
-function audio(): AudioContext | undefined {
-  if (!useSettings.getState().sound) return undefined;
+function audio(force = false): AudioContext | undefined {
+  if (!force && !useSettings.getState().sound) return undefined;
   try {
     ctx ??= new AudioContext();
     if (ctx.state === "suspended") void ctx.resume();
@@ -51,8 +78,35 @@ function click(a: AudioContext, at: number, gain = 0.35, freq = 2200) {
   src.start(at);
 }
 
-export function playCue(cue: Cue) {
-  const a = audio();
+const decoded = new Map<string, Promise<AudioBuffer>>();
+
+/** Play a clip (data URL or URL). `force` plays even with sounds off (previews in the editor). */
+export async function playClip(src: string, opts: { force?: boolean } = {}): Promise<void> {
+  const a = audio(opts.force);
+  if (!a) return;
+  (window as { __forgeSoundLog?: string[] }).__forgeSoundLog?.push(src.slice(0, 48));
+  try {
+    let buf = decoded.get(src);
+    if (!buf) {
+      buf = fetch(src)
+        .then((r) => r.arrayBuffer())
+        .then((b) => a.decodeAudioData(b));
+      decoded.set(src, buf);
+      buf.catch(() => decoded.delete(src));
+    }
+    const node = a.createBufferSource();
+    node.buffer = await buf;
+    node.connect(a.destination);
+    node.start();
+  } catch {
+    /* unplayable clip: stay quiet */
+  }
+}
+
+export function playCue(cue: Cue, opts: { force?: boolean; synth?: boolean } = {}) {
+  const own = opts.synth ? undefined : cueSource(cue);
+  if (own) return void playClip(own, opts);
+  const a = audio(opts.force);
   if (!a) return;
   const t = a.currentTime + 0.01;
   switch (cue) {

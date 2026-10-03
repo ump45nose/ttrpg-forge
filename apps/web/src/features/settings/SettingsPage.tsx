@@ -1,6 +1,6 @@
 import { localize } from "@forge/core";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Check, ChevronDown, ChevronUp, Download, FileJson, Package, Puzzle, Trash2 } from "lucide-react";
+import { ArrowLeft, Check, ChevronDown, ChevronUp, Download, FileJson, Package, Puzzle, Trash2, Wand2 } from "lucide-react";
 import { motion } from "motion/react";
 import { useRef, type ReactNode } from "react";
 import { useCharacters } from "../../app/characters";
@@ -17,6 +17,7 @@ import { toast } from "../../ui/Toast";
 import { Slot } from "../../app/slot";
 import { downloadJson, importPackFile } from "../library/transfer";
 import { DataSection } from "./DataSection";
+import { ImageApiSection } from "./ImageApiSection";
 
 export function SettingsPage() {
   const t = useT();
@@ -98,6 +99,10 @@ export function SettingsPage() {
         <Switch checked={s.diceAnim} onChange={(v) => s.set({ diceAnim: v })} label={t("settings.diceAnim")} hint={t("settings.diceAnimHint")} />
         <Switch checked={s.sound} onChange={(v) => s.set({ sound: v })} label={t("settings.sound")} hint={t("settings.soundHint")} />
         <Switch checked={s.haptics} onChange={(v) => s.set({ haptics: v })} label={t("settings.haptics")} />
+      </Section>
+
+      <Section title={t("settings.imageApi")} icon={<Wand2 size={16} />}>
+        <ImageApiSection />
       </Section>
 
       <Slot name="settings.section" />

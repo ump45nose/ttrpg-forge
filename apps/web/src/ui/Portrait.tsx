@@ -1,12 +1,12 @@
 import type { Character } from "@forge/core";
 import { useState } from "react";
 import { useSettings } from "../app/settings";
-import { ArtImg } from "./Art";
+import { ART_REF, ArtImg } from "./Art";
 import { cn } from "./cn";
 import { Crest } from "./Crest";
 
 /** `meta.portrait` is either an uploaded image (data URL) or a reference to pack art ("art:portrait:elf"). */
-export const PORTRAIT_ART = "art:";
+export const PORTRAIT_ART = ART_REF;
 
 export function defaultPortraitId(speciesId: string | undefined) {
   return speciesId ? `portrait:${speciesId.split(":")[1]}` : undefined;
@@ -30,21 +30,4 @@ export function Portrait({ character, speciesId, accent, size = 48, className }:
   const id = p?.startsWith(PORTRAIT_ART) ? p.slice(PORTRAIT_ART.length) : defaultPortraitId(speciesId);
   if (!artOn) return crest;
   return <ArtImg id={id} size={size > 96 ? "lg" : "sm"} focus={[0.5, 0.35]} fallback={crest} className={cn(ring, className)} style={{ width: size, height: size, ["--class" as string]: accent }} />;
-}
-
-/** Downscale an uploaded picture to a square WebP data URL small enough to live in the character. */
-export async function compressPortrait(file: File, edge = 384): Promise<string> {
-  const bmp = await createImageBitmap(file);
-  const side = Math.min(bmp.width, bmp.height);
-  const canvas = document.createElement("canvas");
-  canvas.width = canvas.height = Math.min(edge, side);
-  const ctx = canvas.getContext("2d")!;
-  // centre crop, biased up a little so faces stay in frame
-  const sx = (bmp.width - side) / 2;
-  const sy = Math.max(0, (bmp.height - side) * 0.3);
-  ctx.drawImage(bmp, sx, sy, side, side, 0, 0, canvas.width, canvas.height);
-  bmp.close();
-  const webp = canvas.toDataURL("image/webp", 0.82);
-  // Safari < 17 can't encode WebP and silently returns PNG
-  return webp.startsWith("data:image/webp") ? webp : canvas.toDataURL("image/jpeg", 0.85);
 }

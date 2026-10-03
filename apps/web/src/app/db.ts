@@ -12,12 +12,32 @@ export interface StoredPack {
   updatedAt: number;
 }
 
+/** A generated or uploaded picture kept for the image studio's "recent" strip (device only, not backed up). */
+export interface StoredImage {
+  id: string;
+  blob: Blob;
+  prompt?: string;
+  source: "ai" | "upload";
+  createdAt: number;
+}
+
+/** A player's replacement for one of the built-in sound cues (WAV data URL). */
+export interface StoredSound {
+  cue: string;
+  data: string;
+  name?: string;
+  updatedAt: number;
+}
+
 class ForgeDB extends Dexie {
   characters!: Table<Character, string>;
   packs!: Table<StoredPack, string>;
+  images!: Table<StoredImage, string>;
+  sounds!: Table<StoredSound, string>;
   constructor() {
     super("forge");
     this.version(1).stores({ characters: "id, updatedAt", packs: "id" });
+    this.version(2).stores({ images: "id, createdAt", sounds: "cue" });
   }
 }
 

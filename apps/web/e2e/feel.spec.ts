@@ -70,6 +70,8 @@ test("art: class picker shows paintings; a portrait can be uploaded", async ({ p
     }),
     "base64",
   );
-  await page.locator('input[type="file"][accept="image/*"]').setInputFiles({ name: "me.png", mimeType: "image/png", buffer: png });
+  await page.getByRole("button", { name: "上传图片" }).click();
+  await page.locator('label:has-text("选择图片或拍照") input[type="file"]').setInputFiles({ name: "me.png", mimeType: "image/png", buffer: png });
+  await page.getByRole("button", { name: "使用这张" }).click();
   await expect(page.locator('img[src^="data:image/"]').first()).toBeVisible();
 });

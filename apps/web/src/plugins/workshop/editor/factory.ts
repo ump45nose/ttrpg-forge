@@ -60,7 +60,8 @@ export function cloneEntity(base: Entity): Entity {
   if (copy.type === "class")
     for (const gs of Object.values(copy.levels))
       for (const g of gs) if (g.type === "choice" && g.id === "subclass" && g.from.kind === "entity") g.from.tags = [slugOf(id)];
-  return { ...copy, id, name: suffix(base.name, "*"), source: base.id };
+  // a copy keeps showing the original's painting until it gets its own picture
+  return { ...copy, id, name: suffix(base.name, "*"), source: base.id, art: copy.art ?? `art:${base.id}` };
 }
 
 /** Same id: saved into a user pack, it replaces the original everywhere (a house rule). */

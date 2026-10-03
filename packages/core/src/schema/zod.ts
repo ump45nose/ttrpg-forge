@@ -46,6 +46,7 @@ const actionBody = {
   when: z.string().optional(),
   category: z.enum(["attack", "spell", "feature", "basic", "item"]).optional(),
   tags: z.array(z.string()).optional(),
+  sound: z.string().optional(),
 };
 
 export const ActionSchema = z.object({ id: z.string(), name: text, activation, ...actionBody });
@@ -110,6 +111,7 @@ const entityBase = {
   grants: grants.optional(),
   repeatable: z.boolean().optional(),
   art: z.string().optional(),
+  sound: z.string().optional(),
   accent: z.string().optional(),
   source: z.string().optional(),
 };

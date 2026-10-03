@@ -1,9 +1,10 @@
 import { parseCharacter, parseRulePack, type Character } from "@forge/core";
 import { downloadJson } from "../features/library/transfer";
 import { useCharacters } from "./characters";
-import { db, type StoredPack } from "./db";
+import { db, type StoredPack, type StoredSound } from "./db";
+import { loadCueSounds } from "./sound";
 import { usePacks } from "./packs";
-import { useSettings, type Settings } from "./settings";
+import { keepLocalKey, portableSettings, useSettings, type Settings } from "./settings";
 
 /** Everything that lives only on this device: characters, user packs and settings. */
 export interface Backup {
@@ -13,12 +14,14 @@ export interface Backup {
   characters: Character[];
   packs: StoredPack[];
   settings?: Partial<Settings>;
+  /** The player's replacement feedback sounds. */
+  sounds?: StoredSound[];
 }
 
 const WEEK = 7 * 24 * 3600 * 1000;
 
-export function downloadBackup() {
-  const { set: _set, ...settings } = useSettings.getState();
+export async function downloadBackup() {
+  const settings = portableSettings(useSettings.getState());
   const b: Backup = {
     format: "forge-backup",
     version: 1,
@@ -26,6 +29,7 @@ export function downloadBackup() {
     characters: Object.values(useCharacters.getState().byId),
     packs: usePacks.getState().packs,
     settings,
+    sounds: await db.sounds.toArray(),
   };
   downloadJson(b, `forge-backup-${new Date().toISOString().slice(0, 10)}.json`);
   useSettings.getState().set({ lastBackup: b.at, backupSnoozed: undefined });
@@ -63,7 +67,8 @@ export async function readBackup(file: File): Promise<ReadBackup> {
       if (r.ok) packs.push({ ...p, pack: r.value });
       else skipped++;
     }
-    return { ok: true, skipped, backup: { format: "forge-backup", version: 1, at: raw.at ?? 0, characters, packs, settings: raw.settings } };
+    const sounds = (Array.isArray(raw.sounds) ? raw.sounds : []).filter((s): s is StoredSound => typeof s?.cue === "string" && typeof s.data === "string" && s.data.startsWith("data:audio/"));
+    return { ok: true, skipped, backup: { format: "forge-backup", version: 1, at: raw.at ?? 0, characters, packs, settings: raw.settings, sounds } };
   } catch (e) {
     return { ok: false, error: (e as Error).message };
   }
@@ -77,19 +82,23 @@ export async function restoreBackup(b: Backup, mode: "merge" | "replace") {
   const chars = useCharacters.getState();
   const packs = usePacks.getState();
   if (mode === "replace") {
-    await db.transaction("rw", db.characters, db.packs, async () => {
+    await db.transaction("rw", db.characters, db.packs, db.sounds, async () => {
       await db.characters.clear();
       await db.packs.clear();
+      await db.sounds.clear();
       await db.characters.bulkPut(b.characters);
       await db.packs.bulkPut(b.packs);
+      await db.sounds.bulkPut(b.sounds ?? []);
     });
-    if (b.settings) useSettings.getState().set(b.settings);
+    if (b.settings) useSettings.getState().set(keepLocalKey(b.settings, useSettings.getState()));
   } else {
     const newer = <T extends { id: string; updatedAt: number }>(mine: T | undefined, theirs: T) => !mine || theirs.updatedAt > mine.updatedAt;
     await db.characters.bulkPut(b.characters.filter((c) => newer(chars.byId[c.id], c)));
     await db.packs.bulkPut(b.packs.filter((p) => newer(packs.packs.find((x) => x.id === p.id), p)));
+    const mine = new Map((await db.sounds.toArray()).map((s) => [s.cue, s]));
+    await db.sounds.bulkPut((b.sounds ?? []).filter((s) => !mine.has(s.cue) || s.updatedAt > mine.get(s.cue)!.updatedAt));
   }
-  await Promise.all([chars.load(), packs.load()]);
+  await Promise.all([chars.load(), packs.load(), loadCueSounds()]);
 }
 
 /** Playtest notes from every character, each with the few events that led up to it, as Markdown. */

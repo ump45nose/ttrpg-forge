@@ -226,8 +226,9 @@ function CharacterCard({ c, index }: { c: Character; index: number }) {
       <div className="pointer-events-none absolute inset-0 opacity-60 transition-opacity group-hover:opacity-100" style={{ background: `radial-gradient(120% 90% at 0% 0%, color-mix(in oklab, ${accent} 26%, transparent), transparent 60%)` }} />
       <ArtImg
         id={[sub?.id, cls?.id]}
+        src={c.meta.picture}
         size="sm"
-        focus={[0.5, 0.3]}
+        focus={[0.5, 0.25]}
         className="pointer-events-none absolute inset-y-0 right-0 w-1/2 bg-transparent opacity-35 transition-opacity [mask-image:linear-gradient(to_left,black,transparent)] group-hover:opacity-55"
       />
       <div className="relative flex gap-4 p-4">

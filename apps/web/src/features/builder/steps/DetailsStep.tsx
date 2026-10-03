@@ -1,14 +1,10 @@
-import { Check, Dices, ImageUp, RotateCcw } from "lucide-react";
-import { useRef } from "react";
+import { Dices } from "lucide-react";
 import { useT } from "../../../app/i18n";
-import { ArtImg, useArtIds } from "../../../ui/Art";
 import { Button } from "../../../ui/Button";
-import { cn } from "../../../ui/cn";
-import { compressPortrait, Portrait, PORTRAIT_ART } from "../../../ui/Portrait";
-import { toast } from "../../../ui/Toast";
 import { Input, Label, Textarea } from "../../../ui/Field";
 import { randomName } from "../../library/Library";
 import { useBuilder } from "../state";
+import { PortraitEditor } from "../../media/PortraitEditor";
 
 const ALIGNMENTS = ["LG", "NG", "CG", "LN", "N", "CN", "LE", "NE", "CE"] as const;
 
@@ -65,61 +61,6 @@ export function DetailsStep() {
 }
 
 function PortraitPicker() {
-  const t = useT();
   const { character, sheet, setMeta } = useBuilder();
-  const fileRef = useRef<HTMLInputElement>(null);
-  const gallery = useArtIds("portrait:");
-  const current = character.meta.portrait;
-  return (
-    <div>
-      <Label>{t("portrait.title")}</Label>
-      <div className="flex items-center gap-4">
-        <Portrait character={character} speciesId={sheet.speciesId} size={88} />
-        <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" size="sm" onClick={() => fileRef.current?.click()}>
-            <ImageUp size={15} /> {t("portrait.upload")}
-          </Button>
-          {current && (
-            <Button variant="ghost" size="sm" onClick={() => setMeta({ portrait: undefined })}>
-              <RotateCcw size={14} /> {t("portrait.reset")}
-            </Button>
-          )}
-        </div>
-      </div>
-      {gallery.length > 0 && (
-        <div className="no-scrollbar -mx-1 mt-3 flex gap-2 overflow-x-auto px-1 pb-1">
-          {gallery.map((id) => {
-            const on = current === PORTRAIT_ART + id;
-            return (
-              <button key={id} type="button" onClick={() => setMeta({ portrait: on ? undefined : PORTRAIT_ART + id })} aria-pressed={on} className="relative shrink-0 rounded-full">
-                <ArtImg id={id} size="sm" className={cn("h-14 w-14 rounded-full ring-2 transition", on ? "ring-class" : "ring-transparent opacity-80 hover:opacity-100")} />
-                {on && (
-                  <span className="absolute -right-0.5 -bottom-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-class text-white">
-                    <Check size={12} strokeWidth={3} />
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      )}
-      <p className="mt-2 text-xs text-ink-3">{t("portrait.hint")}</p>
-      <input
-        ref={fileRef}
-        type="file"
-        accept="image/*"
-        hidden
-        onChange={async (e) => {
-          const f = e.target.files?.[0];
-          e.target.value = "";
-          if (!f) return;
-          try {
-            setMeta({ portrait: await compressPortrait(f) });
-          } catch {
-            toast({ content: t("portrait.failed"), tone: "bad" });
-          }
-        }}
-      />
-    </div>
-  );
+  return <PortraitEditor character={character} speciesId={sheet.speciesId} classId={sheet.classes[0]?.id} onChange={setMeta} />;
 }

@@ -12,6 +12,7 @@ import { Tabs } from "../../../ui/Tabs";
 import { spellLists } from "./contentTemplates";
 import { Field, MultiPick, Select, TagList, toFormula, useLocale } from "./fields";
 import { JsonEditor } from "./JsonEditor";
+import { SoundField } from "../../../features/media/SoundField";
 import { L, plain } from "./templates";
 
 /**
@@ -435,6 +436,9 @@ export function ActionForm({ g, onChange, resources, bare = false }: { g: Action
       </div>
       <Field label={t("workshop.heal")} hint={t("common.optional")}>
         <Input value={a.heal?.dice ?? ""} placeholder="1d8 + @ability.wis.mod" onChange={(e) => set({ heal: e.target.value ? { dice: e.target.value } : undefined })} />
+      </Field>
+      <Field label={t("sound.actionSound")} hint={t("sound.actionSoundHint")}>
+        <SoundField value={a.sound} onChange={(sound) => set({ sound })} title={t("sound.actionSound")} />
       </Field>
     </div>
   );

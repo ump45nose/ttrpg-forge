@@ -1,6 +1,7 @@
 import type { Locale } from "@forge/core";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { ImageConnection } from "./imageApi";
 
 export interface Settings {
   locale: Locale;
@@ -20,6 +21,10 @@ export interface Settings {
   sound: boolean;
   /** Tumbling dice before the result lands. */
   diceAnim: boolean;
+  /** Saved OpenAI-compatible image API connections. Keys stay on this device. */
+  imageConnections: ImageConnection[];
+  /** The connection used for generating. */
+  imageConnectionId?: string;
   /** One-off tips the user has dismissed. */
   seenHints: string[];
   /** Last full backup (ms), for the "back up your data" nudge. */
@@ -45,12 +50,31 @@ export const useSettings = create<Settings>()(
       art: true,
       sound: false,
       diceAnim: true,
+      imageConnections: [],
       seenHints: [],
       set: (patch) => set(patch),
     }),
     { name: "forge.settings", version: 2, migrate: (s) => ({ seenHints: [], ...(s as object) }) as unknown as Settings },
   ),
 );
+
+/** The connection images are generated with, if one is set up. */
+export function activeConnection(s: Pick<Settings, "imageConnections" | "imageConnectionId">): ImageConnection | undefined {
+  return s.imageConnections.find((c) => c.id === s.imageConnectionId) ?? s.imageConnections[0];
+}
+
+/** Settings as they go into a backup: everything but the personal image API keys. */
+export function portableSettings(s: Settings): Partial<Settings> {
+  const { set: _set, imageConnections, ...rest } = s;
+  return { ...rest, imageConnections: imageConnections.map((c) => ({ ...c, key: "" })) };
+}
+
+/** Settings restored from a backup keep this device's own keys (matched by connection). */
+export function keepLocalKey(incoming: Partial<Settings>, current: Settings): Partial<Settings> {
+  if (!incoming.imageConnections) return incoming;
+  const own = new Map(current.imageConnections.map((c) => [c.id, c.key]));
+  return { ...incoming, imageConnections: incoming.imageConnections.map((c) => ({ ...c, key: own.get(c.id) ?? "" })) };
+}
 
 export function reducedMotion(): boolean {
   const m = useSettings.getState().motion;
