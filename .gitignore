@@ -13,3 +13,6 @@ packs/phb-2024/src/generated/
 
 # raw generated art (converted WebP goes into the app)
 tools/art/raw/
+
+# built APKs are distributed out-of-band, not committed
+*.apk
