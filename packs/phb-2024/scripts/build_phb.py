@@ -23,15 +23,17 @@ OUT = os.path.join(HERE, "..", "src", "generated", "phb.json")
 
 
 def api(path):
-    with urllib.request.urlopen(f"https://api.github.com/repos/{REPO}/{path}") as r:
+    with urllib.request.urlopen(f"https://api.github.com/repos/{REPO}/{path}", timeout=60) as r:
         return json.load(r)
 
 
-def fetch_all(refresh):
+def fetch_all(refresh, commit=None):
     os.makedirs(CACHE, exist_ok=True)
     meta_path = os.path.join(CACHE, "_meta.json")
+    if commit and os.path.exists(meta_path):
+        refresh = refresh or json.load(open(meta_path, encoding="utf-8"))["commit"] != commit
     if refresh or not os.path.exists(meta_path):
-        commit = api("commits/main")["sha"]
+        commit = commit or api("commits/main")["sha"]
         tree = api(f"git/trees/{commit}?recursive=1")["tree"]
         files = [x["path"] for x in tree if x["path"].startswith(ROOT) and x["path"].endswith(".htm")]
         json.dump({"commit": commit, "files": files}, open(meta_path, "w", encoding="utf-8"), ensure_ascii=False)
@@ -40,7 +42,7 @@ def fetch_all(refresh):
     def get(p):
         out = os.path.join(CACHE, p.replace("/", "_"))
         if refresh or not os.path.exists(out):
-            with urllib.request.urlopen(RAW.replace("main", meta["commit"]) + urllib.parse.quote(p)) as r:
+            with urllib.request.urlopen(RAW.replace("main", meta["commit"]) + urllib.parse.quote(p), timeout=60) as r:
                 open(out, "wb").write(r.read())
 
     with concurrent.futures.ThreadPoolExecutor(8) as ex:
@@ -500,8 +502,11 @@ def parse_classes(files):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--refresh", action="store_true", help="re-download the pages")
+    ap.add_argument("--commit", help="pin source to an exact 40-character Git commit")
     args = ap.parse_args()
-    meta = fetch_all(args.refresh)
+    if args.commit and not re.fullmatch(r"[0-9a-f]{40}", args.commit):
+        ap.error("--commit must be an exact 40-character lowercase Git commit")
+    meta = fetch_all(args.refresh, args.commit)
     data = {
         "source": {"repo": REPO, "path": ROOT, "commit": meta["commit"], "generatedAt": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds")},
         "spells": parse_spells(),

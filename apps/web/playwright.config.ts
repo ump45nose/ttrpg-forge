@@ -6,12 +6,14 @@ import { defineConfig } from "@playwright/test";
  */
 export default defineConfig({
   testDir: "e2e",
+  testIgnore: "**/pages.spec.ts",
   timeout: 30_000,
   fullyParallel: true,
   reporter: [["list"]],
   use: {
     baseURL: "http://localhost:4180",
-    channel: "chrome",
+    channel: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE ? undefined : "chrome",
+    launchOptions: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE } : undefined,
     viewport: { width: 390, height: 844 },
     isMobile: true,
     hasTouch: true,

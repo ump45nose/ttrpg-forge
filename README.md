@@ -84,7 +84,7 @@ cd apps/web/android
 
 也可以不装 APK，部署到自己的服务器后用浏览器「添加到主屏幕」。Forge 没有后端，任何静态托管都行，具体要求（HTTPS、根路径、缓存头、nginx 配置）见 [docs/deploy.md](docs/deploy.md)。
 
-> ⚠️ 若本地生成了 PHB 2024 包（社区译本内容），构建产物**只能私有部署**，不要放到公网。
+> ⚠️ PHB 2024 包（社区译本内容）默认仅供私有部署；只有已取得适用分发许可的发布者才能公开部署。获许可的 GitHub Pages 构建和验证见 [docs/github-pages.md](docs/github-pages.md)。
 
 ## 仓库结构
 

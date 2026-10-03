@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Generate the art pack from prompts.json through an OpenAI-compatible images API.
 
+Set FORGE_IMAGE_API to your OpenAI-compatible endpoint.
 The key is never stored in the repo: pass it via FORGE_IMAGE_KEY or a key file
 (FORGE_IMAGE_KEY_FILE). Raw PNGs land in tools/art/raw/ (gitignored).
 
@@ -11,7 +12,7 @@ import base64, json, os, sys, time, urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-API = os.environ.get("FORGE_IMAGE_API", "http://192.168.31.201:3000/v1")
+API = os.environ["FORGE_IMAGE_API"]  # Explicit endpoint; do not publish a private-network default.
 MODELS = os.environ.get("FORGE_IMAGE_MODELS", "gpt-image-2,codex-gpt-image-2").split(",")
 KEY = os.environ.get("FORGE_IMAGE_KEY") or open(os.environ["FORGE_IMAGE_KEY_FILE"]).read().strip()
 

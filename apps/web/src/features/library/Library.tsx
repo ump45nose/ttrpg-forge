@@ -126,7 +126,7 @@ function Wordmark() {
   const t = useT();
   return (
     <div className="flex items-center gap-2.5">
-      <img src="/icon.svg" alt="" className="h-9 w-9 rounded-[10px] shadow-card" />
+      <img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" className="h-9 w-9 rounded-[10px] shadow-card" />
       <div className="leading-none">
         <div className="font-display text-xl font-bold tracking-[0.18em] text-gold">FORGE</div>
         <div className="mt-1 text-[11px] tracking-wide text-ink-3">{t("app.tagline")}</div>

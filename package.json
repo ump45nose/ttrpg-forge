@@ -10,7 +10,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc -b",
-    "e2e": "pnpm --filter @forge/web e2e"
+    "e2e": "pnpm --filter @forge/web e2e",
+    "check:phb": "node tools/deploy/check-phb.mjs",
+    "build:pages": "pnpm check:phb && pnpm --filter @forge/web exec vite build --mode pages",
+    "e2e:pages": "pnpm --filter @forge/web exec playwright test --config playwright.pages.config.ts"
   },
   "devDependencies": {
     "typescript": "^7.0.2",

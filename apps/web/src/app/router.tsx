@@ -1,4 +1,4 @@
-import { createRootRoute, createRoute, createRouter, lazyRouteComponent, Outlet, useRouterState } from "@tanstack/react-router";
+import { createHashHistory, createRootRoute, createRoute, createRouter, lazyRouteComponent, Outlet, useRouterState } from "@tanstack/react-router";
 import { motion, MotionConfig } from "motion/react";
 import { useEffect } from "react";
 import { DiceDock } from "../features/dice/DiceDock";
@@ -56,7 +56,15 @@ export const sheetRoute = createRoute({ getParentRoute: () => rootRoute, path: "
 
 const routeTree = rootRoute.addChildren([indexRoute, settingsRoute, pluginRoute, buildRoute, sheetRoute]);
 
-export const router = createRouter({ routeTree, defaultPreload: "intent", scrollRestoration: true });
+const hashRouting = import.meta.env.VITE_ROUTER_MODE === "hash";
+
+export const router = createRouter({
+  routeTree,
+  history: hashRouting ? createHashHistory() : undefined,
+  basepath: hashRouting ? undefined : import.meta.env.BASE_URL,
+  defaultPreload: "intent",
+  scrollRestoration: true,
+});
 
 declare module "@tanstack/react-router" {
   interface Register {

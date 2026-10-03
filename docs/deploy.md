@@ -1,5 +1,7 @@
 # 部署说明（私有分发）
 
+获许可的公开 GitHub Pages 分发请见 [github-pages.md](github-pages.md)。本页保留私有服务器部署说明。
+
 Forge 是纯静态的 PWA：构建产物是一个 `apps/web/dist/` 目录，没有后端。
 角色数据只存在每台设备的浏览器里（IndexedDB），服务器只负责第一次安装和后续更新。
 
