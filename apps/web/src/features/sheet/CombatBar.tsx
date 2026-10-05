@@ -5,7 +5,9 @@ import { Popover } from "radix-ui";
 import { useT } from "../../app/i18n";
 import { Button } from "../../ui/Button";
 import { cn } from "../../ui/cn";
+import { Term } from "../terms/Term";
 import { usePlay } from "./play";
+import { SLOT_RULE } from "./TurnGuide";
 
 type Slot = "action" | "bonus" | "reaction";
 const SLOTS: Slot[] = ["action", "bonus", "reaction"];
@@ -46,6 +48,15 @@ export function CombatBar() {
         <Popover.Portal>
           <Popover.Content sideOffset={6} align="start" collisionPadding={12} className="z-50 w-60 rounded-2xl border border-line-strong bg-surface-2 p-3 shadow-float outline-none">
             <div className="mb-2 text-sm text-ink">{t("sheet.combat.round", { n: state.round })}</div>
+            <div className="mb-3 text-xs leading-relaxed text-ink-3">
+              {t("sheet.turn.rules")}{" "}
+              {(["action", "bonus", "reaction", "movement"] as const).map((s, i) => (
+                <span key={s}>
+                  {i > 0 && " · "}
+                  <Term id={SLOT_RULE[s]}>{t(`sheet.economy.${s}`)}</Term>
+                </span>
+              ))}
+            </div>
             <div className="mb-3 text-xs text-ink-3">{t("sheet.combat.endHint")}</div>
             <Popover.Close asChild>
               <Button size="sm" variant="danger" className="w-full" onClick={() => push({ type: "combat.end" })}>
@@ -107,7 +118,9 @@ function Movement() {
       <Popover.Portal>
         <Popover.Content sideOffset={6} collisionPadding={12} className="z-50 w-64 rounded-2xl border border-line-strong bg-surface-2 p-3 shadow-float outline-none">
           <div className="mb-2 flex items-baseline justify-between">
-            <span className="text-xs font-semibold tracking-wide text-ink-3 uppercase">{t("sheet.economy.movement")}</span>
+            <Term id={SLOT_RULE.movement} className="text-xs font-semibold tracking-wide uppercase">
+              {t("sheet.economy.movement")}
+            </Term>
             <span className="tnum text-sm text-ink">
               {left} / {budget} {t("sheet.ft")}
             </span>

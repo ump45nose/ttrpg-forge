@@ -117,7 +117,8 @@ export interface ResolvedAction {
   costs: Cost[];
   applies?: ApplyEffect[];
   spell?: { id: string; level: number; upcastDamage?: string; upcastHeal?: string; ritual?: boolean };
-  weapon?: { itemKey: string; properties: string[]; mastery?: string; versatile?: string; range?: string; equipped: boolean };
+  /** `mod`: the ability modifier the attack uses (Graze damage, Topple DC...). */
+  weapon?: { itemKey: string; properties: string[]; mastery?: string; versatile?: string; range?: string; equipped: boolean; mod: number };
   /** Usable inventory item behind the action. */
   item?: { key: string; entityId: string; qty: number; consumable: boolean };
   /** Static availability (formula `when`); resource availability is a play-state concern. */
@@ -553,7 +554,7 @@ export function derive(reg: PackRegistry, build: Build, opts: DeriveOptions = {}
       attack: { bonus, kind },
       damage: [{ dice: dmg(die(w.damage)), type: w.damageType }],
       costs: [{ economy: "action" }],
-      weapon: { itemKey: it.key, properties: w.properties, mastery, versatile: w.versatile ? dmg(die(w.versatile)) : undefined, range: w.range, equipped: it.equipped },
+      weapon: { itemKey: it.key, properties: w.properties, mastery, versatile: w.versatile ? dmg(die(w.versatile)) : undefined, range: w.range, equipped: it.equipped, mod },
       available: true,
     });
     if (!proficient) {

@@ -22,7 +22,7 @@ import { LevelUpSheet } from "./LevelUpSheet";
 import { LogPanel } from "./LogPanel";
 import { PlayProvider, usePlay } from "./play";
 import { ResourcesPanel } from "./ResourcesPanel";
-import { StatsPanel } from "./StatsPanel";
+import { CharacterPanel } from "./CharacterPanel";
 import { Vitals } from "./Vitals";
 
 export function SheetPage() {
@@ -166,10 +166,10 @@ function PlaySheet() {
               {...(desktop ? {} : swipe)}
               className="min-h-[50dvh] touch-pan-y"
             >
-              {current === "actions" && <ActionsPanel />}
+              {current === "actions" && <ActionsPanel onShowSheet={() => (setTab("skills"), window.scrollTo({ top: 0, behavior: reducedMotion() ? "auto" : "smooth" }))} />}
               {current === "inventory" && <InventoryPanel />}
               {current === "resources" && <Side />}
-              {current === "skills" && <StatsPanel />}
+              {current === "skills" && <CharacterPanel />}
               {current === "log" && <LogPanel />}
             </motion.div>
           </AnimatePresence>

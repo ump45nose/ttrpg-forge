@@ -1,4 +1,4 @@
-import { actionUseEvent, canUse, type Entity, lowestAvailableSlot, pactRemaining, slotsRemaining, type ResolvedAction, type Sheet as SheetData } from "@forge/core";
+import { actionUseEvent, canUse, masteryFacts, type Entity, lowestAvailableSlot, pactRemaining, slotsRemaining, type ResolvedAction, type Sheet as SheetData } from "@forge/core";
 import { Brain, Crosshair, Dices, HeartPulse, ShieldAlert, Sparkles } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { create } from "zustand";
@@ -16,8 +16,10 @@ import { toast } from "../../ui/Toast";
 import { useNames } from "../common/names";
 import { afterLanding, type RollRecord } from "../dice/store";
 import { RichText } from "../terms/RichText";
+import { Term } from "../terms/Term";
 import { useEventText } from "./logText";
 import { usePlay } from "./play";
+import { basicRule, SLOT_RULE } from "./TurnGuide";
 import { d20, edge, effectName } from "./util";
 import { AdvToggle } from "../../ui/AdvToggle";
 
@@ -121,7 +123,22 @@ function Body({ action }: { action: ResolvedAction }) {
     <div className="space-y-4">
       <ArtImg id={actionEntityIds(action)} focus={[0.5, 0.35]} className="h-32 rounded-2xl [mask-image:linear-gradient(to_bottom,black_65%,transparent)] sm:h-40" />
       <div className="flex flex-wrap gap-1.5">
-        <Chip tone="class">{n.activation(action.activation)}</Chip>
+        <Chip tone="class">
+          {action.activation in SLOT_RULE ? (
+            <Term id={SLOT_RULE[action.activation as keyof typeof SLOT_RULE]} plain className="underline decoration-dotted underline-offset-[3px]">
+              {n.activation(action.activation)}
+            </Term>
+          ) : (
+            n.activation(action.activation)
+          )}
+        </Chip>
+        {basicRule(action) && (
+          <Chip tone="info">
+            <Term id={basicRule(action)!} plain className="underline decoration-dotted underline-offset-[3px]">
+              {t("sheet.fullRule")}
+            </Term>
+          </Chip>
+        )}
         {spell && <Chip tone="magic">{spell.level ? t("spell.level", { n: spell.level }) : t("spell.cantrip")}</Chip>}
         {action.range && <Chip>{n.l(action.range, { mono: true })}</Chip>}
         {action.duration && <Chip>{n.l(action.duration, { mono: true })}</Chip>}
@@ -132,8 +149,12 @@ function Body({ action }: { action: ResolvedAction }) {
         )}
         {spell?.ritual && <Chip tone="info">{t("spell.ritual")}</Chip>}
         {action.item && <Chip tone="warn">{t("sheet.carried", { n: action.item.qty })}</Chip>}
-        {action.weapon?.mastery && <Chip tone="accent">{t("sheet.mastery")}: {n.entity(`mastery:${action.weapon.mastery}`, true)}</Chip>}
+        {action.weapon?.properties.map((p) => (
+          <Chip key={p}>{t(`workshop.prop.${p}`, { defaultValue: p })}</Chip>
+        ))}
       </div>
+
+      {action.weapon?.mastery && <MasteryBox action={action} attacked={!!lastAttack} />}
 
       {action.trigger && (
         <div className="rounded-xl border border-info/30 bg-info/8 px-3 py-2 text-sm">
@@ -348,4 +369,49 @@ export function CostSummary({ action, slot, ritual }: { action: ResolvedAction; 
   if (slot && action.spell && !action.costs.some((c) => "slot" in c) && !ritual) parts.push(t("sheet.slot", { n: slot }));
   if (!parts.length) return null;
   return <span className="text-sm font-normal opacity-80">· {parts.join(" · ")}</span>;
+}
+
+/**
+ * The weapon's mastery property spelled out for this attack: the rule, the numbers it
+ * needs (Topple DC, Graze damage), and for Graze a one-tap note after a miss.
+ */
+function MasteryBox({ action, attacked }: { action: ResolvedAction; attacked: boolean }) {
+  const t = useT();
+  const n = useNames();
+  const { sheet, push } = usePlay();
+  const f = masteryFacts(action, sheet);
+  if (!f) return null;
+  const id = `mastery:${f.id}`;
+  const e = n.engine.reg.get(id);
+  const facts: string[] = [];
+  if (f.save) facts.push(t("sheet.masteryFacts.save", { dc: f.save.dc, ability: n.ability(f.save.ability) }));
+  if (f.missDamage) facts.push(t("sheet.masteryFacts.miss", { n: f.missDamage.amount, type: n.damage(f.missDamage.type) }));
+  if (f.feet) facts.push(t(`sheet.masteryFacts.${f.id === "push" ? "push" : "slow"}`, { n: f.feet }));
+  if (f.nextAttack) facts.push(t(`sheet.masteryFacts.${f.nextAttack}`));
+  if (f.extraAttack) facts.push(t(`sheet.masteryFacts.${f.extraAttack}`));
+  return (
+    <div className="rounded-xl border border-accent/30 bg-accent/6 px-3 py-2.5">
+      <div className="flex items-center gap-2 text-sm">
+        <span className="text-xs font-semibold text-accent">{t("sheet.mastery")}</span>
+        <Term id={id} className="font-medium">
+          {n.entity(id, true)}
+        </Term>
+      </div>
+      {!!facts.length && <div className="tnum mt-1 text-sm font-medium text-ink">{facts.join(" · ")}</div>}
+      {e?.text && <RichText text={e.text} selfId={id} className="mt-1 block text-xs leading-relaxed text-ink-2" />}
+      {f.missDamage && attacked && f.missDamage.amount > 0 && (
+        <Button
+          size="sm"
+          variant="secondary"
+          className="mt-2"
+          onClick={() => {
+            push({ type: "note", text: t("sheet.masteryFacts.grazeLog", { name: n.l(action.name, { mono: true }), n: f.missDamage!.amount, type: n.damage(f.missDamage!.type) }) });
+            toast({ content: t("sheet.masteryFacts.grazed", { n: f.missDamage!.amount }), tone: "accent" }, 3000);
+          }}
+        >
+          {t("sheet.masteryFacts.grazeButton", { n: f.missDamage.amount })}
+        </Button>
+      )}
+    </div>
+  );
 }

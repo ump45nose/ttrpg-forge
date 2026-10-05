@@ -61,3 +61,41 @@ test("shops have everyday goods by kind, and a random stock that can be restocke
   await shop.getByRole("button", { name: /^匕首/ }).click();
   await expect(shop.getByRole("button", { name: "买入 · 2 金币" })).toBeEnabled();
 });
+
+test("the character tab is a one-page sheet: species traits grouped, darkvision shown", async ({ page }) => {
+  await startFromSample(page, "达格娜·炉石");
+  await tab(page, "角色卡");
+  await expect(page.getByText("点按属性掷检定", { exact: false })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "种族特性" })).toBeVisible();
+  await expect(page.getByText(/黑暗视觉/).first()).toBeVisible();
+});
+
+test("weapon mastery shows on the attack and explains itself", async ({ page }) => {
+  await startFromSample(page, "布伦·铁誓");
+  const card = page.getByRole("button", { name: /^巨剑/ });
+  await expect(card).toContainText("精通擦掠");
+  await card.getByText("巨剑", { exact: true }).click();
+  const sheet = page.getByRole("dialog");
+  // the numbers worked out: Graze deals the Strength modifier on a miss
+  await expect(sheet.getByText(/未命中.*3/).first()).toBeVisible();
+  await sheet.locator("[data-term='mastery:graze']").first().click();
+  await expect(page.getByRole("dialog").last()).toContainText("擦掠");
+});
+
+test("in combat a turn guide shows what is left and ends the turn", async ({ page }) => {
+  await startFromSample(page, "米拉·轻步");
+  await page.getByRole("button", { name: "开始战斗" }).click();
+  const guide = page.getByRole("region", { name: /你的回合/ });
+  await expect(guide).toBeVisible();
+  await expect(guide.getByText("回合怎么走")).toBeVisible();
+  // the rogue's Sneak Attack is listed as something to remember
+  await expect(page.getByRole("button", { name: /记得用.*偷袭/ })).toBeVisible();
+  // tapping Bonus switches the list to bonus actions
+  const bonus = guide.locator("button[aria-pressed]").filter({ hasText: "附赠" });
+  await bonus.click();
+  await expect(page.getByRole("tab", { name: /附赠动作/ })).toHaveAttribute("aria-selected", "true");
+  await page.locator(".glass").getByRole("button", { name: "附赠", exact: true }).click(); // spend it on the combat bar
+  await expect(bonus).toContainText("已用");
+  await guide.getByRole("button", { name: "结束回合" }).click();
+  await expect(bonus).not.toContainText("已用");
+});

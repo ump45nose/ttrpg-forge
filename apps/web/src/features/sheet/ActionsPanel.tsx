@@ -1,5 +1,5 @@
 import { canUse, resourceRemaining, type Activation, type ResolvedAction } from "@forge/core";
-import { ArrowRight, Backpack, Brain, Crosshair, Sparkles, Star, Swords } from "lucide-react";
+import { ArrowRight, Backpack, BellRing, Brain, ChevronDown, Crosshair, Dices, Sparkles, Star, Swords } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { motion } from "motion/react";
 import { useState } from "react";
@@ -9,7 +9,10 @@ import { cn } from "../../ui/cn";
 import { Tabs } from "../../ui/Tabs";
 import { preparedAnchor, unprepared } from "../builder/state";
 import { useNames } from "../common/names";
+import { Term } from "../terms/Term";
 import { ActionSheet } from "./ActionSheet";
+import { Feature } from "./CharacterPanel";
+import { TurnGuide } from "./TurnGuide";
 import { usePlay } from "./play";
 
 type Group = "action" | "bonus" | "reaction" | "other";
@@ -18,7 +21,7 @@ const GROUP_OF = (a: Activation): Group => (a === "action" || a === "bonus" || a
 const ICON = { attack: Swords, spell: Sparkles, feature: Star, basic: Crosshair, item: Backpack } as const;
 
 /** Ability cards tabbed by activation; "usable now" hides what can't be paid for. */
-export function ActionsPanel() {
+export function ActionsPanel({ onShowSheet }: { onShowSheet?: () => void }) {
   const t = useT();
   const { sheet, state } = usePlay();
   const [group, setGroup] = useState<Group>("action");
@@ -37,16 +40,19 @@ export function ActionsPanel() {
   const spells = list.filter(leveled).sort((a, b) => a.spell!.level - b.spell!.level);
   const basic = list.filter((a) => a.category === "basic");
   const spent = (g: Group) => g !== "other" && state.inCombat && state.economy[g];
+  const options = (g: Group) => inGroup(g).filter((a) => a.category !== "basic" && (all || usable(a))).length;
 
   return (
     <div className="space-y-3">
       <PrepareReminder />
+      <TurnGuide options={{ action: options("action"), bonus: options("bonus"), reaction: options("reaction") }} group={group} onPick={setGroup} />
+      <Reminders actions={pool} onOpen={setOpen} />
       <Tabs
         size="sm"
         items={(["action", "bonus", "reaction", "other"] as const).map((g) => ({
           id: g,
           label: <span className={cn(spent(g) && "line-through opacity-60")}>{t(`sheet.groups.${g === "other" ? "special" : g}`)}</span>,
-          badge: <span className="tnum text-[10px] text-ink-3">{inGroup(g).filter((a) => a.category !== "basic" && (all || usable(a))).length || ""}</span>,
+          badge: <span className="tnum text-[10px] text-ink-3">{options(g) || ""}</span>,
         }))}
         value={group}
         onChange={setGroup}
@@ -83,8 +89,59 @@ export function ActionsPanel() {
           </div>
         </div>
       )}
+      {group === "other" && onShowSheet && (
+        <button type="button" onClick={onShowSheet} className="flex min-h-11 w-full items-center gap-2 rounded-xl border border-line bg-surface/60 px-3 text-left text-sm text-ink-2 transition-colors hover:border-line-strong hover:text-ink">
+          <Dices size={16} className="shrink-0 text-class" />
+          <span className="min-w-0 flex-1">{t("sheet.checksLink")}</span>
+          <ArrowRight size={14} className="shrink-0 text-ink-3" />
+        </button>
+      )}
       <ActionSheet action={open} onClose={() => setOpen(null)} />
     </div>
+  );
+}
+
+/**
+ * Riders that only work if someone remembers them (Sneak Attack, Divine Fury...): listed
+ * together at the top, not automated. Tapping one opens it like any other action.
+ */
+function Reminders({ actions, onOpen }: { actions: ResolvedAction[]; onOpen: (a: ResolvedAction) => void }) {
+  const t = useT();
+  const n = useNames();
+  const { sheet } = usePlay();
+  const [open, setOpen] = useState(false);
+  const flagged = (tags?: string[]) => !!tags && (tags.includes("rider") || tags.includes("once-per-turn"));
+  const acts = actions.filter((a) => flagged(a.tags));
+  const named = new Set(acts.map((a) => n.l(a.name, { mono: true })));
+  const feats = sheet.features.filter((f) => flagged(f.tags) && !named.has(n.l(f.name, { mono: true })));
+  const tagText = (tags?: string[]) => [tags?.includes("once-per-turn") && t("sheet.oncePerTurn"), tags?.includes("rider") && t("sheet.rider")].filter(Boolean).join(" · ");
+  if (!acts.length && !feats.length) return null;
+  return (
+    <section className="rounded-2xl border border-warn/30 bg-warn/[0.05]">
+      <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} className="flex min-h-11 w-full items-center gap-2 px-3 text-left">
+        <BellRing size={15} className="shrink-0 text-warn" />
+        <span className="shrink-0 text-sm font-medium text-ink">{t("sheet.reminders")}</span>
+        <span className="min-w-0 flex-1 truncate text-xs text-ink-3">{[...named, ...feats.map((f) => n.l(f.name, { mono: true }))].join(" · ")}</span>
+        <ChevronDown size={14} className={cn("shrink-0 text-ink-3 transition-transform", open && "rotate-180")} />
+      </button>
+      {open && (
+        <div className="space-y-1.5 px-3 pb-3">
+          {acts.map((a) => (
+            <button key={a.id} type="button" onClick={() => onOpen(a)} className="flex min-h-10 w-full items-center gap-2 rounded-xl border border-line bg-surface/60 px-3 py-2 text-left">
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm text-ink">{n.l(a.name, { mono: true })}</span>
+                {a.trigger && <span className="block text-[11px] text-info">{n.l(a.trigger, { mono: true })}</span>}
+              </span>
+              <span className="shrink-0 text-[10px] text-warn">{tagText(a.tags)}</span>
+              <ArrowRight size={13} className="shrink-0 text-ink-3" />
+            </button>
+          ))}
+          {feats.map((f) => (
+            <Feature key={`${f.source.path}/${f.id}`} name={n.l(f.name)} source={tagText(f.tags)} text={f.text} />
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -132,6 +189,14 @@ export function ActionCard({ action, onOpen }: { action: ResolvedAction; onOpen:
         </span>
         {!!stats.length && <span className="tnum block text-xs break-words text-ink-2">{stats.join(" · ")}</span>}
         {action.trigger && <span className="block truncate text-[11px] text-info">{n.l(action.trigger, { mono: true })}</span>}
+        {action.weapon?.mastery && (
+          <span className="mt-1 inline-flex items-center gap-1 rounded-md border border-accent/30 bg-accent/8 px-1.5 text-[11px] leading-5 text-accent">
+            {t("sheet.mastery")}
+            <Term id={`mastery:${action.weapon.mastery}`} className="font-medium">
+              {n.entity(`mastery:${action.weapon.mastery}`, true)}
+            </Term>
+          </span>
+        )}
         <Costs action={action} />
       </span>
     </motion.button>
