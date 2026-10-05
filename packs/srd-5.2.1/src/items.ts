@@ -95,6 +95,21 @@ const GEAR: G[] = [
   ["lute", "Lute", "鲁特琴", "tool"],
 ];
 
+/** Prices from the SRD 5.2.1 equipment tables (coins are items themselves and have none). */
+const PRICE: Record<string, string> = {
+  club: "1 SP", dagger: "2 GP", greatclub: "2 SP", handaxe: "5 GP", javelin: "5 SP", "light-hammer": "2 GP", mace: "5 GP", quarterstaff: "2 SP", sickle: "1 GP", spear: "1 GP",
+  dart: "5 CP", "light-crossbow": "25 GP", shortbow: "25 GP", sling: "1 SP",
+  battleaxe: "10 GP", flail: "10 GP", glaive: "20 GP", greataxe: "30 GP", greatsword: "50 GP", halberd: "20 GP", lance: "10 GP", longsword: "15 GP", maul: "10 GP", morningstar: "15 GP",
+  pike: "5 GP", rapier: "25 GP", scimitar: "25 GP", shortsword: "10 GP", trident: "5 GP", warhammer: "15 GP", "war-pick": "5 GP", whip: "2 GP",
+  blowgun: "10 GP", "hand-crossbow": "75 GP", "heavy-crossbow": "50 GP", longbow: "50 GP", musket: "500 GP", pistol: "250 GP",
+  "padded-armor": "5 GP", "leather-armor": "10 GP", "studded-leather-armor": "45 GP", "hide-armor": "10 GP", "chain-shirt": "50 GP", "scale-mail": "50 GP", breastplate: "400 GP",
+  "half-plate-armor": "750 GP", "ring-mail": "30 GP", "chain-mail": "75 GP", "splint-armor": "200 GP", "plate-armor": "1,500 GP", shield: "10 GP",
+  arrows: "1 GP", bolts: "1 GP", quiver: "1 GP", "holy-symbol": "5 GP", "arcane-focus": "10 GP", "druidic-focus": "1 GP", spellbook: "50 GP", robe: "1 GP", "travelers-clothes": "2 GP",
+  crowbar: "2 GP", pouch: "5 SP", book: "25 GP", parchment: "1 SP", "healers-kit": "5 GP",
+  "dungeoneers-pack": "12 GP", "burglars-pack": "16 GP", "priests-pack": "33 GP", "scholars-pack": "40 GP", "explorers-pack": "10 GP", "entertainers-pack": "40 GP",
+  "thieves-tools": "25 GP", "calligraphers-supplies": "10 GP", "dice-set": "1 SP", "playing-cards": "5 SP", "herbalism-kit": "5 GP", "smiths-tools": "20 GP", lute: "35 GP",
+};
+
 /** Things you use up. Drinking a potion is a Bonus Action in the 2024 rules. */
 const THROWN_DC = "8 + @ability.dex.mod + @prof";
 const CONSUMABLES: ItemEntity[] = [
@@ -170,6 +185,7 @@ export const items: Entity[] = [
     name: t(en, zh),
     tags: ["weapon", category, kind, ...properties],
     weapon: { category, kind, damage, damageType, properties, mastery, ...extra },
+    cost: PRICE[id],
   })),
   ...ARMOR.map(([id, en, zh, category, ac, extra]): Entity => ({
     id: `item:${id}`,
@@ -178,8 +194,9 @@ export const items: Entity[] = [
     name: t(en, zh),
     tags: ["armor", category],
     armor: { category, ac, dexCap: category === "medium" ? 2 : undefined, ...extra },
+    cost: PRICE[id],
   })),
-  ...GEAR.map(([id, en, zh, itemType]): Entity => ({ id: `item:${id}`, type: "item", itemType: itemType ?? "gear", name: t(en, zh), tags: [itemType ?? "gear"] })),
+  ...GEAR.map(([id, en, zh, itemType]): Entity => ({ id: `item:${id}`, type: "item", itemType: itemType ?? "gear", name: t(en, zh), tags: [itemType ?? "gear"], ...(PRICE[id] ? { cost: PRICE[id] } : {}) })),
   ...CONSUMABLES,
   ...Object.entries(MASTERY).map(([id, [en, zh, ten, tzh]]): Entity => ({
     id: `mastery:${id}`,

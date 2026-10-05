@@ -1,6 +1,7 @@
 import type { Build, PlayEvent, Sheet } from "@forge/core";
 import { useCallback } from "react";
 import { useNames } from "../common/names";
+import { coinText } from "./coins";
 import { effectName } from "./util";
 
 /** One-line description of a play event, for the log and undo toasts. */
@@ -54,6 +55,8 @@ export function useEventText(sheet: Sheet, events: PlayEvent[] = [], build?: Bui
           return t("log.itemRemove", { name: itemName(e.key) });
         case "item.equip":
           return t(e.equipped ? "log.equip" : "log.unequip", { name: itemName(e.key) });
+        case "trade":
+          return t(e.side === "buy" ? "log.buy" : "log.sell", { name: entityName(e.item), n: e.qty, coins: coinText(t, e.delta, true) });
         case "currency":
           return Object.entries(e.delta)
             .filter(([, v]) => v)

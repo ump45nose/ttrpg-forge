@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Check, ChevronDown, ChevronUp, Download, FileJson, Package, Puzzle, Trash2, Wand2 } from "lucide-react";
+import { ArrowLeft, Check, ChevronDown, ChevronUp, Download, FileJson, Package, Puzzle, Scale, Trash2, Wand2 } from "lucide-react";
 import { motion } from "motion/react";
 import { useRef, type ReactNode } from "react";
 import { useCharacters } from "../../app/characters";
@@ -15,6 +15,7 @@ import { Tabs } from "../../ui/Tabs";
 import { Slot } from "../../app/slot";
 import { downloadJson, importPackAsking } from "../library/transfer";
 import { DataSection } from "./DataSection";
+import { HouseRulesSection } from "./HouseRulesSection";
 import { ImageApiSection } from "./ImageApiSection";
 
 export function SettingsPage() {
@@ -104,6 +105,10 @@ export function SettingsPage() {
       </Section>
 
       <Slot name="settings.section" />
+
+      <Section title={t("houseRules.title")} icon={<Scale size={16} />}>
+        <HouseRulesSection />
+      </Section>
 
       <Section title={t("settings.packs")} icon={<Package size={16} />}>
         <p className="mb-3 text-xs text-ink-3">{t("homebrew.orderHint")}</p>

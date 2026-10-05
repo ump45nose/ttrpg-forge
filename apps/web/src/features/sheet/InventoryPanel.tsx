@@ -1,5 +1,5 @@
 import { gearIssues, makeEvent, type Currency, type ItemView, type NewEvent, type ResolvedAction, type Sheet } from "@forge/core";
-import { AlertTriangle, Backpack, Coins as CoinsIcon, Gem, Plus, Shield, Sparkles, Sword, Trash2, Wand2 } from "lucide-react";
+import { AlertTriangle, Backpack, Coins as CoinsIcon, Gem, Plus, Shield, Sparkles, Store, Sword, Trash2, Wand2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { ulid } from "ulid";
@@ -21,6 +21,7 @@ import { ActionSheet } from "./ActionSheet";
 import { usePlay } from "./play";
 import { confirmDialog } from "../../ui/Confirm";
 import { Stepper } from "../../ui/Stepper";
+import { ShopSheet, usePurse, type Deal } from "./ShopSheet";
 
 const COINS = ["pp", "gp", "ep", "sp", "cp"] as const;
 type Coin = (typeof COINS)[number];
@@ -40,6 +41,7 @@ export function InventoryPanel() {
   const canCreate = useCanCreate("item");
   const [using, setUsing] = useState<ResolvedAction | null>(null);
   const [detail, setDetail] = useState<string | null>(null);
+  const [deal, setDeal] = useState<Deal | null>(null);
   const items = sheet.items.filter((i) => !isCoin(i.item));
   const worn = items.filter((i) => i.equipped);
   const pack = items.filter((i) => !i.equipped);
@@ -54,7 +56,7 @@ export function InventoryPanel() {
 
   return (
     <div className="space-y-4">
-      <Purse />
+      <Purse onShop={() => setDeal({ side: "buy" })} />
 
       <div className="flex flex-wrap gap-1.5 text-xs">
         <Chip tone={weight > capacity ? "bad" : "neutral"}>
@@ -89,7 +91,8 @@ export function InventoryPanel() {
         )}
       </div>
 
-      <ItemDetail itemKey={detail} onClose={() => setDetail(null)} onUse={setUsing} />
+      <ItemDetail itemKey={detail} onClose={() => setDetail(null)} onUse={setUsing} onSell={(it) => (setDetail(null), setDeal({ side: "sell", it }))} />
+      <ShopSheet deal={deal} onClose={() => setDeal(null)} />
       <ActionSheet action={using} onClose={() => setUsing(null)} />
     </div>
   );
@@ -214,7 +217,7 @@ function ItemRow({ it, onUse, onOpen }: { it: ItemView; onUse: (a: ResolvedActio
 }
 
 /** Item card: description, properties, use / equip, customise or drop. */
-function ItemDetail({ itemKey, onClose, onUse }: { itemKey: string | null; onClose: () => void; onUse: (a: ResolvedAction) => void }) {
+function ItemDetail({ itemKey, onClose, onUse, onSell }: { itemKey: string | null; onClose: () => void; onUse: (a: ResolvedAction) => void; onSell: (it: ItemView) => void }) {
   const t = useT();
   const n = useNames();
   const { sheet, push } = usePlay();
@@ -259,6 +262,9 @@ function ItemDetail({ itemKey, onClose, onUse }: { itemKey: string | null; onClo
               {t(equipWord(it, it.equipped ? "undo" : "do"))}
             </Button>
           )}
+          <Button variant="secondary" onClick={() => onSell(it)}>
+            <CoinsIcon size={15} /> {t("shop.sell")}
+          </Button>
           <Button
             variant="danger"
             onClick={() => {
@@ -306,15 +312,16 @@ function ItemDetail({ itemKey, onClose, onUse }: { itemKey: string | null; onClo
 }
 
 /** Coins as totals (kit gold + changes); gaining or spending writes one log entry. */
-function Purse() {
+function Purse({ onShop }: { onShop: () => void }) {
   const t = useT();
-  const { sheet, build, push } = usePlay();
+  const { push } = usePlay();
+  const purse = usePurse();
   const [open, setOpen] = useState(false);
-  const total = (c: Coin) => sheet.items.filter((i) => i.item === `item:${c}`).reduce((s, i) => s + i.qty, 0) + (build.currency?.[c] ?? 0);
+  const total = (c: Coin) => purse[c] ?? 0;
   const shown = COINS.filter((c) => c === "gp" || c === "sp" || c === "cp" || total(c));
   return (
-    <>
-      <button type="button" onClick={() => setOpen(true)} className="flex w-full items-center gap-3 rounded-2xl border border-warn/30 bg-warn/5 px-3 py-2.5 text-left transition-colors hover:border-warn/60">
+    <div className="flex items-stretch gap-2">
+      <button type="button" onClick={() => setOpen(true)} className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl border border-warn/30 bg-warn/5 px-3 py-2.5 text-left transition-colors hover:border-warn/60">
         <CoinsIcon size={18} className="shrink-0 text-warn" />
         <span className="flex flex-1 flex-wrap gap-x-4 gap-y-1">
           {shown.map((c) => (
@@ -325,8 +332,11 @@ function Purse() {
         </span>
         <span className="text-xs text-ink-3">±</span>
       </button>
+      <Button variant="secondary" className="h-auto shrink-0 flex-col gap-0.5 rounded-2xl px-3 text-xs" onClick={onShop}>
+        <Store size={17} /> {t("shop.open")}
+      </Button>
       <PurseSheet open={open} onOpenChange={setOpen} total={total} onApply={(delta) => push({ type: "currency", delta })} />
-    </>
+    </div>
   );
 }
 

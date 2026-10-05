@@ -38,6 +38,15 @@ export function foldInventory(build: Build, events: PlayEvent[]): Build {
         b.equipped[e.key] = e.equipped;
         break;
       }
+      case "trade": {
+        const b = edit();
+        if (e.side === "buy") {
+          if (b.inventory.some((i) => i.key === e.key)) bump(e.key, e.qty);
+          else b.inventory.push({ key: e.key, item: e.item, qty: e.qty });
+        } else bump(e.key, -e.qty);
+        for (const [k, v] of Object.entries(e.delta) as [keyof Currency, number][]) b.currency![k] = (b.currency![k] ?? 0) + v;
+        break;
+      }
       case "currency": {
         const b = edit();
         for (const [k, v] of Object.entries(e.delta) as [keyof Currency, number][]) b.currency![k] = (b.currency![k] ?? 0) + v;

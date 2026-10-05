@@ -33,6 +33,25 @@ describe("system config", () => {
     expect(base.evaluate(b).issues.some((i) => i.code === "pointbuy-budget")).toBe(true);
   });
 
+  it("raising the point-buy max continues the cost curve, so 16+ can be bought", () => {
+    const e = new Engine([fixturePack, houseRules({ systemConfig: { pointBuy: { budget: 32, max: 17 } } })]);
+    expect(e.reg.system.pointBuy.cost).toMatchObject({ 15: 9, 16: 12, 17: 15 });
+    const scores = { str: 17, dex: 14, con: 13, int: 10, wis: 8, cha: 8 };
+    expect(pointBuyCost(scores, e.reg.system)).toBe(29);
+    const b = applyOps(e.newCharacter("x").build, [{ op: "setAbilities", method: "pointbuy", scores }]);
+    const codes = e.evaluate(b).issues.map((i) => i.code);
+    expect(codes).not.toContain("pointbuy-range");
+    expect(codes).not.toContain("pointbuy-budget");
+    // the default rules still stop at 15, and say so
+    const range = new Engine([fixturePack]).evaluate(b).issues.find((i) => i.code === "pointbuy-range");
+    expect(range?.message).toMatchObject({ en: "Point buy scores must be 8–15" });
+  });
+
+  it("costs a pack writes itself win over the continued curve", () => {
+    const e = new Engine([fixturePack, houseRules({ systemConfig: { pointBuy: { max: 16, cost: { 16: 10 } } } })]);
+    expect(e.reg.system.pointBuy.cost[16]).toBe(10);
+  });
+
   it("HP house rule: max hit die every level", () => {
     const ops = [{ op: "setClass", id: "class:fighter" } as const, { op: "setLevel", level: 3 } as const];
     const avg = new Engine([fixturePack]);

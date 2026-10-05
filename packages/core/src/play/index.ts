@@ -273,6 +273,7 @@ function apply(s: PlayState, e: PlayEvent, sheet?: Sheet) {
     case "item.remove":
     case "item.equip":
     case "currency":
+    case "trade":
     case "roll":
     case "note":
     case "revert":

@@ -158,8 +158,9 @@ export function validate(reg: PackRegistry, build: Build, sheet: Sheet): Issue[]
   // base ability scores
   const scores = ABILITIES.map((a) => build.baseAbilities[a]);
   if (build.abilityMethod === "pointbuy") {
-    const cost = pointBuyCost(build.baseAbilities, sys);
-    if (cost === null) issues.push({ severity: "error", code: "pointbuy-range", message: L("Point buy scores must be 8–15", "购点属性必须在 8–15 之间") });
+    const { min, max } = sys.pointBuy;
+    const cost = scores.some((v) => v < min || v > max) ? null : pointBuyCost(build.baseAbilities, sys);
+    if (cost === null) issues.push({ severity: "error", code: "pointbuy-range", message: L(`Point buy scores must be ${min}–${max}`, `购点属性必须在 ${min}–${max} 之间`) });
     else if (cost > sys.pointBuy.budget) issues.push({ severity: "error", code: "pointbuy-budget", message: L(`Point buy over budget (${cost}/${sys.pointBuy.budget})`, `购点超出预算（${cost}/${sys.pointBuy.budget}）`) });
   } else if (build.abilityMethod === "standard") {
     if ([...scores].sort((a, b) => b - a).join() !== [...sys.standardArray].sort((a, b) => b - a).join())

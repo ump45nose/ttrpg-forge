@@ -44,7 +44,21 @@ type DeepPartial<T> = T extends readonly unknown[] ? T : T extends object ? { [K
 /** House-rule overrides of a system; arrays replace, objects merge. */
 export type SystemConfig = DeepPartial<Omit<GameSystemData, "id">>;
 
+/**
+ * A house rule may raise the point-buy max past the table's last entry: scores
+ * above it continue the curve (16 = 12, 17 = 15, 18 = 19, then +4 each). Costs
+ * a pack writes itself always win.
+ */
+function extendPointBuy(pb: GameSystemData["pointBuy"]): GameSystemData["pointBuy"] {
+  const top = Math.max(...Object.keys(pb.cost).map(Number));
+  if (!(pb.max > top)) return pb;
+  const cost = { ...pb.cost };
+  for (let n = top + 1; n <= pb.max; n++) cost[n] = cost[n - 1]! + (n <= 17 ? 3 : 4);
+  return { ...pb, cost };
+}
+
 export function makeSystem(data: GameSystemData): GameSystem {
+  data = { ...data, pointBuy: extendPointBuy(data.pointBuy) };
   const clampLevel = (lvl: number, len: number) => Math.min(len - 1, Math.max(0, lvl));
   return {
     ...data,

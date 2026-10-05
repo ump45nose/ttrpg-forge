@@ -252,4 +252,28 @@ describe("adventuring inventory", () => {
     // the saved build still holds only the starting kit
     expect(c.build.inventory).toEqual([]);
   });
+
+  it("trading: buying and selling move the stack and the coins together, and one undo takes both back", () => {
+    const c = hero("class:fighter", "subclass:champion", 3);
+    const { push, now } = table(c);
+    const coins = () => {
+      const s = now();
+      const granted = s.sheet.items.filter((i) => i.item === "item:gp").reduce((n, i) => n + i.qty, 0);
+      return { gp: granted + (s.build.currency?.gp ?? 0), sp: s.build.currency?.sp ?? 0 };
+    };
+    const start = coins();
+    const buy = push({ type: "trade", side: "buy", key: "shop-rope", item: "item:rope", qty: 2, delta: { gp: -1, sp: 8 } });
+    expect(now().sheet.items.find((i) => i.key === "shop-rope")?.qty).toBe(2);
+    expect(coins()).toEqual({ gp: start.gp - 1, sp: start.sp + 8 });
+    // selling one of them back
+    push({ type: "trade", side: "sell", key: "shop-rope", item: "item:rope", qty: 1, delta: { sp: 1 } });
+    expect(now().sheet.items.find((i) => i.key === "shop-rope")?.qty).toBe(1);
+    // selling the whole stack empties it
+    push({ type: "trade", side: "sell", key: "shop-rope", item: "item:rope", qty: 1, delta: { sp: 1 } });
+    expect(now().sheet.items.some((i) => i.key === "shop-rope")).toBe(false);
+    expect(coins().sp).toBe(start.sp + 10);
+    // undoing the purchase takes back the rope and the coins at once (the sales then net out)
+    push({ type: "revert", target: buy.id });
+    expect(coins().gp).toBe(start.gp);
+  });
 });

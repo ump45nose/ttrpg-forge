@@ -97,6 +97,18 @@ export async function removePackUndoable(p: StoredPack, name: string) {
   toast({ content: i18n.t("homebrew.packDeleted", { name }), action: { label: i18n.t("common.undo"), run: () => void usePacks.getState().save(p) } }, 8000);
 }
 
+/**
+ * Point-buy house rule from Settings: stored in the local pack's systemConfig (it loads last, so
+ * it wins). `null` goes back to whatever the other packs say.
+ */
+export async function setLocalPointBuy(pb: { max: number; budget: number } | null): Promise<void> {
+  const st = usePacks.getState();
+  const cur = st.packs.find((p) => p.id === LOCAL_PACK_ID) ?? localPack();
+  const { pointBuy: _old, ...rest } = cur.pack.systemConfig ?? {};
+  const systemConfig = pb ? { ...rest, pointBuy: { ...(_old ?? {}), ...pb } } : rest;
+  await st.save({ ...cur, pack: { ...cur.pack, systemConfig } });
+}
+
 export const BASE_PACKS: RulePack[] = [srd52];
 
 /** Adds the PHB (a separate chunk) before the first render, so no character ever sees it missing. */

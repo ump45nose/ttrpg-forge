@@ -1,4 +1,4 @@
-import type { EntityType } from "@forge/core";
+import type { Entity, EntityType } from "@forge/core";
 import { Plus, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useL, useT } from "../../app/i18n";
@@ -6,7 +6,7 @@ import { useEngine } from "../../app/packs";
 import { Input } from "../../ui/Field";
 
 /** Search-as-you-type picker over registry entities. */
-export function EntitySearch({ type, filter, onPick, placeholder }: { type: EntityType; filter?: (id: string) => boolean; onPick: (id: string) => void; placeholder?: string }) {
+export function EntitySearch({ type, filter, onPick, placeholder, meta }: { type: EntityType; filter?: (id: string) => boolean; onPick: (id: string) => void; placeholder?: string; meta?: (e: Entity) => string | undefined }) {
   const t = useT();
   const l = useL();
   const engine = useEngine();
@@ -34,6 +34,7 @@ export function EntitySearch({ type, filter, onPick, placeholder }: { type: Enti
                 {/* tells two things with the same name apart better than an id would */}
                 {e.summary && <span className="block truncate text-xs text-ink-3">{l(e.summary)}</span>}
               </span>
+              {meta?.(e) && <span className="tnum shrink-0 text-xs text-ink-3">{meta(e)}</span>}
             </button>
           ))}
         </div>

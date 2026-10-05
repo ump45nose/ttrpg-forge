@@ -18,6 +18,7 @@ import { GrantList } from "../common/GrantList";
 import { useNames } from "../common/names";
 import { choiceAnchor, useBuilder } from "./state";
 import { RichText } from "../terms/RichText";
+import { groupByMastery, masteryOf } from "./mastery";
 
 /** One pending/finished choice: skills, fighting style, feat, spells, equipment, ability increases... */
 export function ChoiceBlock({ ch, hideSource = false }: { ch: ChoiceView; hideSource?: boolean }) {
@@ -39,6 +40,8 @@ export function ChoiceBlock({ ch, hideSource = false }: { ch: ChoiceView; hideSo
       </header>
       {kind === "ability" ? (
         <AbilityChoiceEditor ch={ch} />
+      ) : kind === "proficiency" && ch.choice.from.kind === "proficiency" && ch.choice.from.profKind === "mastery" ? (
+        <MasteryPicker ch={ch} candidates={candidates} />
       ) : kind === "proficiency" ? (
         <ChipGrid ch={ch} candidates={candidates} />
       ) : kind === "options" ? (
@@ -81,42 +84,123 @@ function usePreviewHandlers(ch: ChoiceView) {
 }
 
 function ChipGrid({ ch, candidates }: { ch: ChoiceView; candidates: ChoiceCandidate[] }) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {candidates.map((c) => (
+        <ChoiceChip key={c.id} ch={ch} c={c} />
+      ))}
+    </div>
+  );
+}
+
+function ChoiceChip({ ch, c, note }: { ch: ChoiceView; c: ChoiceCandidate; note?: string }) {
   const n = useNames();
   const { apply } = useBuilder();
   const hover = usePreviewHandlers(ch);
   return (
-    <div className="flex flex-wrap gap-1.5">
-      {candidates.map((c) => (
-        <motion.button
-          key={c.id}
-          whileTap={c.valid || c.selected ? { scale: 0.94 } : undefined}
-          disabled={!c.valid && !c.selected}
-          title={c.reason ? n.l(c.reason) : undefined}
-          onClick={() => {
-            haptic(6);
-            apply(toggleOp(ch, c.id));
-          }}
-          {...hover(c)}
-          className={cn(
-            "relative inline-flex h-9 items-center gap-1.5 rounded-xl border px-3 text-sm transition-colors",
-            c.selected
-              ? "border-class/70 bg-class/18 text-ink shadow-[0_6px_18px_-10px_var(--class)]"
-              : c.valid
-                ? "border-line bg-surface/60 text-ink-2 hover:border-line-strong hover:text-ink"
-                : "cursor-not-allowed border-line/50 text-ink-3/60 line-through",
-          )}
-        >
-          <AnimatePresence initial={false}>
-            {c.selected && (
-              <motion.span initial={{ width: 0, opacity: 0 }} animate={{ width: "auto", opacity: 1 }} exit={{ width: 0, opacity: 0 }} className="overflow-hidden text-class">
-                <Check size={14} strokeWidth={3} />
-              </motion.span>
-            )}
-          </AnimatePresence>
-          {n.l(c.name, { mono: true })}
-        </motion.button>
-      ))}
-    </div>
+    <motion.button
+      whileTap={c.valid || c.selected ? { scale: 0.94 } : undefined}
+      disabled={!c.valid && !c.selected}
+      title={c.reason ? n.l(c.reason) : undefined}
+      onClick={() => {
+        haptic(6);
+        apply(toggleOp(ch, c.id));
+      }}
+      {...hover(c)}
+      className={cn(
+        "relative inline-flex h-9 items-center gap-1.5 rounded-xl border px-3 text-sm transition-colors",
+        c.selected
+          ? "border-class/70 bg-class/18 text-ink shadow-[0_6px_18px_-10px_var(--class)]"
+          : c.valid
+            ? "border-line bg-surface/60 text-ink-2 hover:border-line-strong hover:text-ink"
+            : "cursor-not-allowed border-line/50 text-ink-3/60 line-through",
+      )}
+    >
+      <AnimatePresence initial={false}>
+        {c.selected && (
+          <motion.span initial={{ width: 0, opacity: 0 }} animate={{ width: "auto", opacity: 1 }} exit={{ width: 0, opacity: 0 }} className="overflow-hidden text-class">
+            <Check size={14} strokeWidth={3} />
+          </motion.span>
+        )}
+      </AnimatePresence>
+      {n.l(c.name, { mono: true })}
+      {note && <span className="text-xs text-ink-3">· {note}</span>}
+    </motion.button>
+  );
+}
+
+/**
+ * Weapon mastery: the weapons grouped by the property they unlock, each group saying
+ * what that property does (the weapon name alone tells a new player nothing).
+ */
+function MasteryPicker({ ch, candidates }: { ch: ChoiceView; candidates: ChoiceCandidate[] }) {
+  const n = useNames();
+  const reg = n.engine.reg;
+  const [expanded, setExpanded] = useState(false);
+  const groups = useMemo(() => groupByMastery(candidates, reg), [candidates, reg]);
+  const folded = ch.remaining <= 0 && !expanded;
+  if (folded)
+    return (
+      <>
+        <div className="flex flex-wrap gap-1.5">
+          {candidates
+            .filter((c) => c.selected)
+            .map((c) => {
+              const m = masteryOf(reg, c.id);
+              return <ChoiceChip key={c.id} ch={ch} c={c} note={m ? n.entity(`mastery:${m}`, true) : undefined} />;
+            })}
+        </div>
+        <MasteryTexts ids={[...new Set(candidates.filter((c) => c.selected).map((c) => masteryOf(reg, c.id)).filter(Boolean))]} />
+        <FoldButton folded total={candidates.length} onToggle={() => setExpanded(true)} />
+      </>
+    );
+  return (
+    <>
+      <div className="space-y-3">
+        {groups.map((g) => {
+          const e = g.mastery ? reg.get(`mastery:${g.mastery}`) : undefined;
+          return (
+            <div key={g.mastery || "-"} className="rounded-xl border border-line/70 bg-surface/40 p-3">
+              {g.mastery && (
+                <div className="mb-2">
+                  <div className="text-sm font-semibold text-ink">{n.entity(`mastery:${g.mastery}`, true)}</div>
+                  {e?.text && (
+                    <div className="mt-0.5 text-xs leading-relaxed text-ink-2">
+                      <RichText text={e.text} selfId={e.id} />
+                    </div>
+                  )}
+                </div>
+              )}
+              <div className="flex flex-wrap gap-1.5">
+                {g.candidates.map((c) => (
+                  <ChoiceChip key={c.id} ch={ch} c={c} />
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {ch.remaining <= 0 && <FoldButton folded={false} total={candidates.length} onToggle={() => setExpanded(false)} />}
+    </>
+  );
+}
+
+/** What the picked properties do, once each, under the folded picks. */
+function MasteryTexts({ ids }: { ids: string[] }) {
+  const n = useNames();
+  if (!ids.length) return null;
+  return (
+    <dl className="mt-3 space-y-1.5 text-xs leading-relaxed">
+      {ids.map((m) => {
+        const e = n.engine.reg.get(`mastery:${m}`);
+        return (
+          <div key={m}>
+            <dt className="inline font-semibold text-ink">{n.entity(`mastery:${m}`, true)} — </dt>
+            <dd className="inline text-ink-2">{e?.text ? <RichText text={e.text} selfId={`mastery:${m}`} inline /> : null}</dd>
+          </div>
+        );
+      })}
+    </dl>
   );
 }
 

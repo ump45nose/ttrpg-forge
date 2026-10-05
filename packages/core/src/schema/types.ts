@@ -585,6 +585,11 @@ export type PlayEvent =
   /** `unequip`: stacks taken off in the same move (old armor when donning new). */
   | Ev<"item.equip", { key: string; equipped: boolean; unequip?: string[] }>
   | Ev<"currency", { delta: Currency }>
+  /**
+   * A purchase or sale: the stack and the coins move together, so one undo takes back both.
+   * `delta` is the purse change worked out at the counter (change included).
+   */
+  | Ev<"trade", { side: "buy" | "sell"; key: string; item: string; qty: number; delta: Currency }>
   | Ev<
       "action.use",
       {
