@@ -119,7 +119,11 @@ export const en = {
     onSheet: "Switches on the sheet", more: "Add more", suggested: "Suggested", reset: "Back to suggested", empty: "No switches yet — add some below.",
     persistent: "Persistent", persistentHint: "Long rests and the end of combat leave it on; only you switch it off", up: "Move up", down: "Move down", addCondition: "Condition",
   },
-  roll: { on: { attack: "Attack", damage: "Damage", save: "Save", check: "Check" } },
+  roll: {
+    on: { attack: "Attack", damage: "Damage", save: "Save", check: "Check" },
+    formula: "What to roll", once: "once", critDoubles: "Critical: double the dice", riders: "On a hit you can also add", oncePerTurn: "once per turn", castIt: "cast the spell",
+    hint: "Roll these with real dice and add them up. Green extra dice can be tapped off (say the target isn't marked). Or let the app roll.", inApp: "Roll in app", record: "Record your roll",
+  },
   sheet: {
     masteryFacts: {
       save: "Target makes a {{ability}} save, DC {{dc}}, or falls Prone", miss: "On a miss: still {{n}} {{type}} damage", push: "On a hit: push the target {{n}} ft", slow: "On a damaging hit: target's Speed −{{n}} ft",
@@ -134,7 +138,7 @@ export const en = {
       hint: "On your turn you can {{rule:speed|move}} (up to your Speed, split as you like) and take one {{rule:action|Action}}; a {{rule:bonus-action|Bonus Action}} only when a feature gives you one. A {{rule:reaction|Reaction}} is once per round and works on others' turns too ({{rule:opportunity-attacks|Opportunity Attack}}). Tap End turn when done; actions and movement reset.",
     },
     reminders: "Remember", checksLink: "Ability checks / saves / skills → Character", fullRule: "Full rule",
-    rollHint: "Tap an ability for a check, the Save row for a save; tap a skill to roll it", identity: "Who", classLevel: "Class", levelN: "Level {{n}}",
+    rollHint: "Tap an ability for its check, the Save row for its save, a skill for its roll", identity: "Who", classLevel: "Class", levelN: "Level {{n}}",
     speedKind: { walk: "Walk", fly: "Fly", swim: "Swim", climb: "Climb" }, sense: { darkvision: "Darkvision", blindsight: "Blindsight", tremorsense: "Tremorsense", truesight: "Truesight" },
     sensesDefences: "Senses, movement & defences", senses: "Senses", noSenses: "Normal sight", resist: "Resist", immune: "Immune", vuln: "Vulnerable", advantageOn: "Advantage on", disadvantageOn: "Disadvantage on",
     edge: { concentration: "Concentration saves", saveAgainst: "Saves against {{name}}", attack: "Attack rolls" },

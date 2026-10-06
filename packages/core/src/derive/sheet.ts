@@ -21,7 +21,7 @@ import {
   type ResourceGrant,
   type SpellcastingGrant,
 } from "../schema/types";
-import { abilityMod } from "../system/dnd5e";
+import { ABILITY_NAMES, abilityMod } from "../system/dnd5e";
 import type { LocalizedText } from "../text";
 import { StatEngine, type Contribution } from "./stats";
 
@@ -117,9 +117,22 @@ export interface ResolvedAction {
   heal?: { dice: string };
   costs: Cost[];
   applies?: ApplyEffect[];
-  spell?: { id: string; level: number; upcastDamage?: string; upcastHeal?: string; ritual?: boolean };
+  spell?: { id: string; level: number; upcastDamage?: string; upcastHeal?: string; ritual?: boolean; ability?: Ability };
   /** `mod`: the ability modifier the attack uses (Graze damage, Topple DC...). */
-  weapon?: { itemKey: string; properties: string[]; mastery?: string; versatile?: string; range?: string; equipped: boolean; mod: number };
+  weapon?: {
+    itemKey: string;
+    properties: string[];
+    mastery?: string;
+    versatile?: string;
+    range?: string;
+    equipped: boolean;
+    mod: number;
+    /** Which ability `mod` is, the damage die before modifiers (after Martial Arts), and proficiency: for roll breakdowns. */
+    ability: "str" | "dex";
+    die: string;
+    versatileDie?: string;
+    proficient: boolean;
+  };
   /** Usable inventory item behind the action. */
   item?: { key: string; entityId: string; qty: number; consumable: boolean };
   /** Static availability (formula `when`); resource availability is a play-state concern. */
@@ -189,6 +202,7 @@ export interface DiceBonusView {
   dice: string;
   damageType?: string;
   kinds?: ("melee" | "ranged" | "spell")[];
+  properties?: string[];
   once?: boolean;
   label: LocalizedText;
   source: SourceRef;
@@ -281,14 +295,16 @@ export function derive(reg: PackRegistry, build: Build, opts: DeriveOptions = {}
   for (const [classId, n] of col.classLevels) {
     stats.define(`class.${classId.replace(/^class:/, "")}.level`, () => n, L("Class level", "职业等级"));
   }
+  /** "Strength modifier" — named, so roll breakdowns read "+3 Strength modifier". */
+  const modLabel = (a: Ability) => L(`${ABILITY_NAMES[a].en} modifier`, `${ABILITY_NAMES[a].zh}调整值`);
   for (const a of ABILITIES) {
     stats.define(`ability.${a}.score`, () => build.baseAbilities[a], L("Base score", "基础值"));
-    stats.define(`ability.${a}.mod`, () => abilityMod(stats.get(`ability.${a}.score`)), L("Ability modifier", "属性调整值"));
+    stats.define(`ability.${a}.mod`, () => abilityMod(stats.get(`ability.${a}.score`)), modLabel(a));
     stats.define(`save.${a}`, () => {
       const mod = stats.get(`ability.${a}.mod`);
       const p = proficiency("save", a);
       const pb = p ? Math.floor(stats.get("prof") * PROF_MULT[p]) : 0;
-      return { value: mod + pb, parts: [{ label: L("Ability modifier", "属性调整值"), value: mod }, ...(pb ? [{ label: L("Proficiency", "熟练"), value: pb }] : [])] };
+      return { value: mod + pb, parts: [{ label: modLabel(a), value: mod }, ...(pb ? [{ label: L("Proficiency", "熟练"), value: pb }] : [])] };
     });
   }
   for (const [skill, def] of Object.entries(sys.skills)) {
@@ -296,7 +312,7 @@ export function derive(reg: PackRegistry, build: Build, opts: DeriveOptions = {}
       const mod = stats.get(`ability.${def.ability}.mod`);
       const p = proficiency("skill", skill);
       const pb = p ? Math.floor(stats.get("prof") * PROF_MULT[p]) : 0;
-      return { value: mod + pb, parts: [{ label: L("Ability modifier", "属性调整值"), value: mod }, ...(pb ? [{ label: p === "expertise" ? L("Expertise", "专精") : L("Proficiency", "熟练"), value: pb }] : [])] };
+      return { value: mod + pb, parts: [{ label: modLabel(def.ability), value: mod }, ...(pb ? [{ label: p === "expertise" ? L("Expertise", "专精") : L("Proficiency", "熟练"), value: pb }] : [])] };
     });
     stats.define(`passive.${skill}`, () => 10 + stats.get(`skill.${skill}`), L("10 + skill", "10 + 技能"));
   }
@@ -561,7 +577,8 @@ export function derive(reg: PackRegistry, build: Build, opts: DeriveOptions = {}
     const dex = stats.get("ability.dex.mod");
     // Martial Arts (monk): simple melee weapons and light martial melee weapons may use Dex and the Martial Arts die
     const monkWeapon = tags.has("martial-arts") && w.kind === "melee" && (w.category === "simple" || w.properties.includes("light"));
-    const mod = w.kind === "ranged" ? dex : finesse || monkWeapon ? Math.max(str, dex) : str;
+    const ability = w.kind === "ranged" || ((finesse || monkWeapon) && dex > str) ? "dex" : "str";
+    const mod = ability === "dex" ? dex : str;
     const maDie = monkWeapon ? stats.get("martial-arts.die") : 0;
     const die = (d: string) => (maDie && /^1d\d+$/.test(d) && Number(d.slice(2)) < maDie ? `1d${maDie}` : d);
     const proficient = !!(proficiency("weapon", w.category) || proficiency("weapon", it.item));
@@ -582,7 +599,19 @@ export function derive(reg: PackRegistry, build: Build, opts: DeriveOptions = {}
       attack: { bonus, kind },
       damage: [{ dice: dmg(die(w.damage)), type: w.damageType }],
       costs: [{ economy: "action" }],
-      weapon: { itemKey: it.key, properties: w.properties, mastery, versatile: w.versatile ? dmg(die(w.versatile)) : undefined, range: w.range, equipped: it.equipped, mod },
+      weapon: {
+        itemKey: it.key,
+        properties: w.properties,
+        mastery,
+        versatile: w.versatile ? dmg(die(w.versatile)) : undefined,
+        range: w.range,
+        equipped: it.equipped,
+        mod,
+        ability,
+        die: die(w.damage),
+        versatileDie: w.versatile ? die(w.versatile) : undefined,
+        proficient,
+      },
       available: true,
     });
     if (!proficient) {
@@ -630,6 +659,7 @@ export function derive(reg: PackRegistry, build: Build, opts: DeriveOptions = {}
         upcastDamage: sp.upcast?.damage ? resolveDice(sp.upcast.damage, extra) : undefined,
         upcastHeal: sp.upcast?.heal ? resolveDice(sp.upcast.heal, extra) : undefined,
         ritual: sp.ritual,
+        ability: s.ability,
       },
       available: true,
     });
@@ -707,7 +737,7 @@ export function derive(reg: PackRegistry, build: Build, opts: DeriveOptions = {}
     const g = c.grant;
     if (g.type !== "dice" || (g.when && !stats.eval(g.when))) return [];
     const resolved = resolveTemplate(g.dice, stats.resolve, { onUnknown: () => 0 }).replace(/\s+/g, "");
-    return [{ on: g.on, dice: resolved, damageType: g.damageType, kinds: g.kinds, once: g.once, label: g.label ?? c.source.name, source: c.source }];
+    return [{ on: g.on, dice: resolved, damageType: g.damageType, kinds: g.kinds, properties: g.properties, once: g.once, label: g.label ?? c.source.name, source: c.source }];
   });
 
   const sheet: Sheet = {

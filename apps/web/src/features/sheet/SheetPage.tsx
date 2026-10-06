@@ -19,6 +19,7 @@ import { CombatBar } from "./CombatBar";
 import { InventoryPanel } from "./InventoryPanel";
 import { Hint } from "../../ui/Hint";
 import { LevelUpSheet } from "./LevelUpSheet";
+import { TestSheet } from "./RollBreakdown";
 import { LogPanel } from "./LogPanel";
 import { PlayProvider, usePlay } from "./play";
 import { ResourcesPanel } from "./ResourcesPanel";
@@ -131,6 +132,7 @@ function PlaySheet() {
       </div>
 
       <LevelUpSheet open={levelUp} onClose={() => setLevelUp(false)} />
+      <TestSheet />
       <LooksSheet open={looks} onClose={() => setLooks(false)} character={character} speciesId={sheet.speciesId} classId={sheet.classes[0]?.id} />
       <div className="safe-t glass sticky top-0 z-20 mt-2 border-b border-line">
         <div className="mx-auto max-w-6xl space-y-2 px-3 py-2 sm:px-6">

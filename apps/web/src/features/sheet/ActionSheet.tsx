@@ -1,4 +1,4 @@
-import { actionUseEvent, canUse, masteryFacts, type Entity, lowestAvailableSlot, pactRemaining, slotsRemaining, type ResolvedAction, type Sheet as SheetData } from "@forge/core";
+import { actionUseEvent, attackParts, canUse, damageParts, masteryFacts, partsExpr, ridersFor, type Entity, lowestAvailableSlot, pactRemaining, slotsRemaining, type ResolvedAction, type Sheet as SheetData } from "@forge/core";
 import { Brain, Crosshair, Dices, HeartPulse, ShieldAlert, Sparkles } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { create } from "zustand";
@@ -20,8 +20,9 @@ import { Term } from "../terms/Term";
 import { useEventText } from "./logText";
 import { usePlay } from "./play";
 import { basicRule, SLOT_RULE } from "./TurnGuide";
-import { d20, edge, effectName } from "./util";
+import { edge, effectName } from "./util";
 import { AdvToggle } from "../../ui/AdvToggle";
+import { PartsLine, Riders, useBonusParts, usedParts, useSpend } from "./RollBreakdown";
 
 type Edge = "normal" | "adv" | "dis";
 
@@ -96,14 +97,25 @@ function Body({ action }: { action: ResolvedAction }) {
   const dmgTypes = [...new Set(action.damage?.map((d) => n.damage(d.type)))].join(" / ");
   const name = n.l(action.name, { mono: true });
 
+  // the rolls spelled out for real dice; extra dice (Bless, Hunter's Mark...) can be switched off
+  const spend = useSpend();
+  const upcastDice = extra > 0 && spell?.upcastDamage ? joinDice(Array.from({ length: extra }, () => spell.upcastDamage!)) : undefined;
+  const atk = useBonusParts(attackParts(sheet, action), action.id);
+  const dmgParts = damageParts(sheet, action, { upcast: upcastDice });
+  const dmg = useBonusParts(dmgParts, action.id);
+  const riders = ridersFor(sheet, action);
+
   const rollAttack = async () => {
     playActionSound(action, engine);
-    const r = await roll({ expr: d20(action.attack!.bonus), label: `${name} · ${t("sheet.attackRoll")}`, kind: "attack", advantage: mode === "adv", disadvantage: mode === "dis" });
+    const r = await roll({ expr: atk.expr, label: `${name} · ${t("sheet.attackRoll")}`, kind: "attack", advantage: mode === "adv", disadvantage: mode === "dis" });
+    if (r) spend(atk.used);
     if (r) await afterLanding(r);
     if (r) setLastAttack(r);
   };
-  const rollDamage = async (expr: string, crit: boolean) => {
-    const r = await roll({ expr, label: `${name} · ${t("sheet.damageRoll")}${dmgTypes ? ` (${dmgTypes})` : ""}`, kind: "damage", crit });
+  const rollDamage = async (versatile: boolean, crit: boolean) => {
+    const used = usedParts(versatile ? damageParts(sheet, action, { versatile: true }) : dmgParts, dmg.off);
+    const r = await roll({ expr: partsExpr(used), label: `${name} · ${t("sheet.damageRoll")}${dmgTypes ? ` (${dmgTypes})` : ""}`, kind: "damage", crit });
+    if (r) spend(used);
     if (r) await afterLanding(r);
     if (r) setLastDamage(r);
   };
@@ -193,18 +205,19 @@ function Body({ action }: { action: ResolvedAction }) {
 
       <div className="space-y-2 rounded-2xl border border-line bg-surface/60 p-3">
         {action.attack && (
-          <div className="flex items-center gap-2">
-            <Crosshair size={16} className="shrink-0 text-accent" />
-            <div className="min-w-0 flex-1">
-              <div className="text-sm text-ink">
+          <div>
+            <div className="flex items-center gap-2">
+              <Crosshair size={16} className="shrink-0 text-accent" />
+              <div className="min-w-0 flex-1 text-sm text-ink">
                 {t("sheet.attack")} <b className="tnum">{signed(action.attack.bonus)}</b>
                 {lastAttack && <LastRoll rec={lastAttack} />}
               </div>
-              <AdvToggle mode={mode} onChange={setMode} className="mt-1.5" />
+              <Button size="sm" variant="primary" onClick={() => void rollAttack()}>
+                <Dices size={14} /> {t("common.roll")}
+              </Button>
             </div>
-            <Button size="sm" variant="primary" onClick={() => void rollAttack()}>
-              <Dices size={14} /> {t("common.roll")}
-            </Button>
+            <PartsLine parts={atk.parts} off={atk.off} onToggle={atk.toggle} className="mt-1.5 pl-5" />
+            <AdvToggle mode={mode} onChange={setMode} className="mt-1.5 pl-6" />
           </div>
         )}
         {action.save && (
@@ -217,29 +230,26 @@ function Body({ action }: { action: ResolvedAction }) {
           </div>
         )}
         {damage && (
-          <div className="flex items-center gap-2">
-            <Sparkles size={16} className="shrink-0 text-bad" />
-            <div className="min-w-0 flex-1 text-sm text-ink">
-              {t("sheet.damage")} <b className="tnum">{damage}</b> <span className="text-xs text-ink-3">{dmgTypes}</span>
-              {lastDamage && <LastRoll rec={lastDamage} />}
+          <div>
+            <div className="flex items-center gap-2">
+              <Sparkles size={16} className="shrink-0 text-bad" />
+              <div className="min-w-0 flex-1 text-sm text-ink">
+                {t("sheet.damage")} <span className="text-xs text-ink-3">{dmgTypes}</span>
+                {lastDamage && <LastRoll rec={lastDamage} />}
+              </div>
               {action.weapon?.versatile && (
-                <div className="text-xs text-ink-3">
-                  {t("sheet.versatile")} <span className="tnum">{action.weapon.versatile}</span>
-                </div>
-              )}
-            </div>
-            <div className="flex flex-col gap-1">
-              <Button size="sm" variant={crit ? "primary" : "secondary"} onClick={() => void rollDamage(damage, crit)}>
-                <Dices size={14} /> {crit ? t("sheet.critDamage") : t("common.roll")}
-              </Button>
-              {action.weapon?.versatile && (
-                <Button size="sm" variant="ghost" onClick={() => void rollDamage(action.weapon!.versatile!, crit)}>
-                  {t("sheet.versatile")}
+                <Button size="sm" variant="ghost" onClick={() => void rollDamage(true, crit)}>
+                  {t("sheet.versatile")} <span className="tnum opacity-70">{action.weapon.versatileDie}</span>
                 </Button>
               )}
+              <Button size="sm" variant={crit ? "primary" : "secondary"} onClick={() => void rollDamage(false, crit)}>
+                <Dices size={14} /> {crit ? t("sheet.critDamage") : t("common.roll")}
+              </Button>
             </div>
+            <PartsLine parts={dmg.parts} off={dmg.off} onToggle={dmg.toggle} crit={crit} className="mt-1.5 pl-5" />
           </div>
         )}
+        <Riders riders={riders} />
         {heal && (
           <div className="flex items-center gap-2">
             <HeartPulse size={16} className="shrink-0 text-good" />

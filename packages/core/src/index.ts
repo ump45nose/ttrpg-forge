@@ -14,6 +14,7 @@ export * from "./build/autofill";
 export * from "./derive/stats";
 export * from "./derive/sheet";
 export * from "./derive/mastery";
+export * from "./derive/breakdown";
 export * from "./diff";
 export * from "./play";
 export * from "./play/inventory";

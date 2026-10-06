@@ -59,7 +59,8 @@ export function buildSpells(spells: PhbSpell[], base: Map<string, Entity>): Enti
       duration: bi(enOf(prev?.duration) ?? headerEn(sp.duration), sp.duration),
       concentration: sp.concentration || undefined,
       ritual: sp.ritual || undefined,
-      tags: [...new Set([...lists, ...extraTags])],
+      // smites are cast after a weapon hit: riders on weapon attacks
+      tags: [...new Set([...lists, ...extraTags, ...(/-smite$/.test(id) ? ["rider"] : [])])],
       // the higher-level paragraph is shown separately
       text: bi(enOf(prev?.text), sp.text.replace(/\n?(升环施法|戏法强化)[。.][^\n]*/, "").trim()),
       higherLevels: sp.higher ? bi(enOf(prev?.higherLevels), sp.higher) : prev?.higherLevels,

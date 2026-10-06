@@ -323,6 +323,9 @@ const DEFS: Def[] = [
     action: { save: { ability: "dex", dc: 0, onSave: "half" }, damage: [{ dice: "5d8", type: "fire" }] }, upcast: { damage: "1d8" } },
 ];
 
+/** Cast after a weapon hit (smites): listed as riders on weapon attacks. */
+const ON_HIT = new Set(["divine-smite", "searing-smite", "ensnaring-strike"]);
+
 export const spells: Entity[] = DEFS.map((d): SpellEntity => {
   const [activation, en, zh] = CAST[d.cast];
   return {
@@ -331,7 +334,7 @@ export const spells: Entity[] = DEFS.map((d): SpellEntity => {
     name: t(d.en, d.zh),
     summary: t(d.text[0], d.text[1]),
     text: t(d.text[0], d.text[1]),
-    tags: [...d.lists, d.school, ...(d.conc ? ["concentration"] : []), ...(d.ritual ? ["ritual"] : [])],
+    tags: [...d.lists, d.school, ...(d.conc ? ["concentration"] : []), ...(d.ritual ? ["ritual"] : []), ...(ON_HIT.has(d.id) ? ["rider"] : [])],
     level: d.level,
     school: d.school,
     castingTime: t(en, zh),

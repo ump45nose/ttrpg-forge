@@ -65,7 +65,7 @@ test("shops have everyday goods by kind, and a random stock that can be restocke
 test("the character tab is a one-page sheet: species traits grouped, darkvision shown", async ({ page }) => {
   await startFromSample(page, "达格娜·炉石");
   await tab(page, "角色卡");
-  await expect(page.getByText("点按属性掷检定", { exact: false })).toBeVisible();
+  await expect(page.getByText("点按属性看检定算式", { exact: false })).toBeVisible();
   await expect(page.getByRole("heading", { name: "种族特性" })).toBeVisible();
   await expect(page.getByText(/黑暗视觉/).first()).toBeVisible();
 });

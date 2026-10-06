@@ -20,6 +20,7 @@ import { EffectPicker } from "./EffectPicker";
 import { HpSheet } from "./HpSheet";
 import { usePlay } from "./play";
 import { BuffConfigSheet, QuickBuffChips } from "./QuickBuffs";
+import { useTests } from "./RollBreakdown";
 import { d20, edge, effectName, groupEffects } from "./util";
 
 const isEffect = (type: string | undefined) => type === "condition" || type === "effect";
@@ -27,7 +28,8 @@ const isEffect = (type: string | undefined) => type === "condition" || type === 
 /** The pinned vitals block: HP, AC, initiative, speed, concentration and conditions. */
 export function Vitals() {
   const t = useT();
-  const { sheet, state, roll, character } = usePlay();
+  const { sheet, state, character } = usePlay();
+  const tests = useTests();
   const [hpOpen, setHpOpen] = useState(false);
   const hp = hpCurrent(state, sheet);
   const pulse = useHpFeedback(character.id, hp, character.play.at(-1)?.type === "revert");
@@ -82,7 +84,7 @@ export function Vitals() {
         <Stat stat="ac" label={t("sheet.ac")} value={sheet.ac} />
         <button
           type="button"
-          onClick={() => void roll({ expr: d20(sheet.initiative), label: t("sheet.initiative"), kind: "initiative", ...edge(sheet, "initiative") })}
+          onClick={tests.initiative}
           className="min-w-0 flex-1 rounded-2xl border border-line bg-surface/70 px-1 py-2 text-center transition-colors hover:border-accent/50"
         >
           <div className="text-[10px] font-semibold tracking-wider text-ink-3 uppercase">{t("sheet.initiativeShort")}</div>

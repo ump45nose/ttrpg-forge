@@ -100,6 +100,7 @@ export const GrantSchema: z.ZodType<Grant> = z.lazy(() =>
       dice: z.string(),
       damageType: z.string().optional(),
       kinds: z.array(z.enum(["melee", "ranged", "spell"])).optional(),
+      properties: z.array(z.string()).optional(),
       when: z.string().optional(),
       once: z.boolean().optional(),
       label: text.optional(),

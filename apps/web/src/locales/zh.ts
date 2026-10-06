@@ -121,7 +121,11 @@ export const zh: Messages = {
     onSheet: "角色卡上的开关", more: "可添加", suggested: "推荐", reset: "恢复推荐", empty: "还没有开关，从下面添加。",
     persistent: "常驻", persistentHint: "开启后长休、结束战斗都不会移除，只能手动关掉", up: "上移", down: "下移", addCondition: "状态",
   },
-  roll: { on: { attack: "攻击", damage: "伤害", save: "豁免", check: "检定" } },
+  roll: {
+    on: { attack: "攻击", damage: "伤害", save: "豁免", check: "检定" },
+    formula: "掷骰算式", once: "一次", critDoubles: "暴击：骰子数量翻倍", riders: "命中后还能追加", oncePerTurn: "每回合一次", castIt: "施放法术",
+    hint: "照着用实体骰掷，把数字加起来就行。绿色的额外骰可以点掉（比如目标没被标记）。也可以让 App 代掷。", inApp: "App 代掷", record: "记录实体骰结果",
+  },
   sheet: {
     masteryFacts: {
       save: "目标进行{{ability}}豁免 DC {{dc}}，失败倒地", miss: "未命中仍造成 {{n}} 点{{type}}伤害", push: "命中可将目标推离 {{n}} 尺", slow: "命中并造成伤害：目标速度 −{{n}} 尺",
@@ -136,7 +140,7 @@ export const zh: Messages = {
       hint: "轮到你时：可以{{rule:speed|移动}}（最多到速度，可拆开用），做一个{{rule:action|动作}}；有特性允许时再做一个{{rule:bonus-action|附赠动作}}。{{rule:reaction|反应}}每轮一次，别人的回合也能用（如{{rule:opportunity-attacks|借机攻击}}）。用完点「结束回合」，动作与移动会重置。",
     },
     reminders: "记得用", checksLink: "属性检定 / 豁免 / 技能 → 角色卡", fullRule: "规则原文",
-    rollHint: "点按属性掷检定，点下方「豁免」掷豁免；技能同样点按即掷", identity: "身份", classLevel: "职业", levelN: "{{n}} 级",
+    rollHint: "点按属性看检定算式，点下方「豁免」看豁免；技能同样点按", identity: "身份", classLevel: "职业", levelN: "{{n}} 级",
     speedKind: { walk: "步行", fly: "飞行", swim: "游泳", climb: "攀爬" }, sense: { darkvision: "黑暗视觉", blindsight: "盲视", tremorsense: "震颤感知", truesight: "真实视觉" },
     sensesDefences: "感官、移动与防御", senses: "感官", noSenses: "普通视觉", resist: "抗性", immune: "免疫", vuln: "易伤", advantageOn: "优势于", disadvantageOn: "劣势于",
     edge: { concentration: "专注豁免", saveAgainst: "对抗{{name}}的豁免", attack: "攻击检定" },

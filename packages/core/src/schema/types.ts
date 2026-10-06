@@ -200,6 +200,8 @@ export interface DiceGrant {
   damageType?: string;
   /** Only attacks/damage of these kinds (default: all). */
   kinds?: ("melee" | "ranged" | "spell")[];
+  /** Only weapons with all of these properties (Great Weapon Master: "heavy"). */
+  properties?: string[];
   /** Condition formula; applies only while truthy. */
   when?: string;
   /** Added to one roll of your choice, not every roll (Guidance, Bardic Inspiration). */

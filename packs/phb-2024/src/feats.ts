@@ -59,6 +59,7 @@ const MECHANICS: Record<string, Grant[]> = {
   "feat:blind-fighting": [mod("sense.blindsight", 10, { op: "atLeast", label: t("Blind Fighting", "盲斗") })],
   "feat:thrown-weapon-fighting": [tag("thrown-weapon-fighting")],
   "feat:boon-of-fortitude": [mod("hp.max", 40, { label: t("Boon of Fortitude", "超凡强韧之恩惠") })],
+  "feat:great-weapon-master": [{ type: "dice", on: ["damage"], dice: "@prof", properties: ["heavy"], label: t("Great Weapon Master", "巨武器大师") }],
   "feat:boon-of-speed": [mod("speed.walk", 30, { label: t("Boon of Speed", "神行无拘之恩惠") })],
 };
 

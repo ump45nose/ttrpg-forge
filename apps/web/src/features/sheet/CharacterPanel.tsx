@@ -9,7 +9,7 @@ import { useNames } from "../common/names";
 import { RichText } from "../terms/RichText";
 import { Term } from "../terms/Term";
 import { usePlay } from "./play";
-import { d20, edge } from "./util";
+import { useTests } from "./RollBreakdown";
 
 /** Features by where they come from, in the order a player reads a sheet. */
 const GROUPS: { id: string; kinds: SourceKind[] }[] = [
@@ -27,9 +27,8 @@ const GROUPS: { id: string; kinds: SourceKind[] }[] = [
 export function CharacterPanel() {
   const t = useT();
   const n = useNames();
-  const { sheet, roll } = usePlay();
-  const check = (a: Ability) => void roll({ expr: d20(sheet.abilities[a].mod), label: t("sheet.checkOf", { name: n.ability(a) }), kind: "check", ...edge(sheet, `check.${a}`) });
-  const save = (a: Ability) => void roll({ expr: d20(sheet.abilities[a].save), label: t("sheet.saveOf", { name: n.ability(a) }), kind: "save", ...edge(sheet, `save.${a}`) });
+  const { sheet } = usePlay();
+  const { check, save, skill } = useTests();
   const skills = Object.entries(sheet.skills).sort(([a], [b]) => n.prof("skill", a).localeCompare(n.prof("skill", b)));
 
   return (
@@ -69,7 +68,7 @@ export function CharacterPanel() {
             <button
               key={k}
               type="button"
-              onClick={() => void roll({ expr: d20(v.value), label: n.prof("skill", k), kind: "check", ...edge(sheet, `skill.${k}`, `check.${v.ability}`) })}
+              onClick={() => skill(k)}
               className="flex min-h-8 items-center gap-2 rounded-lg px-2 py-1 text-left text-sm transition-colors hover:bg-surface-3/60"
             >
               <span className={cn("h-2 w-2 shrink-0 rounded-full border", v.prof === "expertise" ? "border-class bg-class" : v.prof ? "border-class bg-class/50" : "border-line-strong")} />
