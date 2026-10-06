@@ -264,7 +264,8 @@ function Body({ action }: { action: ResolvedAction }) {
 }
 
 function edgeMode(sheet: SheetData, a: ResolvedAction): Edge | undefined {
-  const keys = a.attack!.kind === "spell" ? ["attack.spell"] : [`attack.${a.attack!.kind}`, a.tags.includes("finesse") ? "" : "attack.str"];
+  // "attack" alone is every attack roll (Steady Aim); "attack.str" the Strength-based ones (Reckless Attack)
+  const keys = a.attack!.kind === "spell" ? ["attack", "attack.spell"] : ["attack", `attack.${a.attack!.kind}`, a.tags.includes("finesse") || a.attack!.kind === "ranged" ? "" : "attack.str"];
   const e = edge(sheet, ...keys.filter(Boolean));
   return e.advantage && !e.disadvantage ? "adv" : e.disadvantage && !e.advantage ? "dis" : undefined;
 }

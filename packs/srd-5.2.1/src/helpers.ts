@@ -1,4 +1,4 @@
-import type { ActionDef, Formula, Grant, LocalizedText, Recovery } from "@forge/core";
+import type { ActionDef, Formula, Grant, LocalizedText, Recovery, RollKind } from "@forge/core";
 
 export const t = (en: string, zh: string): LocalizedText => ({ en, zh });
 
@@ -33,6 +33,14 @@ export const mod = (target: string, value: Formula, extra: { when?: string; labe
 });
 
 export const tag = (name: string, label?: LocalizedText): Grant => ({ type: "tag", tag: name, label });
+
+/** Extra dice on some rolls: `dice(["attack", "save"], "1d4")` is Bless. */
+export const dice = (on: RollKind[], d: string, extra: { damageType?: string; kinds?: ("melee" | "ranged" | "spell")[]; once?: boolean; when?: string; label?: LocalizedText } = {}): Grant => ({
+  type: "dice",
+  on,
+  dice: d,
+  ...extra,
+});
 
 export const item = (id: string, qty = 1, equipped = false): Grant => ({ type: "item", item: `item:${id}`, qty, equipped });
 

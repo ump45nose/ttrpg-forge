@@ -120,6 +120,10 @@ export function checkPack(data: unknown, base: RulePack[]): PackReport {
         case "item":
           ref(where, g.item);
           break;
+        case "dice":
+          template(`${where} dice`, g.dice);
+          formula(`${where} dice when`, g.when);
+          break;
       }
     }
   };

@@ -1,5 +1,5 @@
 import { type Build, type ChoiceView, type SheetDiff } from "@forge/core";
-import { Dices, HeartPulse, Sparkles } from "lucide-react";
+import { ChevronsUp, Dices, HeartPulse, Sparkles } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useCharacters } from "../../app/characters";
 import { useT } from "../../app/i18n";
@@ -45,9 +45,9 @@ export function LevelUpSheet({ open, onClose }: { open: boolean; onClose: () => 
     if (phase.step === "gains") update(character.id, (c) => ({ ...c, build: phase.before }));
     close();
   };
-  const settleHp = (roll?: number) => {
+  const settleHp = (hp?: number | "max") => {
     const before = character.build;
-    const ops = engine.levelUpOps(before, roll);
+    const ops = engine.levelUpOps(before, hp);
     if (!ops.length) return;
     const { diff } = engine.preview(before, engine.evaluate(before).sheet, ops);
     update(character.id, (c) => ({ ...c, build: engine.apply(c.build, ops) }));
@@ -68,18 +68,19 @@ export function LevelUpSheet({ open, onClose }: { open: boolean; onClose: () => 
   );
 }
 
-function HpStep({ onSettle }: { onSettle: (roll?: number) => void }) {
+function HpStep({ onSettle }: { onSettle: (hp?: number | "max") => void }) {
   const t = useT();
   const n = useNames();
   const { character, engine, sheet } = usePlay();
   const classId = character.build.levels.at(-1)?.classId;
   const die = sheet.classes.find((c) => c.id === classId)?.hitDie ?? 8;
   const con = sheet.abilities.con.mod;
-  const rule = engine.reg.system.hp.levelUp;
-  const avg = rule === "max" ? die : Math.floor(die / 2) + 1;
+  const forcedMax = engine.reg.system.hp.levelUp === "max";
+  const avg = Math.floor(die / 2) + 1;
   const [roll, setRoll] = useState<number | null>(null);
   const settle = useOnce(roll, onSettle);
   const plus = (x: number) => `${Math.max(1, x + con)}`;
+  const note = (x: number | string) => `${x} ${con >= 0 ? "+" : "−"} ${Math.abs(con)}`;
 
   const doRoll = async () => {
     const r = await rollDice({ expr: `1d${die}`, label: `${t("levelUp.title", { n: sheet.level + 1 })} · ${t("builder.hitDie")}`, kind: "hitdie", characterId: character.id });
@@ -99,21 +100,50 @@ function HpStep({ onSettle }: { onSettle: (roll?: number) => void }) {
           {n.ability("con")} {con >= 0 ? `+${con}` : con}
         </Chip>
       </div>
-      <p className="text-sm text-ink-2">{t("levelUp.hpHint")}</p>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <HpCard icon={<HeartPulse size={18} />} title={rule === "max" ? t("levelUp.max") : t("levelUp.average")} value={plus(avg)} note={`${avg} ${con >= 0 ? "+" : "−"} ${Math.abs(con)}`} onPick={() => settle()} />
-        {rule !== "max" && (
-          <HpCard
-            icon={<Dices size={18} />}
-            title={t("levelUp.roll")}
-            value={roll === null ? "?" : plus(roll)}
-            note={roll === null ? `1d${die} ${con >= 0 ? "+" : "−"} ${Math.abs(con)}` : `${roll} ${con >= 0 ? "+" : "−"} ${Math.abs(con)}`}
-            onPick={roll === null ? () => void doRoll() : () => settle(roll)}
-            action={roll === null ? t("common.roll") : t("levelUp.keep")}
-          />
-        )}
-      </div>
+      <p className="text-sm text-ink-2">{forcedMax ? t("levelUp.hpHintMax") : t("levelUp.hpHint")}</p>
+      {forcedMax ? (
+        <HpCard icon={<HeartPulse size={18} />} title={t("levelUp.max")} value={plus(die)} note={note(die)} onPick={() => settle()} />
+      ) : (
+        <>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <HpCard icon={<HeartPulse size={18} />} title={t("levelUp.average")} value={plus(avg)} note={note(avg)} onPick={() => settle()} />
+            <HpCard icon={<ChevronsUp size={18} />} title={t("levelUp.maxOption")} value={plus(die)} note={note(die)} onPick={() => settle("max")} />
+            <HpCard
+              icon={<Dices size={18} />}
+              title={t("levelUp.roll")}
+              value={roll === null ? "?" : plus(roll)}
+              note={roll === null ? note(`1d${die}`) : note(roll)}
+              onPick={roll === null ? () => void doRoll() : () => settle(roll)}
+              action={roll === null ? t("common.roll") : t("levelUp.keep")}
+            />
+          </div>
+          <RealDie die={die} onPick={(v) => settle(v)} />
+        </>
+      )}
       <p className="text-xs text-ink-3">{t("levelUp.multiclassLater")}</p>
+    </div>
+  );
+}
+
+/** Rolled a real Hit Die? Tap what it shows. */
+export function RealDie({ die, onPick, value }: { die: number; onPick: (v: number) => void; value?: number }) {
+  const t = useT();
+  return (
+    <div>
+      <div className="mb-1.5 text-xs text-ink-3">{t("levelUp.realDie", { die })}</div>
+      <div className="flex flex-wrap gap-1.5">
+        {Array.from({ length: die }, (_, i) => i + 1).map((v) => (
+          <button
+            key={v}
+            type="button"
+            onClick={() => onPick(v)}
+            aria-pressed={value === v}
+            className={cn("tnum h-9 min-w-9 rounded-lg border px-2 text-sm transition-colors", value === v ? "border-class bg-class/15 text-class" : "border-line bg-surface/60 text-ink-2 hover:border-class/50")}
+          >
+            {v}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

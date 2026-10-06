@@ -51,6 +51,7 @@ const NAMED: Record<string, LucideIcon> = {
   "zap-off": ZapOff, mountain: Mountain, flask: FlaskConical, "arrow-down": ArrowDown, link: Link, sparkles: Sparkles, moon: Moon,
   shield: Shield, shirt: Shirt, "shield-plus": ShieldPlus, sparkle: Sparkle, wind: Wind, "heart-pulse": HeartPulse, feather: Feather,
   flame: Flame, sun: Sun, maximize: Maximize, radar: Radar, skull: Skull, zap: Zap, crosshair: Crosshair, sword: Sword,
+  compass: Compass, music: Music, leaf: Leaf, footprints: Footprints, crown: Crown,
 };
 
 export function entityGlyph(id: string | undefined): LucideIcon {

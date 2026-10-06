@@ -23,6 +23,8 @@ function grantKeys(g: Grant): { id?: string; key?: string; target?: string } {
       return { key: g.key };
     case "modifier":
       return { target: g.target };
+    case "dice":
+      return { target: g.on.join(",") };
   }
 }
 

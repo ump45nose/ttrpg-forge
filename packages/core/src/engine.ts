@@ -3,7 +3,7 @@ import { choiceCandidates, validate, type ChoiceCandidate } from "./build/choice
 import type { Issue } from "./build/collect";
 import { autofill } from "./build/autofill";
 import { applyOps, emptyBuild, type BuildOp } from "./build/mutations";
-import { derive, type Sheet } from "./derive/sheet";
+import { derive, levelHp, type Sheet } from "./derive/sheet";
 import { preview, type Preview } from "./diff";
 import { PackRegistry } from "./pack/registry";
 import { activeEffectIds, replay, type PlayState } from "./play";
@@ -53,15 +53,38 @@ export class Engine {
   }
 
   /**
-   * The level-up step at the table: one more level in the current class.
-   * `roll` is the Hit Die result when rolling for HP (house rules may force max/average).
+   * The level-up step at the table: one more level in the current class. `hp` is how the
+   * new level's hit points are settled — a rolled value, "max", or nothing for the average.
+   * Choosing differently from the build's method records every earlier level's value
+   * first, so switching from max to rolled never shrinks the levels already taken.
    */
-  levelUpOps(build: Build, roll?: number): BuildOp[] {
+  levelUpOps(build: Build, hp?: number | "max"): BuildOp[] {
     const classId = build.levels.at(-1)?.classId;
     if (!classId || build.levels.length >= this.levelCap(build)) return [];
-    const rule = this.reg.system.hp.levelUp;
-    const hp = rule === "max" ? undefined : roll;
-    return [...(hp !== undefined && build.hpMethod !== "rolled" ? [{ op: "setHpMethod", method: "rolled" } as const] : []), { op: "addLevel", classId, hp }];
+    if (this.reg.system.hp.levelUp === "max") return [{ op: "addLevel", classId }];
+    const die = this.reg.getOf("class", classId)?.hitDie ?? 8;
+    const value = hp === "max" ? die : hp ?? Math.floor(die / 2) + 1;
+    const natural = build.hpMethod === "max" ? die : build.hpMethod === "average" ? Math.floor(die / 2) + 1 : undefined;
+    if (natural === value) return [{ op: "addLevel", classId }];
+    const keep: BuildOp[] =
+      build.hpMethod === "rolled"
+        ? []
+        : [
+            ...build.levels.slice(1).map((_, i): BuildOp => ({ op: "setLevelHp", index: i + 1, hp: levelHp(this.reg, build, i + 1) })),
+            { op: "setHpMethod", method: "rolled" },
+          ];
+    return [...keep, { op: "addLevel", classId, hp: value }];
+  }
+
+  /**
+   * Hit points chosen while building: average, max, or rolled. `rolls` are the Hit Die
+   * results for levels 2+ (from real dice or the app); missing ones count as average.
+   */
+  hpMethodOps(build: Build, method: Build["hpMethod"], rolls: (number | undefined)[] = []): BuildOp[] {
+    return [
+      { op: "setHpMethod", method },
+      ...build.levels.slice(1).map((_, i): BuildOp => ({ op: "setLevelHp", index: i + 1, hp: method === "rolled" ? rolls[i] : undefined })),
+    ];
   }
 
   apply(build: Build, ops: BuildOp[]): Build {

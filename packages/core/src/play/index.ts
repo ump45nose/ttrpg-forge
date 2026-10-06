@@ -143,9 +143,9 @@ function rest(s: PlayState, kind: RestKind, sheet?: Sheet) {
     s.damage = 0;
     s.temp = 0;
     s.slotsUsed = [];
-    // effects and conditions wear off; Exhaustion drops by one level
+    // effects and conditions wear off, except standing buffs; Exhaustion drops by one level
     const exhaustion = s.effects.filter((x) => x.effect === EXHAUSTION);
-    s.effects = exhaustion.slice(1);
+    s.effects = [...exhaustion.slice(1), ...s.effects.filter((x) => x.persistent && x.effect !== EXHAUSTION)];
     s.concentration = undefined;
     s.deathSaves = { success: 0, failure: 0 };
   }

@@ -36,6 +36,33 @@ describe("level up at the table", () => {
     expect(engine.evaluate(b).sheet.hpMax - hp3).toBe(2 + con);
   });
 
+  it("max HP at level-up, and switching from max to rolled keeps the earlier levels' max", () => {
+    const c = hero(3);
+    const avg3 = engine.evaluate(c.build).sheet.hpMax;
+    const max3 = engine.evaluate(applyOps(c.build, engine.hpMethodOps(c.build, "max"))).sheet.hpMax;
+    expect(max3 - avg3).toBe(2 * (10 - 6)); // fighter d10: levels 2 and 3 at 10 instead of 6
+    const maxBuild = applyOps(c.build, engine.hpMethodOps(c.build, "max"));
+    // a max level-up on a max build is just another level
+    expect(engine.levelUpOps(maxBuild, "max")).toEqual([{ op: "addLevel", classId: "class:fighter" }]);
+    const rolled = applyOps(maxBuild, engine.levelUpOps(maxBuild, 3));
+    expect(rolled.hpMethod).toBe("rolled");
+    expect(rolled.levels.map((l) => l.hp)).toEqual([undefined, 10, 10, 3]);
+    const con = engine.evaluate(rolled).sheet.abilities.con.mod;
+    expect(engine.evaluate(rolled).sheet.hpMax - max3).toBe(3 + con);
+  });
+
+  it("building with rolled HP records each level's die; average clears them", () => {
+    const c = hero(4);
+    const rolled = applyOps(c.build, engine.hpMethodOps(c.build, "rolled", [7, undefined, 2]));
+    expect(rolled.levels.map((l) => l.hp)).toEqual([undefined, 7, undefined, 2]);
+    // a level without a roll counts as average (6 for a d10)
+    const avg = engine.evaluate(c.build).sheet.hpMax;
+    expect(engine.evaluate(rolled).sheet.hpMax - avg).toBe(7 - 6 + (2 - 6));
+    const back = applyOps(rolled, engine.hpMethodOps(rolled, "average"));
+    expect(back.levels.every((l) => l.hp === undefined)).toBe(true);
+    expect(engine.evaluate(back).sheet.hpMax).toBe(avg);
+  });
+
   it("stops at the level cap; house rule 'max HP' ignores the roll", () => {
     const capped = hero(engine.levelCap(hero(1).build));
     expect(engine.levelUpOps(capped.build)).toEqual([]);

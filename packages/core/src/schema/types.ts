@@ -184,7 +184,31 @@ export interface TagGrant {
   label?: LocalizedText;
 }
 
+/** The d20 tests and damage rolls a dice bonus can join. */
+export type RollKind = "attack" | "damage" | "save" | "check";
+
+/**
+ * Extra dice on a kind of roll: Bless (+1d4 to attacks and saves), Guidance (+1d4 to a
+ * check), Hunter's Mark (+1d6 damage). Shown in the roll breakdown and added to app rolls.
+ */
+export interface DiceGrant {
+  type: "dice";
+  on: RollKind[];
+  /** Roll template, may contain @refs: "1d4", "1d6", "[[@prof]]d4". Negative: "-1d4" (Bane). */
+  dice: string;
+  /** Damage bonuses: their damage type. */
+  damageType?: string;
+  /** Only attacks/damage of these kinds (default: all). */
+  kinds?: ("melee" | "ranged" | "spell")[];
+  /** Condition formula; applies only while truthy. */
+  when?: string;
+  /** Added to one roll of your choice, not every roll (Guidance, Bardic Inspiration). */
+  once?: boolean;
+  label?: LocalizedText;
+}
+
 export type Grant =
+  | DiceGrant
   | ModifierGrant
   | ProficiencyGrant
   | ResourceGrant
@@ -510,7 +534,11 @@ export interface Build {
   backgroundId?: string;
   /** One entry per character level, in the order they were taken. */
   levels: { classId: string; hp?: number }[];
-  hpMethod: "average" | "rolled";
+  /**
+   * Hit points after level 1: the fixed average, the die's maximum (a table rule), or
+   * what was rolled (`levels[i].hp`; levels without a roll count as average).
+   */
+  hpMethod: "average" | "max" | "rolled";
   /** Choice path -> selected ids / tokens. */
   choices: Record<string, string[]>;
   /** classId -> prepared spell ids. */
@@ -537,6 +565,11 @@ export interface CharacterMeta {
   backstory?: string;
   notes?: string;
   player?: string;
+  /**
+   * The buff switches on this character's sheet (effect ids, in order), and which of them
+   * stay on through rests. Unset: suggested from the character's classes and spells.
+   */
+  quickBuffs?: { effect: string; persistent?: boolean }[];
 }
 
 export interface Character {
@@ -563,6 +596,8 @@ export interface EffectStart {
   source?: string;
   rounds?: number;
   concentration?: boolean;
+  /** Stays through rests and the end of combat until switched off (a standing buff). */
+  persistent?: boolean;
 }
 
 export type PlayEvent =

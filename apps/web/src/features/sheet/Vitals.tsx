@@ -15,9 +15,11 @@ import { toast } from "../../ui/Toast";
 import { afterLanding } from "../dice/store";
 import { Explain } from "../common/Explain";
 import { RichText } from "../terms/RichText";
+import { quickBuffs } from "./buffs";
 import { EffectPicker } from "./EffectPicker";
 import { HpSheet } from "./HpSheet";
 import { usePlay } from "./play";
+import { BuffConfigSheet, QuickBuffChips } from "./QuickBuffs";
 import { d20, edge, effectName, groupEffects } from "./util";
 
 const isEffect = (type: string | undefined) => type === "condition" || type === "effect";
@@ -162,9 +164,12 @@ const Dots = ({ n, tone, label }: { n: number; tone: string; label: string }) =>
 function EffectRow() {
   const t = useT();
   const l = useL();
-  const { engine, sheet, state, push } = usePlay();
+  const { character, engine, sheet, state, push } = usePlay();
   const [pick, setPick] = useState(false);
-  const groups = groupEffects(state.effects);
+  const [config, setConfig] = useState(false);
+  // buffs with a switch show as that switch, not again as a chip
+  const switched = new Set(quickBuffs(character, engine.reg, sheet).map((b) => b.effect));
+  const groups = groupEffects(state.effects).filter((g) => !switched.has(g.effect.effect));
   const conc = state.concentration;
   return (
     <div className="flex flex-wrap items-center gap-1.5">
@@ -177,6 +182,7 @@ function EffectRow() {
           </button>
         </span>
       )}
+      <QuickBuffChips onConfigure={() => setConfig(true)} />
       <AnimatePresence initial={false}>
         {groups
           // a concentration marker for a spell is already shown by the concentration pill
@@ -233,9 +239,10 @@ function EffectRow() {
       </AnimatePresence>
       {/* small to look at, but a finger-sized target */}
       <button type="button" onClick={() => setPick(true)} aria-label={t("sheet.addEffect")} className="hit relative inline-flex items-center gap-1 rounded-full border border-dashed border-line-strong px-2 py-0.5 text-xs text-ink-3 transition-colors hover:border-accent/50 hover:text-accent">
-        <Plus size={12} /> {groups.length || conc ? "" : t("sheet.addEffect")}
+        <Plus size={12} /> {groups.length || conc ? "" : switched.size ? t("buffs.addCondition") : t("sheet.addEffect")}
       </button>
       <EffectPicker open={pick} onOpenChange={setPick} />
+      <BuffConfigSheet open={config} onClose={() => setConfig(false)} />
     </div>
   );
 }

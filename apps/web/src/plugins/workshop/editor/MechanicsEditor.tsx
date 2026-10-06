@@ -219,6 +219,8 @@ export function useGrantSummary() {
         return `${n.entity(g.item, true)}${g.qty && g.qty > 1 ? ` ×${g.qty}` : ""}`;
       case "spellcasting":
         return `${n.ability(g.ability)} · ${g.progression}`;
+      case "dice":
+        return `${g.on.map((r) => t(`roll.on.${r}`)).join(" / ")} +${g.dice.replace(/^\+/, "")}${g.label ? ` · ${n.l(g.label, { mono: true })}` : ""}`;
     }
   };
 }

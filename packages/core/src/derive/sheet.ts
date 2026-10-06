@@ -17,6 +17,7 @@ import {
   type ProficiencyKind,
   type ProficiencyLevel,
   type Recovery,
+  type RollKind,
   type ResourceGrant,
   type SpellcastingGrant,
 } from "../schema/types";
@@ -157,6 +158,8 @@ export interface Sheet {
   speed: Record<"walk" | "fly" | "swim" | "climb", number>;
   hpMax: number;
   senses: Record<string, number>;
+  /** Extra dice on attacks, damage, saves or checks from effects and features. */
+  dice: DiceBonusView[];
   proficiencies: ProficiencyView[];
   tags: string[];
   features: FeatureView[];
@@ -179,6 +182,18 @@ export interface Sheet {
   proficiency(kind: ProficiencyKind, key: string): ProficiencyLevel | null;
 }
 
+/** An extra die on some rolls (Bless, Guidance, Hunter's Mark), resolved for this character. */
+export interface DiceBonusView {
+  on: RollKind[];
+  /** Plain dice, e.g. "1d4" or "-1d4". */
+  dice: string;
+  damageType?: string;
+  kinds?: ("melee" | "ranged" | "spell")[];
+  once?: boolean;
+  label: LocalizedText;
+  source: SourceRef;
+}
+
 export interface DeriveOptions {
   /** Effects / conditions currently active in play; their grants apply. */
   activeEffects?: string[];
@@ -188,6 +203,19 @@ const PROF_MULT: Record<ProficiencyLevel, number> = { half: 0.5, proficient: 1, 
 const PROF_RANK: Record<ProficiencyLevel, number> = { half: 1, proficient: 2, expertise: 3 };
 
 const L = (en: string, zh: string): LocalizedText => ({ en, zh });
+
+/**
+ * Hit Die points one level after the first adds (Con not included): the table's
+ * max rule, else the build's method — a recorded roll, the die's maximum, or the average.
+ */
+export function levelHp(reg: PackRegistry, build: Build, index: number): number {
+  const l = build.levels[index];
+  const die = reg.getOf("class", l?.classId)?.hitDie ?? 8;
+  const avg = Math.floor(die / 2) + 1;
+  if (reg.system.hp.levelUp === "max" || build.hpMethod === "max") return die;
+  if (build.hpMethod === "rolled" && l?.hp) return l.hp;
+  return avg;
+}
 
 /* ───────────────────────── derive ───────────────────────── */
 
@@ -316,7 +344,7 @@ export function derive(reg: PackRegistry, build: Build, opts: DeriveOptions = {}
       const die = reg.getOf("class", l.classId)?.hitDie ?? 8;
       const avg = Math.floor(die / 2) + 1;
       if (i === 0) dice += reg.system.hp.firstLevel === "max" ? die : avg;
-      else dice += build.hpMethod === "rolled" && l.hp ? l.hp : reg.system.hp.levelUp === "max" ? die : avg;
+      else dice += levelHp(reg, build, i);
     });
     const conTotal = con * level;
     return {
@@ -675,6 +703,13 @@ export function derive(reg: PackRegistry, build: Build, opts: DeriveOptions = {}
     issues.push({ severity: "warning", code: "armor-strength", path: armor!.key, message: L(`Strength ${abilities.str.score} is below ${strNeed}: Speed −10 ft`, `力量 ${abilities.str.score} 低于 ${strNeed}：速度 −10 尺`) });
   }
 
+  const dice: DiceBonusView[] = col.grants.flatMap((c): DiceBonusView[] => {
+    const g = c.grant;
+    if (g.type !== "dice" || (g.when && !stats.eval(g.when))) return [];
+    const resolved = resolveTemplate(g.dice, stats.resolve, { onUnknown: () => 0 }).replace(/\s+/g, "");
+    return [{ on: g.on, dice: resolved, damageType: g.damageType, kinds: g.kinds, once: g.once, label: g.label ?? c.source.name, source: c.source }];
+  });
+
   const sheet: Sheet = {
     level,
     prof: stats.get("prof"),
@@ -690,6 +725,7 @@ export function derive(reg: PackRegistry, build: Build, opts: DeriveOptions = {}
     speed: { walk: stats.get("speed.walk"), fly: stats.get("speed.fly"), swim: stats.get("speed.swim"), climb: stats.get("speed.climb") },
     hpMax: stats.get("hp.max"),
     senses: { darkvision: stats.get("sense.darkvision") },
+    dice,
     proficiencies: [...profMap.values()],
     tags: [...tags],
     features,

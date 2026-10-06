@@ -79,6 +79,7 @@ pnpm validate:pack 你的包.json
 | `spell` | 直接给一个法术，可设免费施放次数 | 种族、专长法术 |
 | `item` | 给物品 | 起始装备 |
 | `tag` | 打一个标记，见下表 | `{"type":"tag","tag":"resist:fire"}` |
+| `dice` | 额外的骰子：`on` 写加在哪类掷骰上（`attack` / `damage` / `save` / `check`），`dice` 写骰子（可为负，如 `-1d4`），伤害骰可写 `damageType`；`kinds` 限定 `melee` / `ranged` / `spell`；`once` 表示用一次就没（如吟游激励） | `{"type":"dice","on":["attack","save"],"dice":"1d4"}`（祝福术） |
 
 **动作**（`action` 里的 `action` 对象，以及法术的 `action`、物品的 `use`）：
 
@@ -106,6 +107,7 @@ pnpm validate:pack 你的包.json
 | `once-per-turn` `rider` | 战斗页「记得用」提醒，角色卡标「记得用」 |
 | `shop:<商店 id>` | 物品上架到商店的常备货：`general` 杂货铺、`smith` 铁匠铺、`apothecary` 药剂铺、`arcane` 奥术用品店、`crafts` 工具与乐器 |
 | `magic` `consumable` `potion` `rarity:<稀有度>` | 物品分类；带 `magic` 的物品名显示为魔法色 |
+| `buff` `suggest:<职业>` / `suggest:all` | 效果（`effect`）带 `buff` 才会出现在角色卡的快捷增益里；`suggest:` 决定默认推荐给哪些职业 |
 
 ## 4. 公式
 

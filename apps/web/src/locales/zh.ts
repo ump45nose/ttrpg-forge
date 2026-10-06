@@ -49,6 +49,12 @@ export const zh: Messages = {
     unnamed: "无名英雄", importChar: "导入角色",
   },
   builder: {
+    hp: {
+      title: "生命值", total: "上限 {{n}}", average: "平均值", max: "最大值", rolled: "掷骰",
+      averageHint: "1 级取生命骰最大值，之后每级取平均 {{avg}}（再加体质调整值）。", maxHint: "每级都取生命骰最大值 {{die}}（需团里允许）。",
+      rolledHint: "每级掷一次 d{{die}}：用实体骰掷完填进来，或让 App 一次掷完。没填的级按平均值算。",
+      forcedMax: "本团村规：每级都取生命骰最大值。", levelRoll: "{{n}} 级的生命骰", rollAll: "App 掷 {{expr}}",
+    },
     steps: { class: "职业", origin: "出身", abilities: "属性", choices: "特性", details: "设定", review: "确认" },
     stepHint: {
       class: "职业决定了你如何战斗、施法与生存。",
@@ -103,12 +109,19 @@ export const zh: Messages = {
   portrait: { title: "头像", upload: "上传图片", reset: "恢复默认", hint: "默认使用所选种族的头像。生成或上传的立绘会压缩后保存在角色里，头像从立绘中裁出，导出时一起带走。", failed: "无法读取这张图片" },
   levelUp: {
     undo: "撤销升级", button: "升级", title: "升到 {{n}} 级", choose: "选这个", average: "取平均值", max: "取最大值（村规）", roll: "掷骰", keep: "就用它",
-    hpHint: "这一级增加多少生命值？取平均值或掷一次生命骰，两种都会加上体质调整值（至少 +1）。",
+    hpHint: "这一级增加多少生命值？取平均值、取最大值（团里允许时），或掷一次生命骰；都会加上体质调整值（至少 +1）。",
+    hpHintMax: "本团村规：每级取生命骰最大值，再加上体质调整值（至少 +1）。", maxOption: "取最大值", realDie: "用实体骰？掷一个 d{{die}}，点它显示的点数：",
     multiclassLater: "暂不支持兼职：本次升级在当前职业上加一级。",
     gains: "本级获得", choices: "本级新选择", earlier: "之前等级还没选完的",
     pending: "还有 {{n}} 项未选。可以先完成升级，之后在构筑编辑里补选。",
     finish: "成为 {{n}} 级", done: "升到 {{n}} 级了！", logged: "升到 {{n}} 级",
   },
+  buffs: {
+    title: "快捷增益", configure: "设置快捷增益", hint: "点一下开、再点一下关。这里选的增益会在角色卡顶部常驻一个开关；标为「常驻」的在长休后也保持开启（如法师护甲、村规里的常驻效果）。",
+    onSheet: "角色卡上的开关", more: "可添加", suggested: "推荐", reset: "恢复推荐", empty: "还没有开关，从下面添加。",
+    persistent: "常驻", persistentHint: "开启后长休、结束战斗都不会移除，只能手动关掉", up: "上移", down: "下移", addCondition: "状态",
+  },
+  roll: { on: { attack: "攻击", damage: "伤害", save: "豁免", check: "检定" } },
   sheet: {
     masteryFacts: {
       save: "目标进行{{ability}}豁免 DC {{dc}}，失败倒地", miss: "未命中仍造成 {{n}} 点{{type}}伤害", push: "命中可将目标推离 {{n}} 尺", slow: "命中并造成伤害：目标速度 −{{n}} 尺",

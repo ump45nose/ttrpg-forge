@@ -19,6 +19,8 @@ export type BuildOp =
   | { op: "addItem"; entry: InventoryEntry }
   | { op: "removeItem"; key: string }
   | { op: "setHpMethod"; method: Build["hpMethod"] }
+  /** The Hit Die result recorded for one level (index 0 = level 1); undefined clears it. */
+  | { op: "setLevelHp"; index: number; hp: number | undefined }
   | { op: "setCurrency"; currency: Currency }
   | { op: "setItemQty"; key: string; qty: number };
 
@@ -86,6 +88,8 @@ export function applyOp(b: Build, o: BuildOp): Build {
       return { ...b, inventory: b.inventory.filter((i) => i.key !== o.key) };
     case "setHpMethod":
       return { ...b, hpMethod: o.method };
+    case "setLevelHp":
+      return { ...b, levels: b.levels.map((l, i) => (i === o.index ? { classId: l.classId, ...(o.hp === undefined ? {} : { hp: o.hp }) } : l)) };
     case "setCurrency":
       return { ...b, currency: { ...b.currency, ...o.currency } };
     case "setItemQty":

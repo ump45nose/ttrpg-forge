@@ -47,6 +47,12 @@ export const en = {
     unnamed: "Unnamed hero", importChar: "Import character",
   },
   builder: {
+    hp: {
+      title: "Hit points", total: "Max {{n}}", average: "Average", max: "Maximum", rolled: "Rolled",
+      averageHint: "Level 1 takes the full Hit Die, every later level the average {{avg}} (plus Con).", maxHint: "Every level takes the Hit Die's maximum {{die}} (if your table allows it).",
+      rolledHint: "Roll a d{{die}} per level: roll real dice and type them in, or let the app roll them all. Empty levels count as average.",
+      forcedMax: "Table rule: every level takes the Hit Die's maximum.", levelRoll: "Hit Die for level {{n}}", rollAll: "App rolls {{expr}}",
+    },
     steps: { class: "Class", origin: "Origin", abilities: "Abilities", choices: "Features", details: "Details", review: "Review" },
     stepHint: {
       class: "Your class shapes how you fight, cast and survive.",
@@ -101,12 +107,19 @@ export const en = {
   portrait: { title: "Portrait", upload: "Upload picture", reset: "Use default", hint: "Defaults to your species' portrait. Generated or uploaded pictures are compressed and stored in the character (the avatar is cropped from them), so they travel with exports.", failed: "Couldn't read that picture" },
   levelUp: {
     undo: "Undo level-up", button: "Level up", title: "Level {{n}}", choose: "Take this", average: "Average", max: "Maximum (house rule)", roll: "Roll", keep: "Keep it",
-    hpHint: "How many Hit Points does this level add? Take the average or roll your Hit Die; your Constitution modifier is added either way (minimum 1).",
+    hpHint: "How many Hit Points does this level add? Take the average, the maximum (if your table allows it), or roll your Hit Die; your Constitution modifier is added in every case (minimum 1).",
+    hpHintMax: "Table rule: every level takes the Hit Die's maximum, plus your Constitution modifier (minimum 1).", maxOption: "Maximum", realDie: "Rolling a real die? Roll a d{{die}} and tap what it shows:",
     multiclassLater: "Multiclassing isn't supported yet — this adds a level in your current class.",
     gains: "What you gain", choices: "New choices", earlier: "Still open from earlier levels",
     pending: "{{n}} choices still open — you can finish now and fill them in later from the build editor.",
     finish: "Become level {{n}}", done: "You are now level {{n}}!", logged: "Reached level {{n}}",
   },
+  buffs: {
+    title: "Quick buffs", configure: "Set up quick buffs", hint: "Tap once to switch on, again to switch off. Each buff picked here gets a switch at the top of the sheet; ones marked Persistent stay on through long rests (Mage Armor, a table's standing effect).",
+    onSheet: "Switches on the sheet", more: "Add more", suggested: "Suggested", reset: "Back to suggested", empty: "No switches yet — add some below.",
+    persistent: "Persistent", persistentHint: "Long rests and the end of combat leave it on; only you switch it off", up: "Move up", down: "Move down", addCondition: "Condition",
+  },
+  roll: { on: { attack: "Attack", damage: "Damage", save: "Save", check: "Check" } },
   sheet: {
     masteryFacts: {
       save: "Target makes a {{ability}} save, DC {{dc}}, or falls Prone", miss: "On a miss: still {{n}} {{type}} damage", push: "On a hit: push the target {{n}} ft", slow: "On a damaging hit: target's Speed −{{n}} ft",
