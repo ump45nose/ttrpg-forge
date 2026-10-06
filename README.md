@@ -95,7 +95,7 @@ packages/plugin-api # 插件 API
 packs/srd-5.2.1   # SRD 5.2.1 中文规则包（职业/法术/物种/背景/专长/物品）
 packs/phb-2024    # PHB 2024 包：本地生成（见下），生成前应用只跑 SRD
 tools/art         # 美术资源处理脚本
-docs/             # 部署说明、真机试玩清单、截图
+docs/             # 部署说明、规则包/插件制作说明、真机试玩清单、截图
 ```
 
 ### 关于 PHB 2024 包
@@ -104,6 +104,10 @@ SRD 5.2.1 是 Wizards of the Coast 以 CC-BY-4.0 发布的开放内容，本仓�
 PHB 2024 包则基于 [DND5eChm](https://github.com/DND5eChm/DND5e_chm) 社区译本，文本版权归 WotC，
 因此**译文数据只在本地生成、绝不入库**（`packs/phb-2024/src/generated/` 已被 gitignore）。
 不生成它，应用就只包含 SRD 内容，一切照常工作。生成方式见 [packs/phb-2024/README.md](packs/phb-2024/README.md)。
+
+## 制作规则包与插件
+
+想加村规、专长、物品、职业，或者做新界面：看 [docs/authoring.md](docs/authoring.md)（一页说明书），从示例包 [docs/examples/house-rules.json](docs/examples/house-rules.json) 改起。写完用 `pnpm validate:pack <文件>` 自检。用 Claude Code 开发时，`.claude/skills/` 里的 `forge-content` 和 `forge-plugin` 两个 skill 会自动带上这些约定。
 
 ## 数据与隐私
 

@@ -1,0 +1,64 @@
+{
+  "id": "house:example",
+  "version": "1.0.0",
+  "system": "dnd5e-2024",
+  "name": { "en": "Example house rules", "zh": "示例村规" },
+  "attribution": { "en": "A template: copy it, rename the id, change what you like.", "zh": "模板：复制一份，改掉 id，再按你的团改。" },
+  "requires": ["srd-5.2.1"],
+  "systemConfig": {
+    "pointBuy": { "max": 17, "budget": 30 }
+  },
+  "entities": [
+    {
+      "id": "feat:house-quick-draw",
+      "type": "feat",
+      "category": "origin",
+      "name": { "en": "Quick Draw", "zh": "拔剑如风" },
+      "summary": { "en": "+2 Initiative; once per turn a free weapon swap; a burst of speed once per rest.", "zh": "先攻 +2；每回合一次免费换武器；每次休息一次爆发冲刺。" },
+      "tags": ["origin"],
+      "grants": [
+        { "type": "modifier", "target": "initiative", "value": 2, "label": { "en": "Quick Draw", "zh": "拔剑如风" } },
+        {
+          "type": "feature",
+          "id": "quick-swap",
+          "name": { "en": "Quick Swap", "zh": "快速换手" },
+          "text": { "en": "Once per turn you can stow one weapon and draw another as part of an attack.", "zh": "每回合一次，你可以在攻击中收起一把武器并拔出另一把。" },
+          "tags": ["once-per-turn"]
+        },
+        {
+          "type": "resource",
+          "id": "house-burst",
+          "name": { "en": "Burst", "zh": "爆发冲刺" },
+          "max": "max(1, @ability.dex.mod)",
+          "recovery": [{ "on": "short", "amount": "all" }]
+        },
+        {
+          "type": "action",
+          "action": {
+            "id": "house-burst",
+            "name": { "en": "Burst of Speed", "zh": "爆发冲刺" },
+            "activation": "bonus",
+            "category": "feature",
+            "cost": [{ "resource": "house-burst" }],
+            "text": { "en": "Your Speed increases by 10 ft until the end of your turn.", "zh": "直到你的回合结束，你的速度提高 10 尺。" }
+          }
+        }
+      ]
+    },
+    {
+      "id": "item:house-fire-tonic",
+      "type": "item",
+      "itemType": "gear",
+      "name": { "en": "Fire Tonic", "zh": "火焰补剂" },
+      "text": { "en": "Bonus Action: drink it to regain 1d4 + 1 HP; you feel warm for an hour.", "zh": "附赠动作：饮用后恢复 1d4 + 1 点生命值，接下来一小时浑身暖和。" },
+      "cost": "8 GP",
+      "weight": 0.5,
+      "tags": ["gear", "consumable", "potion", "shop:apothecary"],
+      "consumable": true,
+      "use": { "activation": "bonus", "range": { "en": "Self", "zh": "自身" }, "heal": { "dice": "1d4 + 1" } }
+    }
+  ],
+  "patches": [
+    { "target": "item:potion-of-healing", "set": { "cost": "40 GP" } }
+  ]
+}

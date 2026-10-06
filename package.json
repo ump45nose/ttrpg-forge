@@ -13,7 +13,8 @@
     "e2e": "pnpm --filter @forge/web e2e",
     "check:phb": "node tools/deploy/check-phb.mjs",
     "build:pages": "pnpm check:phb && pnpm --filter @forge/web exec vite build --mode pages",
-    "e2e:pages": "pnpm --filter @forge/web exec playwright test --config playwright.pages.config.ts"
+    "e2e:pages": "pnpm --filter @forge/web exec playwright test --config playwright.pages.config.ts",
+    "validate:pack": "node tools/pack/validate.mjs"
   },
   "devDependencies": {
     "typescript": "^7.0.2",

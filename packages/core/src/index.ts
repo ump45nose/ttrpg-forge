@@ -6,6 +6,7 @@ export * from "./dice";
 export * from "./system/dnd5e";
 export * from "./pack/registry";
 export * from "./pack/patch";
+export * from "./pack/check";
 export * from "./build/collect";
 export * from "./build/choices";
 export * from "./build/mutations";
